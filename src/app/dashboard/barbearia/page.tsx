@@ -628,7 +628,7 @@ export default function BarbeariaDashboard() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
                       outerRadius={60}
                       fill="#8884d8"
                       dataKey="value"
@@ -645,7 +645,7 @@ export default function BarbeariaDashboard() {
                         color: '#ffffff',
                         fontSize: '12px'
                       }}
-                      formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
+                      formatter={(value: number, name: string) => [`R$ ${value.toFixed(2).replace('.', ',')}`, name]}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -718,7 +718,7 @@ export default function BarbeariaDashboard() {
         {/* Recent Transactions */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
           gap: '20px' 
         }}>
           {/* Recent Receitas */}
