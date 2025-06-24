@@ -1,0 +1,839 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabaseClient'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import PeriodSelector from '@/components/PeriodSelector'
+
+interface CategoriaDespesa {
+  id: string
+  nome: string
+}
+
+interface Despesa {
+  id: string
+  valor: number
+  data_despesa: string
+  observacoes?: string
+  categoria_despesa: {
+    id: string
+    nome: string
+  } | null
+}
+
+interface MonthlyData {
+  mes: string
+  despesas: number
+}
+
+interface DailyData {
+  dia: string
+  despesas: number
+}
+
+export default function DespesasPage() {
+  const [despesas, setDespesas] = useState<Despesa[]>([])
+  const [categorias, setCategorias] = useState<CategoriaDespesa[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [formData, setFormData] = useState({
+    valor: '',
+    data_despesa: new Date().toISOString().split('T')[0],
+    categoria_id: '',
+    observacoes: ''
+  })
+  const [editingDespesa, setEditingDespesa] = useState<Despesa | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
+  const [dailyData, setDailyData] = useState<DailyData[]>([])
+  const [filteredDespesas, setFilteredDespesas] = useState<Despesa[]>([])
+  const router = useRouter()
+
+  useEffect(() => {
+    checkUserAndLoadData()
+  }, [])
+
+  useEffect(() => {
+    if (despesas.length > 0) {
+      loadChartData()
+    }
+  }, [despesas])
+
+  async function checkUserAndLoadData() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        router.push('/login')
+        return
+      }
+
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!usuario) {
+        router.push('/login')
+        return
+      }
+
+      setUserId(usuario.id)
+      await loadDespesas(usuario.id)
+      await loadCategorias(usuario.id)
+    } catch (error) {
+      console.error('Erro ao verificar usuário:', error)
+      router.push('/login')
+    }
+  }
+
+  async function loadDespesas(usuarioId: string) {
+    try {
+      const { data: despesasData } = await supabase
+        .from('despesas')
+        .select(`
+          id,
+          valor,
+          data_despesa,
+          observacoes,
+          categoria_despesa:categorias_despesa(id, nome)
+        `)
+        .eq('usuario_id', usuarioId)
+        .order('data_despesa', { ascending: false })
+
+      setDespesas((despesasData as unknown as Despesa[]) || [])
+      setFilteredDespesas((despesasData as unknown as Despesa[]) || [])
+    } catch (error) {
+      console.error('Erro ao carregar despesas:', error)
+    }
+  }
+
+  async function loadCategorias(usuarioId: string) {
+    try {
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('tipo_negocio_id')
+        .eq('id', usuarioId)
+        .single()
+
+      const { data: categoriasData } = await supabase
+        .from('categorias_despesa')
+        .select('*')
+        .eq('ativo', true)
+        .eq('tipo_negocio_id', usuario?.tipo_negocio_id)
+        .order('nome')
+
+      setCategorias(categoriasData || [])
+    } catch (error) {
+      console.error('Erro ao carregar categorias:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handlePeriodChange(startDate: Date, endDate: Date) {
+    const filtered = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
+      const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
+    })
+    setFilteredDespesas(filtered)
+  }
+
+  function loadChartData() {
+    // Dados mensais dos últimos 6 meses
+    const monthlyData = []
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date()
+      date.setMonth(date.getMonth() - i)
+      const monthStr = date.toLocaleDateString('pt-BR', { month: 'short' })
+      
+      const despesasMes = despesas.filter(d => {
+        const dataDespesa = new Date(d.data_despesa)
+        return dataDespesa.getMonth() === date.getMonth() && dataDespesa.getFullYear() === date.getFullYear()
+      }).reduce((sum, d) => sum + d.valor, 0)
+      
+      monthlyData.push({
+        mes: monthStr,
+        despesas: despesasMes
+      })
+    }
+    setMonthlyData(monthlyData)
+
+    // Dados diários dos últimos 7 dias
+    const dailyData = []
+    for (let i = 6; i >= 0; i--) {
+      const dia = new Date()
+      dia.setDate(dia.getDate() - i)
+      const diaStr = dia.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+      
+      const despesasDia = despesas.filter(d => {
+        const dataDespesa = new Date(d.data_despesa + 'T00:00:00')
+        return dataDespesa.toDateString() === dia.toDateString()
+      }).reduce((sum, d) => sum + d.valor, 0)
+      
+      dailyData.push({
+        dia: diaStr,
+        despesas: despesasDia
+      })
+    }
+    setDailyData(dailyData)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    
+    try {
+      if (!userId) return
+
+      const despesaData = {
+        usuario_id: userId,
+        valor: parseFloat(formData.valor),
+        data_despesa: formData.data_despesa,
+        categoria_despesa_id: formData.categoria_id || null,
+        observacoes: formData.observacoes || null
+      }
+
+      if (editingDespesa) {
+        const { error } = await supabase
+          .from('despesas')
+          .update(despesaData)
+          .eq('id', editingDespesa.id)
+
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('despesas')
+          .insert([despesaData])
+
+        if (error) throw error
+      }
+
+      await loadDespesas(userId)
+      
+      setFormData({
+        valor: '',
+        data_despesa: new Date().toISOString().split('T')[0],
+        categoria_id: '',
+        observacoes: ''
+      })
+      setShowForm(false)
+      setEditingDespesa(null)
+    } catch (error) {
+      console.error('Erro ao salvar despesa:', error)
+      alert('Erro ao salvar despesa. Tente novamente.')
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Tem certeza que deseja excluir esta despesa?')) return
+
+    try {
+      const { error } = await supabase
+        .from('despesas')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+
+      // Recarregar dados para atualizar gráficos
+      if (userId) {
+        await loadDespesas(userId)
+      }
+    } catch (error) {
+      console.error('Erro ao excluir despesa:', error)
+      alert('Erro ao excluir despesa. Tente novamente.')
+    }
+  }
+
+  function handleEdit(despesa: Despesa) {
+    setFormData({
+      valor: despesa.valor.toString(),
+      data_despesa: despesa.data_despesa,
+      categoria_id: despesa.categoria_despesa?.id || '',
+      observacoes: despesa.observacoes || ''
+    })
+    setEditingDespesa(despesa)
+    setShowForm(true)
+  }
+
+  function handleCancel() {
+    setFormData({
+      valor: '',
+      data_despesa: new Date().toISOString().split('T')[0],
+      categoria_id: '',
+      observacoes: ''
+    })
+    setShowForm(false)
+    setEditingDespesa(null)
+  }
+
+  const totalDespesas = filteredDespesas.reduce((sum, d) => sum + d.valor, 0)
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            border: '4px solid #374151',
+            borderTop: '4px solid #3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto'
+          }}></div>
+          <p style={{ marginTop: '16px', color: '#d1d5db' }}>Carregando despesas...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#111827' }}>
+      {/* Header */}
+      <div style={{ 
+        backgroundColor: '#1f2937', 
+        borderBottom: '1px solid #374151',
+        padding: '32px 0'
+      }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1 style={{ 
+                fontSize: '30px', 
+                fontWeight: 'bold', 
+                color: '#ffffff',
+                margin: 0
+              }}>
+                Despesas
+              </h1>
+              <p style={{ 
+                color: '#d1d5db', 
+                marginTop: '8px', 
+                fontSize: '18px',
+                margin: 0
+              }}>
+                Gerencie suas despesas
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <Link 
+                href="/dashboard/lavarapido"
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#374151',
+                  color: 'white',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  fontWeight: '500',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#374151'}
+              >
+                ← Voltar
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 32px' }}>
+        {/* Period Selector */}
+        <PeriodSelector onPeriodChange={handlePeriodChange} />
+
+        {/* Create Button */}
+        <div style={{ marginBottom: '32px' }}>
+          <button
+            onClick={() => setShowForm(true)}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#dc2626'
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 6px 12px -1px rgba(0, 0, 0, 0.2)'
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = '#ef4444'
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Criar Despesa
+          </button>
+        </div>
+
+        {/* Form */}
+        {showForm && (
+          <div style={{ 
+            backgroundColor: '#1f2937', 
+            borderRadius: '8px', 
+            padding: '32px',
+            border: '1px solid #374151',
+            marginBottom: '32px'
+          }}>
+            <h2 style={{ 
+              fontSize: '24px', 
+              fontWeight: 'bold', 
+              color: '#ffffff',
+              marginBottom: '24px',
+              margin: '0 0 24px 0'
+            }}>
+              {editingDespesa ? 'Editar Despesa' : 'Nova Despesa'}
+            </h2>
+
+            <form onSubmit={handleSubmit} style={{ 
+              display: 'grid !important', 
+              gridTemplateColumns: '1fr !important', 
+              gap: '24px',
+              width: '100%'
+            }}>
+              <div style={{ minWidth: '0', width: '100%' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  marginBottom: '8px' 
+                }}>
+                  Valor
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="0,00"
+                  value={formData.valor}
+                  onChange={e => setFormData({ ...formData, valor: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '16px'
+                  }}
+                  required
+                />
+              </div>
+
+              <div style={{ minWidth: '0', width: '100%' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  marginBottom: '8px' 
+                }}>
+                  Data
+                </label>
+                <input
+                  type="date"
+                  value={formData.data_despesa}
+                  onChange={e => setFormData({ ...formData, data_despesa: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '16px'
+                  }}
+                  required
+                />
+              </div>
+
+              <div style={{ minWidth: '0', width: '100%' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  marginBottom: '8px' 
+                }}>
+                  Categoria
+                </label>
+                <select
+                  value={formData.categoria_id}
+                  onChange={e => setFormData({ ...formData, categoria_id: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '16px'
+                  }}
+                  required
+                >
+                  <option value="">Selecione uma categoria</option>
+                  {categorias.map((categoria) => (
+                    <option key={categoria.id} value={categoria.id}>
+                      {categoria.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ minWidth: '0', width: '100%' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  marginBottom: '8px' 
+                }}>
+                  Observações (opcional)
+                </label>
+                <textarea
+                  value={formData.observacoes}
+                  onChange={e => setFormData({ ...formData, observacoes: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '16px',
+                    minHeight: '100px',
+                    resize: 'vertical'
+                  }}
+                  placeholder="Observações sobre a despesa..."
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#374151',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#374151'}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#ef4444',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+                >
+                  {editingDespesa ? 'Atualizar' : 'Salvar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Summary Card */}
+        <div style={{ 
+          backgroundColor: '#1f2937', 
+          borderRadius: '8px', 
+          padding: '24px',
+          border: '1px solid #374151',
+          marginBottom: '32px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h3 style={{ 
+                fontSize: '18px', 
+                fontWeight: '600', 
+                color: '#ffffff',
+                margin: '0 0 8px 0'
+              }}>
+                Resumo do Período
+              </h3>
+              <p style={{ 
+                color: '#d1d5db', 
+                fontSize: '14px',
+                margin: 0
+              }}>
+                {filteredDespesas.length} despesas registradas
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ 
+                fontSize: '24px', 
+                fontWeight: 'bold', 
+                color: '#ef4444',
+                margin: 0
+              }}>
+                R$ {totalDespesas.toFixed(2).replace('.', ',')}
+              </p>
+              <p style={{ 
+                color: '#d1d5db', 
+                fontSize: '14px',
+                margin: 0
+              }}>
+                Total de despesas
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Charts Grid */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+          gap: '24px',
+          marginBottom: '32px'
+        }}>
+          {/* Monthly Expenses Chart */}
+          <div style={{ 
+            backgroundColor: '#1f2937', 
+            borderRadius: '8px', 
+            padding: '24px',
+            border: '1px solid #374151'
+          }}>
+            <h3 style={{ 
+              fontSize: '18px', 
+              fontWeight: '600', 
+              color: '#ffffff',
+              margin: '0 0 20px 0'
+            }}>
+              Despesas por Mês
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="mes" stroke="#d1d5db" />
+                <YAxis stroke="#d1d5db" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1f2937', 
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#ffffff'
+                  }}
+                />
+                <Bar dataKey="despesas" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Daily Evolution Chart */}
+          <div style={{ 
+            backgroundColor: '#1f2937', 
+            borderRadius: '8px', 
+            padding: '24px',
+            border: '1px solid #374151'
+          }}>
+            <h3 style={{ 
+              fontSize: '18px', 
+              fontWeight: '600', 
+              color: '#ffffff',
+              margin: '0 0 20px 0'
+            }}>
+              Evolução Diária (Últimos 7 dias)
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={dailyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="dia" stroke="#d1d5db" />
+                <YAxis stroke="#d1d5db" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1f2937', 
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#ffffff'
+                  }}
+                />
+                <Bar dataKey="despesas" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Despesas List */}
+        <div style={{ 
+          backgroundColor: '#1f2937', 
+          borderRadius: '8px',
+          border: '1px solid #374151',
+          overflow: 'hidden'
+        }}>
+          <div style={{ 
+            padding: '24px', 
+            borderBottom: '1px solid #374151', 
+            backgroundColor: '#374151' 
+          }}>
+            <h3 style={{ 
+              fontSize: '20px', 
+              fontWeight: 'bold', 
+              color: '#ffffff',
+              margin: 0
+            }}>
+              Lista de Despesas ({filteredDespesas.length})
+            </h3>
+          </div>
+          
+          <div style={{ padding: '24px' }}>
+            {filteredDespesas.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {filteredDespesas.map((despesa) => (
+                  <div key={despesa.id} style={{ 
+                    padding: '20px', 
+                    backgroundColor: '#374151', 
+                    borderRadius: '8px',
+                    border: '1px solid #4b5563'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+                          <h4 style={{ 
+                            fontSize: '18px', 
+                            fontWeight: '600', 
+                            color: '#ffffff',
+                            margin: 0
+                          }}>
+                            {despesa.categoria_despesa?.nome || 'Sem categoria'}
+                          </h4>
+                        </div>
+                        <p style={{ 
+                          color: '#d1d5db', 
+                          fontSize: '14px',
+                          margin: '8px 0 0 0'
+                        }}>
+                          {new Date(despesa.data_despesa).toLocaleDateString('pt-BR')}
+                        </p>
+                        {despesa.observacoes && (
+                          <p style={{ 
+                            color: '#9ca3af', 
+                            fontSize: '14px',
+                            margin: '8px 0 0 0'
+                          }}>
+                            {despesa.observacoes}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <p style={{ 
+                          fontSize: '20px', 
+                          fontWeight: 'bold', 
+                          color: '#ef4444',
+                          margin: 0
+                        }}>
+                          R$ {despesa.valor.toFixed(2).replace('.', ',')}
+                        </p>
+                        
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => handleEdit(despesa)}
+                            style={{
+                              padding: '8px 12px',
+                              backgroundColor: '#3b82f6',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              transition: 'background-color 0.2s'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDelete(despesa.id)}
+                            style={{
+                              padding: '8px 12px',
+                              backgroundColor: '#ef4444',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              transition: 'background-color 0.2s'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+                <p style={{ 
+                  color: '#9ca3af', 
+                  fontSize: '16px',
+                  margin: '0 0 24px 0'
+                }}>
+                  Nenhuma despesa encontrada no período selecionado
+                </p>
+                <button
+                  onClick={() => setShowForm(true)}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#ef4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+                >
+                  Registrar Primeira Despesa
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+} 
