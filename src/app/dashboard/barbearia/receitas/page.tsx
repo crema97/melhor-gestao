@@ -745,10 +745,11 @@ export default function ReceitasPage() {
                 Total do Período
               </p>
               <p style={{ 
-                fontSize: '24px', 
+                fontSize: '20px', 
                 fontWeight: 'bold', 
                 color: '#10b981',
-                margin: 0
+                margin: 0,
+                whiteSpace: 'nowrap'
               }}>
                 R$ {totalReceitas.toFixed(2).replace('.', ',')}
               </p>

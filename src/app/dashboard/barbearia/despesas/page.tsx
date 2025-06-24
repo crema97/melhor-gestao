@@ -63,13 +63,13 @@ export default function DespesasPage() {
     if (usuarioId) {
       loadDespesas(usuarioId)
     }
-  }, [dateRange, usuarioId])
+  }, [usuarioId])
 
   useEffect(() => {
     if (despesas.length > 0) {
       loadChartData()
     }
-  }, [despesas])
+  }, [filteredDespesas])
 
   useEffect(() => {
     // Aplicar filtro de período quando as despesas mudarem
@@ -153,7 +153,6 @@ export default function DespesasPage() {
   }
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
-    console.log('handlePeriodChange chamado:', startDate, endDate)
     setDateRange({ startDate, endDate })
   }
 
@@ -643,10 +642,11 @@ export default function DespesasPage() {
                 Total do Período
               </p>
               <p style={{ 
-                fontSize: '24px', 
+                fontSize: '20px', 
                 fontWeight: 'bold', 
                 color: '#ef4444',
-                margin: 0
+                margin: 0,
+                whiteSpace: 'nowrap'
               }}>
                 R$ {filteredDespesas.reduce((sum, d) => sum + d.valor, 0).toFixed(2).replace('.', ',')}
               </p>
