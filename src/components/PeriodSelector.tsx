@@ -72,10 +72,12 @@ export default function PeriodSelector({ onPeriodChange, initialPeriod = 'month'
   }
 
   const getCurrentRangeText = () => {
-    const { startDate, endDate } = getDateRange(selectedPeriod)
-    if (selectedPeriod === 'custom') {
+    if (selectedPeriod === 'custom' && customStartDate && customEndDate) {
+      const startDate = new Date(customStartDate)
+      const endDate = new Date(customEndDate)
       return `${formatDate(startDate)} - ${formatDate(endDate)}`
     }
+    const { startDate, endDate } = getDateRange(selectedPeriod)
     return `${formatDate(startDate)} - ${formatDate(endDate)}`
   }
 
