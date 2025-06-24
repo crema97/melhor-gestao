@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { useRouter } from 'next/navigation'
 import AdminProtected from '@/components/AdminProtected'
 
 interface TipoNegocio {
@@ -34,6 +35,8 @@ export default function AdminDashboard() {
   const [carregando, setCarregando] = useState(false)
   const [loading, setLoading] = useState(true)
   const [deletando, setDeletando] = useState<string | null>(null)
+
+  const router = useRouter()
 
   useEffect(() => {
     fetchTipos()
@@ -89,38 +92,29 @@ export default function AdminDashboard() {
   }
 
   async function handleDeleteUser(email: string, nome: string) {
-    if (!confirm(`Tem certeza que deseja excluir o cliente "${nome}"? Esta ação não pode ser desfeita.`)) {
-      return
-    }
+    if (!confirm(`Tem certeza que deseja excluir o usuário "${nome}"?`)) return
 
     setDeletando(email)
-
     try {
-      const response = await fetch('/api/delete-user', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email })
-      })
+      const { error } = await supabase
+        .from('usuarios')
+        .delete()
+        .eq('email', email)
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        alert('Erro ao deletar usuário: ' + result.error)
-        setDeletando(null)
-        return
-      }
+      if (error) throw error
 
       await fetchUsuarios()
-      setDeletando(null)
-      alert('Cliente excluído com sucesso!')
-
     } catch (error) {
-      console.error('Erro ao deletar usuário:', error)
-      alert('Erro inesperado ao deletar usuário')
+      console.error('Erro ao excluir usuário:', error)
+      alert('Erro ao excluir usuário')
+    } finally {
       setDeletando(null)
     }
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push('/')
   }
 
   function formatarData(data: string | undefined) {
@@ -212,14 +206,33 @@ export default function AdminDashboard() {
                   Gerenciamento de clientes e mensalidades
                 </p>
               </div>
-              <div style={{ 
-                padding: '12px 24px',
-                backgroundColor: '#8b5cf6',
-                color: 'white',
-                borderRadius: '8px',
-                fontWeight: '500'
-              }}>
-                {usuarios.length} Clientes
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ 
+                  padding: '12px 24px',
+                  backgroundColor: '#8b5cf6',
+                  color: 'white',
+                  borderRadius: '8px',
+                  fontWeight: '500'
+                }}>
+                  {usuarios.length} Clientes
+                </div>
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#dc2626',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                >
+                  Sair
+                </button>
               </div>
             </div>
           </div>
