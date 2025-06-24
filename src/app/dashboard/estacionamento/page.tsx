@@ -4,20 +4,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts'
 import PeriodSelector from '@/components/PeriodSelector'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
 
 interface Receita {
   id: string
@@ -54,27 +42,30 @@ interface DailyData {
   lucro: number
 }
 
-interface PaymentData {
-  name: string
-  value: number
-  color: string
-}
-
 export default function EstacionamentoDashboard() {
   const [receitas, setReceitas] = useState<Receita[]>([])
+  const [filteredReceitas, setFilteredReceitas] = useState<Receita[]>([])
   const [despesas, setDespesas] = useState<Despesa[]>([])
+  const [filteredDespesas, setFilteredDespesas] = useState<Despesa[]>([])
   const [loading, setLoading] = useState(true)
-  const [userId, setUserId] = useState<string | null>(null)
-  const [dateRange, setDateRange] = useState(() => {
-    const now = new Date()
-    return {
-      startDate: new Date(now.getFullYear(), now.getMonth(), 1),
-      endDate: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-    }
-  })
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [dailyData, setDailyData] = useState<DailyData[]>([])
-  const [paymentData, setPaymentData] = useState<PaymentData[]>([])
+  const [usuarioId, setUsuarioId] = useState<string>('')
+  const [stats, setStats] = useState({
+    receitasMes: 0,
+    despesasMes: 0,
+    lucro: 0,
+    pagamentos: {
+      dinheiro: 0,
+      debito: 0,
+      credito: 0,
+      pix: 0
+    }
+  })
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
+  })
   const router = useRouter()
 
   useEffect(() => {
@@ -82,10 +73,58 @@ export default function EstacionamentoDashboard() {
   }, [])
 
   useEffect(() => {
-    if (userId) {
-      loadDashboardData(userId)
+    if (usuarioId) {
+      loadDashboardData(usuarioId)
     }
-  }, [userId, dateRange])
+  }, [usuarioId])
+
+  useEffect(() => {
+    if (receitas.length > 0 || despesas.length > 0) {
+      loadChartData()
+    }
+  }, [receitas, despesas])
+
+  useEffect(() => {
+    // Aplicar filtro de período quando as receitas e despesas mudarem
+    const filteredReceitasData = receitas.filter(receita => {
+      const receitaDate = new Date(receita.data_receita + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return receitaDate >= start && receitaDate <= end
+    })
+    setFilteredReceitas(filteredReceitasData)
+
+    const filteredDespesasData = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
+    })
+    setFilteredDespesas(filteredDespesasData)
+
+    // Atualizar stats
+    const receitasMes = filteredReceitasData.reduce((sum, r) => sum + r.valor, 0)
+    const despesasMes = filteredDespesasData.reduce((sum, d) => sum + d.valor, 0)
+    const lucro = receitasMes - despesasMes
+
+    const pagamentos = {
+      dinheiro: 0,
+      debito: 0,
+      credito: 0,
+      pix: 0
+    }
+
+    filteredReceitasData.forEach(receita => {
+      pagamentos[receita.forma_pagamento as keyof typeof pagamentos] += receita.valor
+    })
+
+    setStats({
+      receitasMes,
+      despesasMes,
+      lucro,
+      pagamentos
+    })
+  }, [receitas, despesas, dateRange])
 
   async function checkUserAndLoadData() {
     try {
@@ -96,7 +135,6 @@ export default function EstacionamentoDashboard() {
         return
       }
 
-      // Buscar dados do usuário
       const { data: usuario } = await supabase
         .from('usuarios')
         .select('*')
@@ -108,7 +146,7 @@ export default function EstacionamentoDashboard() {
         return
       }
 
-      setUserId(usuario.id)
+      setUsuarioId(usuario.id)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
       router.push('/login')
@@ -119,7 +157,6 @@ export default function EstacionamentoDashboard() {
     try {
       setLoading(true)
 
-      // Buscar receitas do período
       const { data: receitasData } = await supabase
         .from('receitas')
         .select(`
@@ -131,11 +168,8 @@ export default function EstacionamentoDashboard() {
           categoria_receita:categorias_receita(nome)
         `)
         .eq('usuario_id', usuarioId)
-        .gte('data_receita', dateRange.startDate.toISOString().split('T')[0])
-        .lte('data_receita', dateRange.endDate.toISOString().split('T')[0])
         .order('data_receita', { ascending: false })
 
-      // Buscar despesas do período
       const { data: despesasData } = await supabase
         .from('despesas')
         .select(`
@@ -146,21 +180,82 @@ export default function EstacionamentoDashboard() {
           categoria_despesa:categorias_despesa(nome)
         `)
         .eq('usuario_id', usuarioId)
-        .gte('data_despesa', dateRange.startDate.toISOString().split('T')[0])
-        .lte('data_despesa', dateRange.endDate.toISOString().split('T')[0])
         .order('data_despesa', { ascending: false })
 
       setReceitas((receitasData as unknown as Receita[]) || [])
       setDespesas((despesasData as unknown as Despesa[]) || [])
-
-      loadChartData()
-      loadPaymentData(receitasData || [])
 
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
     } finally {
       setLoading(false)
     }
+  }
+
+  function loadChartData() {
+    if (receitas.length === 0 && despesas.length === 0) {
+      setMonthlyData([])
+      setDailyData([])
+      return
+    }
+
+    // Dados mensais dos últimos 6 meses
+    const monthlyDataArray: MonthlyData[] = []
+    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date()
+      date.setMonth(date.getMonth() - i)
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      
+      const monthReceitas = receitas.filter(r => r.data_receita.startsWith(monthKey))
+        .reduce((sum, r) => sum + r.valor, 0)
+      
+      const monthDespesas = despesas.filter(d => d.data_despesa.startsWith(monthKey))
+        .reduce((sum, d) => sum + d.valor, 0)
+      
+      monthlyDataArray.push({
+        mes: months[date.getMonth()],
+        receitas: monthReceitas,
+        despesas: monthDespesas,
+        lucro: monthReceitas - monthDespesas
+      })
+    }
+    
+    setMonthlyData(monthlyDataArray)
+
+    // Dados diários dos últimos 7 dias
+    const dailyDataArray: DailyData[] = []
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date()
+      date.setDate(date.getDate() - i)
+      const dateKey = date.toISOString().split('T')[0]
+      
+      const dayReceitas = receitas.filter(r => r.data_receita === dateKey)
+        .reduce((sum, r) => sum + r.valor, 0)
+      
+      const dayDespesas = despesas.filter(d => d.data_despesa === dateKey)
+        .reduce((sum, d) => sum + d.valor, 0)
+      
+      dailyDataArray.push({
+        dia: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+        receitas: dayReceitas,
+        despesas: dayDespesas,
+        lucro: dayReceitas - dayDespesas
+      })
+    }
+    
+    setDailyData(dailyDataArray)
+  }
+
+  function getPaymentMethodsData() {
+    const { pagamentos } = stats
+    return [
+      { name: 'Dinheiro', value: pagamentos.dinheiro, color: '#10B981' },
+      { name: 'Débito', value: pagamentos.debito, color: '#3B82F6' },
+      { name: 'Crédito', value: pagamentos.credito, color: '#8B5CF6' },
+      { name: 'PIX', value: pagamentos.pix, color: '#F59E0B' }
+    ].filter(item => item.value > 0)
   }
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
@@ -176,103 +271,28 @@ export default function EstacionamentoDashboard() {
     }
   }
 
-  function loadChartData() {
-    // Dados mensais (últimos 6 meses)
-    const monthlyData = []
-    const hoje = new Date()
-    
-    for (let i = 5; i >= 0; i--) {
-      const mes = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1)
-      const mesStr = mes.toLocaleDateString('pt-BR', { month: 'short' })
-      
-      const receitasMes = receitas.filter(r => {
-        const dataReceita = new Date(r.data_receita + 'T00:00:00')
-        return dataReceita.getMonth() === mes.getMonth() && dataReceita.getFullYear() === mes.getFullYear()
-      }).reduce((sum, r) => sum + r.valor, 0)
-      
-      const despesasMes = despesas.filter(d => {
-        const dataDespesa = new Date(d.data_despesa + 'T00:00:00')
-        return dataDespesa.getMonth() === mes.getMonth() && dataDespesa.getFullYear() === mes.getFullYear()
-      }).reduce((sum, d) => sum + d.valor, 0)
-      
-      monthlyData.push({
-        mes: mesStr,
-        receitas: receitasMes,
-        despesas: despesasMes,
-        lucro: receitasMes - despesasMes
-      })
-    }
-    
-    setMonthlyData(monthlyData)
-
-    // Dados diários (últimos 7 dias)
-    const dailyData = []
-    for (let i = 6; i >= 0; i--) {
-      const dia = new Date()
-      dia.setDate(dia.getDate() - i)
-      const diaStr = dia.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-      
-      const receitasDia = receitas.filter(r => {
-        const dataReceita = new Date(r.data_receita + 'T00:00:00')
-        return dataReceita.toDateString() === dia.toDateString()
-      }).reduce((sum, r) => sum + r.valor, 0)
-      
-      const despesasDia = despesas.filter(d => {
-        const dataDespesa = new Date(d.data_despesa + 'T00:00:00')
-        return dataDespesa.toDateString() === dia.toDateString()
-      }).reduce((sum, d) => sum + d.valor, 0)
-      
-      dailyData.push({
-        dia: diaStr,
-        receitas: receitasDia,
-        despesas: despesasDia,
-        lucro: receitasDia - despesasDia
-      })
-    }
-    
-    setDailyData(dailyData)
-  }
-
-  function loadPaymentData(receitasData: any[]) {
-    const pagamentos = {
-      dinheiro: 0,
-      debito: 0,
-      credito: 0,
-      pix: 0
-    }
-
-    receitasData.forEach(receita => {
-      pagamentos[receita.forma_pagamento as keyof typeof pagamentos] += receita.valor
-    })
-
-    const paymentData = [
-      { name: 'Dinheiro', value: pagamentos.dinheiro, color: '#10b981' },
-      { name: 'Débito', value: pagamentos.debito, color: '#3b82f6' },
-      { name: 'Crédito', value: pagamentos.credito, color: '#8b5cf6' },
-      { name: 'PIX', value: pagamentos.pix, color: '#f59e0b' }
-    ].filter(item => item.value > 0)
-
-    setPaymentData(paymentData)
-  }
-
-  const totalReceitas = receitas.reduce((sum, r) => sum + r.valor, 0)
-  const totalDespesas = despesas.reduce((sum, d) => sum + d.valor, 0)
-  const lucro = totalReceitas - totalDespesas
-
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#1f2937', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{
-            width: '48px',
-            height: '48px',
-            border: '4px solid #374151',
-            borderTop: '4px solid #3b82f6',
+            width: '64px',
+            height: '64px',
+            border: '4px solid #8b5cf6',
+            borderTop: '4px solid transparent',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
             margin: '0 auto'
           }}></div>
-          <p style={{ marginTop: '16px', color: '#d1d5db' }}>Carregando dashboard...</p>
+          <p style={{ marginTop: '24px', color: '#e5e7eb', fontSize: '18px', fontWeight: '500' }}>
+            Carregando dashboard...
+          </p>
         </div>
       </div>
     )
@@ -284,13 +304,13 @@ export default function EstacionamentoDashboard() {
       <div style={{ 
         backgroundColor: '#1f2937', 
         borderBottom: '1px solid #374151',
-        padding: '32px 0'
+        padding: '24px 0'
       }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <h1 style={{ 
-                fontSize: '30px', 
+                fontSize: '24px', 
                 fontWeight: 'bold', 
                 color: '#ffffff',
                 margin: 0
@@ -299,24 +319,26 @@ export default function EstacionamentoDashboard() {
               </h1>
               <p style={{ 
                 color: '#d1d5db', 
-                marginTop: '8px', 
-                fontSize: '18px',
+                marginTop: '4px', 
+                fontSize: '16px',
                 margin: 0
               }}>
                 Resumo geral do seu negócio
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <Link 
                 href="/dashboard/estacionamento/receitas"
                 style={{
-                  padding: '12px 24px',
+                  padding: '10px 20px',
                   backgroundColor: '#2563eb',
                   color: 'white',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   textDecoration: 'none',
                   fontWeight: '500',
-                  transition: 'background-color 0.2s'
+                  transition: 'background-color 0.2s',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
@@ -326,13 +348,15 @@ export default function EstacionamentoDashboard() {
               <Link 
                 href="/dashboard/estacionamento/despesas"
                 style={{
-                  padding: '12px 24px',
+                  padding: '10px 20px',
                   backgroundColor: '#dc2626',
                   color: 'white',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   textDecoration: 'none',
                   fontWeight: '500',
-                  transition: 'background-color 0.2s'
+                  transition: 'background-color 0.2s',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
@@ -342,13 +366,15 @@ export default function EstacionamentoDashboard() {
               <Link
                 href="/dashboard/estacionamento/anotacoes"
                 style={{
-                  padding: '12px 24px',
+                  padding: '10px 20px',
                   backgroundColor: '#ca8a04',
                   color: 'white',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   textDecoration: 'none',
                   fontWeight: '500',
-                  transition: 'background-color 0.2s'
+                  transition: 'background-color 0.2s',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#a16207'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ca8a04'}
@@ -358,22 +384,24 @@ export default function EstacionamentoDashboard() {
               <button
                 onClick={handleLogout}
                 style={{
-                  padding: '12px 24px',
+                  padding: '10px 20px',
                   backgroundColor: '#6b7280',
                   color: 'white',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   border: 'none',
                   fontWeight: '500',
                   cursor: 'pointer',
                   transition: 'background-color 0.2s',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '6px',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
               >
-                <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
                 Sair
@@ -384,113 +412,113 @@ export default function EstacionamentoDashboard() {
       </div>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 16px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
         {/* Period Selector */}
         <PeriodSelector onPeriodChange={handlePeriodChange} />
 
         {/* Stats Cards */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '32px', 
-          marginBottom: '48px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+          gap: '20px', 
+          marginBottom: '32px' 
         }}>
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div style={{ 
-                padding: '16px', 
-              backgroundColor: '#10b981', 
-                borderRadius: '8px',
-                marginRight: '24px'
+              <div style={{ 
+                padding: '12px', 
+                backgroundColor: '#10b981', 
+                borderRadius: '6px',
+                marginRight: '16px'
               }}>
-                <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                </div>
-                <div>
-                <p style={{ color: '#d1d5db', fontSize: '18px', fontWeight: '500', margin: 0 }}>
+                <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+              </div>
+              <div>
+                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0, whiteSpace: 'nowrap' }}>
                   Receitas do Período
                 </p>
                 <p style={{ 
-                  fontSize: '30px', 
+                  fontSize: '24px', 
                   fontWeight: 'bold', 
                   color: '#ffffff',
                   margin: 0
                 }}>
-                    R$ {totalReceitas.toFixed(2).replace('.', ',')}
-                  </p>
-                </div>
+                  R$ {stats.receitasMes.toFixed(2).replace('.', ',')}
+                </p>
+              </div>
             </div>
           </div>
 
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div style={{ 
-                padding: '16px', 
-              backgroundColor: '#ef4444', 
-                borderRadius: '8px',
-                marginRight: '24px'
+              <div style={{ 
+                padding: '12px', 
+                backgroundColor: '#ef4444', 
+                borderRadius: '6px',
+                marginRight: '16px'
               }}>
-                <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <div>
-                <p style={{ color: '#d1d5db', fontSize: '18px', fontWeight: '500', margin: 0 }}>
+                <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div>
+                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0, whiteSpace: 'nowrap' }}>
                   Despesas do Período
                 </p>
                 <p style={{ 
-                  fontSize: '30px', 
+                  fontSize: '24px', 
                   fontWeight: 'bold', 
                   color: '#ffffff',
                   margin: 0
                 }}>
-                    R$ {totalDespesas.toFixed(2).replace('.', ',')}
-                  </p>
-                </div>
+                  R$ {stats.despesasMes.toFixed(2).replace('.', ',')}
+                </p>
+              </div>
             </div>
           </div>
 
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div style={{ 
-                padding: '16px', 
+              <div style={{ 
+                padding: '12px', 
                 backgroundColor: '#3b82f6', 
-                borderRadius: '8px',
-                marginRight: '24px'
+                borderRadius: '6px',
+                marginRight: '16px'
               }}>
-                <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div>
-                <p style={{ color: '#d1d5db', fontSize: '18px', fontWeight: '500', margin: 0 }}>
+                <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div>
+                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0, whiteSpace: 'nowrap' }}>
                   Lucro do Período
                 </p>
-                  <p style={{ 
-                  fontSize: '30px', 
-                    fontWeight: 'bold', 
-                  color: lucro >= 0 ? '#4ade80' : '#f87171',
-                    margin: 0 
-                  }}>
-                    R$ {lucro.toFixed(2).replace('.', ',')}
-                  </p>
-                </div>
+                <p style={{ 
+                  fontSize: '24px', 
+                  fontWeight: 'bold', 
+                  color: stats.lucro >= 0 ? '#4ade80' : '#f87171',
+                  margin: 0
+                }}>
+                  R$ {stats.lucro.toFixed(2).replace('.', ',')}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -498,27 +526,26 @@ export default function EstacionamentoDashboard() {
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', 
-          gap: '32px', 
-          marginBottom: '48px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+          gap: '24px', 
+          marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '18px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 20px 0'
             }}>
               Evolução Mensal (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="mes" stroke="#d1d5db" />
@@ -544,19 +571,18 @@ export default function EstacionamentoDashboard() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '18px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 20px 0'
             }}>
               Evolução Diária (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="dia" stroke="#d1d5db" />
@@ -580,83 +606,83 @@ export default function EstacionamentoDashboard() {
         </div>
 
         {/* Payment Methods */}
-            <div style={{ 
-              backgroundColor: '#1f2937', 
-              borderRadius: '8px', 
-              padding: '32px',
+        <div style={{ 
+          backgroundColor: '#1f2937', 
+          borderRadius: '8px', 
+          padding: '24px',
           border: '1px solid #374151',
-          marginBottom: '48px'
-            }}>
-              <h3 style={{ 
-            fontSize: '24px', 
-                fontWeight: 'bold', 
-                color: '#ffffff',
-                marginBottom: '24px',
-                margin: '0 0 24px 0'
-              }}>
-                Formas de Pagamento
-              </h3>
+          marginBottom: '32px'
+        }}>
+          <h3 style={{ 
+            fontSize: '20px', 
+            fontWeight: 'bold', 
+            color: '#ffffff',
+            margin: '0 0 20px 0'
+          }}>
+            Formas de Pagamento
+          </h3>
           
-          {paymentData.length > 0 ? (
+          {getPaymentMethodsData().length > 0 ? (
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: '1fr 1fr', 
-              gap: '32px',
+              gap: '24px',
               alignItems: 'center'
             }}>
               {/* Pie Chart */}
-              <div style={{ height: '300px' }}>
+              <div style={{ height: '250px' }}>
                 <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={paymentData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {paymentData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: '#1f2937',
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#ffffff'
-                    }}
-                    formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+                  <PieChart>
+                    <Pie
+                      data={getPaymentMethodsData()}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={70}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {getPaymentMethodsData().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#1f2937',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#ffffff'
+                      }}
+                      itemStyle={{ color: '#ffffff' }}
+                      formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
-            {/* Payment Methods List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {paymentData.map((item) => (
+              {/* Payment Methods List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {getPaymentMethodsData().map((item) => (
                   <div key={item.name} style={{ 
                     display: 'flex', 
-                    alignItems: 'center',
+                    alignItems: 'center', 
                     justifyContent: 'space-between',
-                    padding: '16px',
-                    backgroundColor: '#374151',
-                    borderRadius: '8px',
-                    border: `2px solid ${item.color}`
+                    padding: '12px', 
+                    backgroundColor: '#374151', 
+                    borderRadius: '6px',
+                    border: `1px solid ${item.color}`
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{
-                        width: '16px',
-                        height: '16px',
+                        width: '12px',
+                        height: '12px',
                         backgroundColor: item.color,
                         borderRadius: '50%'
                       }}></div>
                       <span style={{ 
                         color: '#ffffff', 
-                        fontSize: '16px', 
+                        fontSize: '14px', 
                         fontWeight: '600' 
                       }}>
                         {item.name}
@@ -664,7 +690,7 @@ export default function EstacionamentoDashboard() {
                     </div>
                     <span style={{ 
                       color: item.color, 
-                      fontSize: '18px', 
+                      fontSize: '16px', 
                       fontWeight: 'bold' 
                     }}>
                       R$ {item.value.toFixed(2).replace('.', ',')}
@@ -692,15 +718,15 @@ export default function EstacionamentoDashboard() {
               <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
                 Nenhum pagamento registrado no período
               </p>
-          </div>
-        )}
+            </div>
+          )}
         </div>
 
         {/* Recent Transactions */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', 
-          gap: '32px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '20px' 
         }}>
           {/* Recent Receitas */}
           <div style={{ 
@@ -710,24 +736,24 @@ export default function EstacionamentoDashboard() {
             overflow: 'hidden'
           }}>
             <div style={{ 
-              padding: '24px', 
+              padding: '20px', 
               borderBottom: '1px solid #374151', 
               backgroundColor: '#374151' 
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ 
-                  fontSize: '20px', 
-                fontWeight: 'bold', 
-                color: '#ffffff',
-                margin: 0
-              }}>
+                <h3 style={{ 
+                  fontSize: '18px', 
+                  fontWeight: 'bold', 
+                  color: '#ffffff',
+                  margin: 0
+                }}>
                   Últimas Receitas
-              </h3>
+                </h3>
                 <Link 
                   href="/dashboard/estacionamento/receitas" 
                   style={{ 
                     color: '#4ade80', 
-                    fontSize: '14px', 
+                    fontSize: '13px', 
                     fontWeight: '500',
                     textDecoration: 'none'
                   }}
@@ -736,29 +762,31 @@ export default function EstacionamentoDashboard() {
                 </Link>
               </div>
             </div>
-            <div style={{ padding: '24px' }}>
-              {receitas.slice(0, 5).length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {receitas.slice(0, 5).map((receita) => (
+            <div style={{ padding: '20px' }}>
+              {filteredReceitas.slice(0, 5).length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {filteredReceitas.slice(0, 5).map((receita) => (
                     <div key={receita.id} style={{ 
                       display: 'flex', 
                       justifyContent: 'space-between', 
                       alignItems: 'center', 
-                      padding: '16px', 
+                      padding: '12px', 
                       backgroundColor: '#374151', 
-                      borderRadius: '8px' 
+                      borderRadius: '6px',
+                      border: '1px solid #4b5563'
                     }}>
                       <div>
                         <p style={{ 
                           fontWeight: '600', 
                           color: '#ffffff',
-                          margin: '0 0 4px 0'
+                          margin: '0 0 3px 0',
+                          fontSize: '14px'
                         }}>
                           {receita.categoria_receita?.nome}
                         </p>
                         <p style={{ 
                           color: '#d1d5db', 
-                          fontSize: '14px',
+                          fontSize: '12px',
                           margin: 0
                         }}>
                           {new Date(receita.data_receita).toLocaleDateString('pt-BR')} • {receita.forma_pagamento}
@@ -767,7 +795,7 @@ export default function EstacionamentoDashboard() {
                       <p style={{ 
                         fontWeight: 'bold', 
                         color: '#4ade80', 
-                        fontSize: '20px',
+                        fontSize: '16px',
                         margin: 0
                       }}>
                         R$ {receita.valor.toFixed(2).replace('.', ',')}
@@ -807,24 +835,24 @@ export default function EstacionamentoDashboard() {
             overflow: 'hidden'
           }}>
             <div style={{ 
-              padding: '24px', 
+              padding: '20px', 
               borderBottom: '1px solid #374151', 
               backgroundColor: '#374151' 
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ 
-                  fontSize: '20px', 
-                fontWeight: 'bold', 
-                color: '#ffffff',
-                margin: 0
-              }}>
+                <h3 style={{ 
+                  fontSize: '18px', 
+                  fontWeight: 'bold', 
+                  color: '#ffffff',
+                  margin: 0
+                }}>
                   Últimas Despesas
-              </h3>
+                </h3>
                 <Link 
                   href="/dashboard/estacionamento/despesas" 
                   style={{ 
                     color: '#f87171', 
-                    fontSize: '14px', 
+                    fontSize: '13px', 
                     fontWeight: '500',
                     textDecoration: 'none'
                   }}
@@ -833,29 +861,31 @@ export default function EstacionamentoDashboard() {
                 </Link>
               </div>
             </div>
-            <div style={{ padding: '24px' }}>
-              {despesas.slice(0, 5).length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {despesas.slice(0, 5).map((despesa) => (
+            <div style={{ padding: '20px' }}>
+              {filteredDespesas.slice(0, 5).length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {filteredDespesas.slice(0, 5).map((despesa) => (
                     <div key={despesa.id} style={{ 
                       display: 'flex', 
                       justifyContent: 'space-between', 
                       alignItems: 'center', 
-                      padding: '16px', 
+                      padding: '12px', 
                       backgroundColor: '#374151', 
-                      borderRadius: '8px' 
+                      borderRadius: '6px',
+                      border: '1px solid #4b5563'
                     }}>
                       <div>
                         <p style={{ 
                           fontWeight: '600', 
                           color: '#ffffff',
-                          margin: '0 0 4px 0'
+                          margin: '0 0 3px 0',
+                          fontSize: '14px'
                         }}>
                           {despesa.categoria_despesa?.nome}
                         </p>
                         <p style={{ 
                           color: '#d1d5db', 
-                          fontSize: '14px',
+                          fontSize: '12px',
                           margin: 0
                         }}>
                           {new Date(despesa.data_despesa).toLocaleDateString('pt-BR')}
@@ -864,7 +894,7 @@ export default function EstacionamentoDashboard() {
                       <p style={{ 
                         fontWeight: 'bold', 
                         color: '#f87171', 
-                        fontSize: '20px',
+                        fontSize: '16px',
                         margin: 0
                       }}>
                         R$ {despesa.valor.toFixed(2).replace('.', ',')}
