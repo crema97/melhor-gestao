@@ -60,9 +60,12 @@ export default function EsteticaDashboard() {
       pix: 0
     }
   })
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
+  const [dateRange, setDateRange] = useState(() => {
+    const now = new Date()
+    return {
+      startDate: new Date(now.getFullYear(), now.getMonth(), 1),
+      endDate: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+    }
   })
   const router = useRouter()
 
@@ -394,40 +397,40 @@ export default function EsteticaDashboard() {
       </div>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 16px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
         {/* Period Selector */}
         <PeriodSelector onPeriodChange={handlePeriodChange} />
 
         {/* Stats Cards */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '32px', 
-          marginBottom: '48px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+          gap: '20px', 
+          marginBottom: '32px' 
         }}>
-          <div style={{
+          <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <div style={{ 
-                padding: '16px', 
+                padding: '12px', 
                 backgroundColor: '#10b981', 
                 borderRadius: '8px',
-                marginRight: '24px'
+                marginRight: '16px'
               }}>
-                <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
               <div>
-                <p style={{ color: '#d1d5db', fontSize: '18px', fontWeight: '500', margin: 0 }}>
+                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
                   Receitas do Período
                 </p>
                 <p style={{ 
-                  fontSize: '30px', 
+                  fontSize: '24px', 
                   fontWeight: 'bold', 
                   color: '#ffffff',
                   margin: 0
@@ -438,29 +441,29 @@ export default function EsteticaDashboard() {
             </div>
           </div>
 
-          <div style={{
+          <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <div style={{ 
-                padding: '16px', 
+                padding: '12px', 
                 backgroundColor: '#ef4444', 
                 borderRadius: '8px',
-                marginRight: '24px'
+                marginRight: '16px'
               }}>
-                <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
               <div>
-                <p style={{ color: '#d1d5db', fontSize: '18px', fontWeight: '500', margin: 0 }}>
+                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
                   Despesas do Período
                 </p>
                 <p style={{ 
-                  fontSize: '30px', 
+                  fontSize: '24px', 
                   fontWeight: 'bold', 
                   color: '#ffffff',
                   margin: 0
@@ -471,31 +474,31 @@ export default function EsteticaDashboard() {
             </div>
           </div>
 
-          <div style={{
+          <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <div style={{ 
-                padding: '16px', 
+                padding: '12px', 
                 backgroundColor: '#3b82f6', 
                 borderRadius: '8px',
-                marginRight: '24px'
+                marginRight: '16px'
               }}>
-                <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
               <div>
-                <p style={{ color: '#d1d5db', fontSize: '18px', fontWeight: '500', margin: 0 }}>
+                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
                   Lucro do Período
                 </p>
                 <p style={{ 
-                  fontSize: '30px', 
+                  fontSize: '24px', 
                   fontWeight: 'bold', 
-                  color: stats.lucro >= 0 ? '#4ade80' : '#f87171',
+                  color: '#ffffff',
                   margin: 0
                 }}>
                   R$ {stats.lucro.toFixed(2).replace('.', ',')}
@@ -508,41 +511,41 @@ export default function EsteticaDashboard() {
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', 
-          gap: '32px', 
-          marginBottom: '48px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '20px', 
+          marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}
-          <div style={{
+          <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '20px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 16px 0'
             }}>
               Evolução Mensal (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="mes" stroke="#d1d5db" />
-                <YAxis stroke="#d1d5db" />
+                <XAxis dataKey="mes" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
-                  contentStyle={{ 
+                  contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend />
+                <Legend fontSize={12} />
                 <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
                 <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />
                 <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />
@@ -551,36 +554,36 @@ export default function EsteticaDashboard() {
           </div>
 
           {/* Daily Chart */}
-          <div style={{
+          <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '20px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 16px 0'
             }}>
               Evolução Diária (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="dia" stroke="#d1d5db" />
-                <YAxis stroke="#d1d5db" />
+                <XAxis dataKey="dia" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
-                  contentStyle={{ 
+                  contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend />
+                <Legend fontSize={12} />
                 <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
                 <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />
                 <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />
@@ -590,83 +593,83 @@ export default function EsteticaDashboard() {
         </div>
 
         {/* Payment Methods */}
-          <div style={{
+        <div style={{ 
           backgroundColor: '#1f2937', 
           borderRadius: '8px', 
-          padding: '32px',
-            border: '1px solid #374151',
-          marginBottom: '48px'
-          }}>
+          padding: '20px',
+          border: '1px solid #374151',
+          marginBottom: '32px'
+        }}>
           <h3 style={{ 
-            fontSize: '24px', 
+            fontSize: '18px', 
             fontWeight: 'bold', 
             color: '#ffffff',
-            marginBottom: '24px',
-            margin: '0 0 24px 0'
+            margin: '0 0 16px 0'
           }}>
-              Formas de Pagamento
-            </h3>
+            Formas de Pagamento
+          </h3>
           
           {getPaymentMethodsData().length > 0 ? (
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: '1fr 1fr', 
-              gap: '32px',
-              alignItems: 'center'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+              gap: '24px',
+              alignItems: 'start'
             }}>
               {/* Pie Chart */}
-              <div style={{ height: '300px' }}>
+              <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={getPaymentMethodsData()}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {getPaymentMethodsData().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
+                  <PieChart>
+                    <Pie
+                      data={getPaymentMethodsData()}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={60}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {getPaymentMethodsData().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{
                         backgroundColor: '#1f2937',
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    color: '#ffffff'
-                  }}
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#ffffff',
+                        fontSize: '12px'
+                      }}
                       formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
 
               {/* Payment Methods List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {getPaymentMethodsData().map((item) => (
                   <div key={item.name} style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between',
-                    padding: '16px', 
+                    padding: '12px', 
                     backgroundColor: '#374151', 
                     borderRadius: '8px',
                     border: `2px solid ${item.color}`
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{
-                        width: '16px',
-                        height: '16px',
+                        width: '12px',
+                        height: '12px',
                         backgroundColor: item.color,
                         borderRadius: '50%'
                       }}></div>
                       <span style={{ 
                         color: '#ffffff', 
-                        fontSize: '16px', 
+                        fontSize: '14px', 
                         fontWeight: '600' 
                       }}>
                         {item.name}
@@ -674,7 +677,7 @@ export default function EsteticaDashboard() {
                     </div>
                     <span style={{ 
                       color: item.color, 
-                      fontSize: '18px', 
+                      fontSize: '16px', 
                       fontWeight: 'bold' 
                     }}>
                       R$ {item.value.toFixed(2).replace('.', ',')}
@@ -684,23 +687,26 @@ export default function EsteticaDashboard() {
               </div>
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '48px 0' }}>
+            <div style={{ textAlign: 'center', padding: '32px 0' }}>
               <div style={{
-                width: '64px',
-                height: '64px',
+                width: '48px',
+                height: '48px',
                 backgroundColor: '#6b7280',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                margin: '0 auto 16px auto'
+                margin: '0 auto 12px auto'
               }}>
-                <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
-              <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
-                Nenhum pagamento registrado no período
+              <p style={{ color: '#d1d5db', fontSize: '14px', margin: 0 }}>
+                Nenhuma receita registrada
+              </p>
+              <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
+                Adicione receitas para ver as formas de pagamento
               </p>
             </div>
           )}
@@ -901,8 +907,8 @@ export default function EsteticaDashboard() {
                   <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
                     Nenhuma despesa registrada no período
                   </p>
-          </div>
-        )}
+                </div>
+              )}
             </div>
           </div>
         </div>

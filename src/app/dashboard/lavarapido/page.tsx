@@ -60,9 +60,12 @@ export default function LavaRapidoDashboard() {
       pix: 0
     }
   })
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
+  const [dateRange, setDateRange] = useState(() => {
+    const now = new Date()
+    return {
+      startDate: new Date(now.getFullYear(), now.getMonth(), 1),
+      endDate: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+    }
   })
   const router = useRouter()
 
