@@ -59,19 +59,19 @@ export default function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px'
+      padding: '16px'
     }}>
       <div style={{ 
         backgroundColor: '#1f2937', 
         borderRadius: '12px',
-        padding: '48px',
+        padding: '32px 24px',
         width: '100%',
         maxWidth: '400px',
         border: '1px solid #374151'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <h1 style={{ 
-            fontSize: '28px', 
+            fontSize: '24px', 
             fontWeight: 'bold', 
             color: '#ffffff',
             margin: '0 0 8px 0'
@@ -80,7 +80,7 @@ export default function LoginPage() {
           </h1>
           <p style={{ 
             color: '#d1d5db', 
-            fontSize: '16px',
+            fontSize: '14px',
             margin: 0
           }}>
             Sistema de Gestão para Pequenos Negócios
@@ -105,14 +105,15 @@ export default function LoginPage() {
               required
               style={{
                 width: '100%',
-                padding: '12px 16px',
+                padding: '14px 16px',
                 backgroundColor: '#374151',
                 border: '1px solid #4b5563',
                 borderRadius: '8px',
                 color: '#ffffff',
                 fontSize: '16px',
                 outline: 'none',
-                transition: 'border-color 0.2s'
+                transition: 'border-color 0.2s',
+                boxSizing: 'border-box'
               }}
               onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
               onBlur={(e) => e.target.style.borderColor = '#4b5563'}
@@ -137,14 +138,15 @@ export default function LoginPage() {
               required
               style={{
                 width: '100%',
-                padding: '12px 16px',
+                padding: '14px 16px',
                 backgroundColor: '#374151',
                 border: '1px solid #4b5563',
                 borderRadius: '8px',
                 color: '#ffffff',
                 fontSize: '16px',
                 outline: 'none',
-                transition: 'border-color 0.2s'
+                transition: 'border-color 0.2s',
+                boxSizing: 'border-box'
               }}
               onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
               onBlur={(e) => e.target.style.borderColor = '#4b5563'}
@@ -169,7 +171,7 @@ export default function LoginPage() {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '14px',
+              padding: '16px',
               backgroundColor: '#8b5cf6',
               color: 'white',
               border: 'none',
@@ -178,7 +180,8 @@ export default function LoginPage() {
               fontWeight: '500',
               cursor: loading ? 'not-allowed' : 'pointer',
               opacity: loading ? 0.7 : 1,
-              transition: 'background-color 0.2s'
+              transition: 'background-color 0.2s',
+              marginTop: '8px'
             }}
             onMouseOver={(e) => !loading && (e.currentTarget.style.backgroundColor = '#7c3aed')}
             onMouseOut={(e) => !loading && (e.currentTarget.style.backgroundColor = '#8b5cf6')}

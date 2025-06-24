@@ -184,13 +184,13 @@ export default function AdminDashboard() {
         <div style={{ 
           backgroundColor: '#1f2937', 
           borderBottom: '1px solid #374151',
-          padding: '32px 0'
+          padding: '24px 0'
         }}>
           <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
               <div>
                 <h1 style={{ 
-                  fontSize: '30px', 
+                  fontSize: '24px', 
                   fontWeight: 'bold', 
                   color: '#ffffff',
                   margin: 0
@@ -199,34 +199,36 @@ export default function AdminDashboard() {
                 </h1>
                 <p style={{ 
                   color: '#d1d5db', 
-                  marginTop: '8px', 
-                  fontSize: '18px',
+                  marginTop: '4px', 
+                  fontSize: '14px',
                   margin: 0
                 }}>
                   Gerenciamento de clientes e mensalidades
                 </p>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                 <div style={{ 
-                  padding: '12px 24px',
+                  padding: '10px 16px',
                   backgroundColor: '#8b5cf6',
                   color: 'white',
                   borderRadius: '8px',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  fontSize: '14px'
                 }}>
                   {usuarios.length} Clientes
                 </div>
                 <button
                   onClick={handleLogout}
                   style={{
-                    padding: '12px 24px',
+                    padding: '10px 20px',
                     backgroundColor: '#dc2626',
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
                     fontWeight: '500',
                     cursor: 'pointer',
-                    transition: 'background-color 0.2s'
+                    transition: 'background-color 0.2s',
+                    fontSize: '14px'
                   }}
                   onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
                   onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
@@ -239,37 +241,37 @@ export default function AdminDashboard() {
         </div>
 
         {/* Main Content */}
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 16px' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
           {/* Stats Cards */}
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-            gap: '32px', 
-            marginBottom: '48px' 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+            gap: '20px', 
+            marginBottom: '32px' 
           }}>
             <div style={{ 
               backgroundColor: '#1f2937', 
               borderRadius: '8px', 
-              padding: '32px',
+              padding: '24px',
               border: '1px solid #374151'
             }}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ 
-                  padding: '16px', 
+                  padding: '12px', 
                   backgroundColor: '#8b5cf6', 
                   borderRadius: '8px',
-                  marginRight: '24px'
+                  marginRight: '16px'
                 }}>
-                  <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                   </svg>
                 </div>
                 <div>
-                  <p style={{ color: '#d1d5db', fontSize: '18px', fontWeight: '500', margin: 0 }}>
+                  <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
                     Total de Clientes
                   </p>
                   <p style={{ 
-                    fontSize: '30px', 
+                    fontSize: '24px', 
                     fontWeight: 'bold', 
                     color: '#ffffff',
                     margin: 0
@@ -283,26 +285,26 @@ export default function AdminDashboard() {
             <div style={{ 
               backgroundColor: '#1f2937', 
               borderRadius: '8px', 
-              padding: '32px',
+              padding: '24px',
               border: '1px solid #374151'
             }}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ 
-                  padding: '16px', 
+                  padding: '12px', 
                   backgroundColor: '#10b981', 
                   borderRadius: '8px',
-                  marginRight: '24px'
+                  marginRight: '16px'
                 }}>
-                  <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
-                  <p style={{ color: '#d1d5db', fontSize: '18px', fontWeight: '500', margin: 0 }}>
+                  <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
                     Clientes Ativos
                   </p>
                   <p style={{ 
-                    fontSize: '30px', 
+                    fontSize: '24px', 
                     fontWeight: 'bold', 
                     color: '#ffffff',
                     margin: 0
@@ -316,26 +318,26 @@ export default function AdminDashboard() {
             <div style={{ 
               backgroundColor: '#1f2937', 
               borderRadius: '8px', 
-              padding: '32px',
+              padding: '24px',
               border: '1px solid #374151'
             }}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ 
-                  padding: '16px', 
+                  padding: '12px', 
                   backgroundColor: '#f59e0b', 
                   borderRadius: '8px',
-                  marginRight: '24px'
+                  marginRight: '16px'
                 }}>
-                  <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
-                  <p style={{ color: '#d1d5db', fontSize: '18px', fontWeight: '500', margin: 0 }}>
+                  <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
                     Vencendo em 7 dias
                   </p>
                   <p style={{ 
-                    fontSize: '30px', 
+                    fontSize: '24px', 
                     fontWeight: 'bold', 
                     color: '#ffffff',
                     margin: 0

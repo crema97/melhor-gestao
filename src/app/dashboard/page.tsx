@@ -136,13 +136,13 @@ export default function DashboardPage() {
       <div style={{ 
         backgroundColor: '#1f2937', 
         borderBottom: '1px solid #374151',
-        padding: '32px 0'
+        padding: '24px 0'
       }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <h1 style={{ 
-                fontSize: '30px', 
+                fontSize: '24px', 
                 fontWeight: 'bold', 
                 color: '#ffffff',
                 margin: 0
@@ -151,8 +151,8 @@ export default function DashboardPage() {
               </h1>
               <p style={{ 
                 color: '#d1d5db', 
-                marginTop: '8px', 
-                fontSize: '18px',
+                marginTop: '4px', 
+                fontSize: '14px',
                 margin: 0
               }}>
                 Bem-vindo, {usuario.nome}
@@ -161,14 +161,15 @@ export default function DashboardPage() {
             <button
               onClick={handleLogout}
               style={{
-                padding: '12px 24px',
+                padding: '10px 20px',
                 backgroundColor: '#dc2626',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: '500',
                 cursor: 'pointer',
-                transition: 'background-color 0.2s'
+                transition: 'background-color 0.2s',
+                fontSize: '14px'
               }}
               onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
               onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
@@ -180,34 +181,34 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 16px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
         <div style={{ 
           backgroundColor: '#1f2937', 
           borderRadius: '8px',
-          padding: '32px',
+          padding: '24px',
           border: '1px solid #374151',
           textAlign: 'center'
         }}>
           <h2 style={{ 
-            fontSize: '24px', 
+            fontSize: '20px', 
             fontWeight: 'bold', 
             color: '#ffffff',
-            margin: '0 0 16px 0'
+            margin: '0 0 12px 0'
           }}>
             Selecione seu tipo de negócio
           </h2>
           <p style={{ 
             color: '#d1d5db', 
-            fontSize: '16px',
-            margin: '0 0 32px 0'
+            fontSize: '14px',
+            margin: '0 0 24px 0'
           }}>
             Escolha o dashboard específico para o seu negócio
           </p>
           
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-            gap: '24px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+            gap: '16px',
             maxWidth: '800px',
             margin: '0 auto'
           }}>
@@ -215,7 +216,7 @@ export default function DashboardPage() {
               href="/dashboard/barbearia"
               style={{
                 display: 'block',
-                padding: '24px',
+                padding: '20px',
                 backgroundColor: '#374151',
                 borderRadius: '8px',
                 border: '1px solid #4b5563',
@@ -233,16 +234,16 @@ export default function DashboardPage() {
               }}
             >
               <h3 style={{ 
-                fontSize: '20px', 
+                fontSize: '18px', 
                 fontWeight: 'bold', 
                 color: '#ffffff',
-                margin: '0 0 8px 0'
+                margin: '0 0 6px 0'
               }}>
                 Barbearia
               </h3>
               <p style={{ 
                 color: '#d1d5db', 
-                fontSize: '14px',
+                fontSize: '12px',
                 margin: 0
               }}>
                 Gestão completa para barbearias
@@ -253,7 +254,7 @@ export default function DashboardPage() {
               href="/dashboard/salao-beleza"
               style={{
                 display: 'block',
-                padding: '24px',
+                padding: '20px',
                 backgroundColor: '#374151',
                 borderRadius: '8px',
                 border: '1px solid #4b5563',
@@ -271,16 +272,16 @@ export default function DashboardPage() {
               }}
             >
               <h3 style={{ 
-                fontSize: '20px', 
+                fontSize: '18px', 
                 fontWeight: 'bold', 
                 color: '#ffffff',
-                margin: '0 0 8px 0'
+                margin: '0 0 6px 0'
               }}>
                 Salão de Beleza
               </h3>
               <p style={{ 
                 color: '#d1d5db', 
-                fontSize: '14px',
+                fontSize: '12px',
                 margin: 0
               }}>
                 Gestão para salões de beleza
@@ -291,7 +292,7 @@ export default function DashboardPage() {
               href="/dashboard/estetica"
               style={{
                 display: 'block',
-                padding: '24px',
+                padding: '20px',
                 backgroundColor: '#374151',
                 borderRadius: '8px',
                 border: '1px solid #4b5563',
@@ -309,16 +310,16 @@ export default function DashboardPage() {
               }}
             >
               <h3 style={{ 
-                fontSize: '20px', 
+                fontSize: '18px', 
                 fontWeight: 'bold', 
                 color: '#ffffff',
-                margin: '0 0 8px 0'
+                margin: '0 0 6px 0'
               }}>
                 Estética
               </h3>
               <p style={{ 
                 color: '#d1d5db', 
-                fontSize: '14px',
+                fontSize: '12px',
                 margin: 0
               }}>
                 Gestão para clínicas estéticas
@@ -329,7 +330,7 @@ export default function DashboardPage() {
               href="/dashboard/lavarapido"
               style={{
                 display: 'block',
-                padding: '24px',
+                padding: '20px',
                 backgroundColor: '#374151',
                 borderRadius: '8px',
                 border: '1px solid #4b5563',
@@ -347,16 +348,16 @@ export default function DashboardPage() {
               }}
             >
               <h3 style={{ 
-                fontSize: '20px', 
+                fontSize: '18px', 
                 fontWeight: 'bold', 
                 color: '#ffffff',
-                margin: '0 0 8px 0'
+                margin: '0 0 6px 0'
               }}>
                 Lava Rápido
               </h3>
               <p style={{ 
                 color: '#d1d5db', 
-                fontSize: '14px',
+                fontSize: '12px',
                 margin: 0
               }}>
                 Gestão para lava rápidos
@@ -367,7 +368,7 @@ export default function DashboardPage() {
               href="/dashboard/estacionamento"
               style={{
                 display: 'block',
-                padding: '24px',
+                padding: '20px',
                 backgroundColor: '#374151',
                 borderRadius: '8px',
                 border: '1px solid #4b5563',
@@ -385,16 +386,16 @@ export default function DashboardPage() {
               }}
             >
               <h3 style={{ 
-                fontSize: '20px', 
+                fontSize: '18px', 
                 fontWeight: 'bold', 
                 color: '#ffffff',
-                margin: '0 0 8px 0'
+                margin: '0 0 6px 0'
               }}>
                 Estacionamento
               </h3>
               <p style={{ 
                 color: '#d1d5db', 
-                fontSize: '14px',
+                fontSize: '12px',
                 margin: 0
               }}>
                 Gestão para estacionamentos
