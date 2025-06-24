@@ -186,33 +186,6 @@ export default function LoginPage() {
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
-
-        <div style={{ 
-          textAlign: 'center', 
-          marginTop: '24px',
-          paddingTop: '24px',
-          borderTop: '1px solid #374151'
-        }}>
-          <p style={{ 
-            color: '#9ca3af', 
-            fontSize: '14px',
-            margin: 0
-          }}>
-            Não tem uma conta?{' '}
-            <a 
-              href="/admin/criar-admin" 
-              style={{ 
-                color: '#8b5cf6', 
-                textDecoration: 'none',
-                fontWeight: '500'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.textDecoration = 'underline'}
-              onMouseOut={(e) => e.currentTarget.style.textDecoration = 'none'}
-            >
-              Solicitar acesso
-            </a>
-          </p>
-        </div>
       </div>
     </div>
   )
