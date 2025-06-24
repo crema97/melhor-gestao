@@ -49,6 +49,22 @@ export default function DashboardPage() {
           return
         }
 
+        // Se for usuário normal, redirecionar para o dashboard específico
+        if (usuarioData.tipo_negocio_id) {
+          // Buscar o nome do tipo de negócio
+          const { data: tipoNegocio } = await supabase
+            .from('tipos_negocio')
+            .select('nome')
+            .eq('id', usuarioData.tipo_negocio_id)
+            .single()
+
+          if (tipoNegocio) {
+            const dashboardPath = getDashboardPath(tipoNegocio.nome)
+            router.push(dashboardPath)
+            return
+          }
+        }
+
         setLoading(false)
       } catch (error) {
         console.error('Erro ao verificar usuário:', error)
@@ -57,6 +73,26 @@ export default function DashboardPage() {
     }
     checkUser()
   }, [router])
+
+  function getDashboardPath(tipoNegocio: string): string {
+    switch (tipoNegocio.toLowerCase()) {
+      case 'barbearia':
+        return '/dashboard/barbearia'
+      case 'salão de beleza':
+      case 'salao de beleza':
+        return '/dashboard/salao-beleza'
+      case 'estética':
+      case 'estetica':
+        return '/dashboard/estetica'
+      case 'lava rápido':
+      case 'lava rapido':
+        return '/dashboard/lavarapido'
+      case 'estacionamento':
+        return '/dashboard/estacionamento'
+      default:
+        return '/dashboard/barbearia' // fallback
+    }
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
