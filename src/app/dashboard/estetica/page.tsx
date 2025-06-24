@@ -286,13 +286,13 @@ export default function EsteticaDashboard() {
       <div style={{ 
         backgroundColor: '#1f2937', 
         borderBottom: '1px solid #374151',
-        padding: '32px 0'
+        padding: '24px 0'
       }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <h1 style={{ 
-                fontSize: '30px', 
+                fontSize: '24px', 
                 fontWeight: 'bold', 
                 color: '#ffffff',
                 margin: 0
@@ -301,56 +301,62 @@ export default function EsteticaDashboard() {
               </h1>
               <p style={{ 
                 color: '#d1d5db', 
-                marginTop: '8px', 
-                fontSize: '18px',
+                marginTop: '4px', 
+                fontSize: '14px',
                 margin: 0
               }}>
                 Resumo geral do seu negócio
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <Link 
                 href="/dashboard/estetica/receitas"
                 style={{
-                  padding: '12px 24px',
+                  padding: '10px 16px',
                   backgroundColor: '#2563eb',
                   color: 'white',
                   borderRadius: '8px',
                   textDecoration: 'none',
                   fontWeight: '500',
-                  transition: 'background-color 0.2s'
+                  transition: 'background-color 0.2s',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
               >
-                + Nova Receita
+                + Receita
               </Link>
               <Link 
                 href="/dashboard/estetica/despesas"
                 style={{
-                  padding: '12px 24px',
+                  padding: '10px 16px',
                   backgroundColor: '#dc2626',
                   color: 'white',
                   borderRadius: '8px',
                   textDecoration: 'none',
                   fontWeight: '500',
-                  transition: 'background-color 0.2s'
+                  transition: 'background-color 0.2s',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
               >
-                + Nova Despesa
+                + Despesa
               </Link>
               <Link
                 href="/dashboard/estetica/anotacoes"
                 style={{
-                  padding: '12px 24px',
+                  padding: '10px 16px',
                   backgroundColor: '#ca8a04',
                   color: 'white',
                   borderRadius: '8px',
                   textDecoration: 'none',
                   fontWeight: '500',
-                  transition: 'background-color 0.2s'
+                  transition: 'background-color 0.2s',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#a16207'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ca8a04'}
@@ -360,7 +366,7 @@ export default function EsteticaDashboard() {
               <button
                 onClick={handleLogout}
                 style={{
-                  padding: '12px 24px',
+                  padding: '10px 16px',
                   backgroundColor: '#6b7280',
                   color: 'white',
                   borderRadius: '8px',
@@ -370,12 +376,14 @@ export default function EsteticaDashboard() {
                   transition: 'background-color 0.2s',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '6px',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
               >
-                <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
                 Sair

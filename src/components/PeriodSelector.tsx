@@ -83,12 +83,12 @@ export default function PeriodSelector({ onPeriodChange, initialPeriod = 'month'
     <div style={{
       backgroundColor: '#1f2937',
       borderRadius: '8px',
-      padding: '20px',
+      padding: '16px',
       border: '1px solid #374151',
-      marginBottom: '24px'
+      marginBottom: '20px'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {[
             { value: 'today', label: 'Hoje' },
             { value: 'week', label: 'Semana' },
@@ -101,15 +101,16 @@ export default function PeriodSelector({ onPeriodChange, initialPeriod = 'month'
               key={period.value}
               onClick={() => handlePeriodChange(period.value as 'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom')}
               style={{
-                padding: '8px 16px',
+                padding: '6px 12px',
                 backgroundColor: selectedPeriod === period.value ? '#8b5cf6' : '#374151',
                 color: 'white',
                 border: 'none',
                 borderRadius: '6px',
-                fontSize: '14px',
+                fontSize: '12px',
                 fontWeight: '500',
                 cursor: 'pointer',
-                transition: 'background-color 0.2s'
+                transition: 'background-color 0.2s',
+                whiteSpace: 'nowrap'
               }}
               onMouseOver={(e) => selectedPeriod !== period.value && (e.currentTarget.style.backgroundColor = '#4b5563')}
               onMouseOut={(e) => selectedPeriod !== period.value && (e.currentTarget.style.backgroundColor = '#374151')}
@@ -120,47 +121,48 @@ export default function PeriodSelector({ onPeriodChange, initialPeriod = 'month'
         </div>
 
         {selectedPeriod === 'custom' && (
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             <input
               type="date"
               value={customStartDate}
               onChange={(e) => setCustomStartDate(e.target.value)}
               style={{
-                padding: '8px 12px',
+                padding: '6px 10px',
                 backgroundColor: '#374151',
                 border: '1px solid #4b5563',
                 borderRadius: '6px',
                 color: 'white',
-                fontSize: '14px'
+                fontSize: '12px'
               }}
             />
-            <span style={{ color: '#d1d5db' }}>até</span>
+            <span style={{ color: '#d1d5db', fontSize: '12px' }}>até</span>
             <input
               type="date"
               value={customEndDate}
               onChange={(e) => setCustomEndDate(e.target.value)}
               style={{
-                padding: '8px 12px',
+                padding: '6px 10px',
                 backgroundColor: '#374151',
                 border: '1px solid #4b5563',
                 borderRadius: '6px',
                 color: 'white',
-                fontSize: '14px'
+                fontSize: '12px'
               }}
             />
             <button
               onClick={handleCustomDateChange}
               disabled={!customStartDate || !customEndDate}
               style={{
-                padding: '8px 16px',
+                padding: '6px 12px',
                 backgroundColor: (!customStartDate || !customEndDate) ? '#6b7280' : '#10b981',
                 color: 'white',
                 border: 'none',
                 borderRadius: '6px',
-                fontSize: '14px',
+                fontSize: '12px',
                 fontWeight: '500',
                 cursor: (!customStartDate || !customEndDate) ? 'not-allowed' : 'pointer',
-                transition: 'background-color 0.2s'
+                transition: 'background-color 0.2s',
+                whiteSpace: 'nowrap'
               }}
               onMouseOver={(e) => (customStartDate && customEndDate) && (e.currentTarget.style.backgroundColor = '#059669')}
               onMouseOut={(e) => (customStartDate && customEndDate) && (e.currentTarget.style.backgroundColor = '#10b981')}
@@ -171,10 +173,10 @@ export default function PeriodSelector({ onPeriodChange, initialPeriod = 'month'
         )}
 
         <div style={{ 
-          marginLeft: 'auto', 
           color: '#d1d5db', 
-          fontSize: '14px',
-          fontWeight: '500'
+          fontSize: '12px',
+          fontWeight: '500',
+          textAlign: 'center'
         }}>
           {getCurrentRangeText()}
         </div>

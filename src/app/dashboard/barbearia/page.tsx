@@ -287,13 +287,13 @@ export default function BarbeariaDashboard() {
       <div style={{ 
         backgroundColor: '#1f2937', 
         borderBottom: '1px solid #374151',
-        padding: '32px 0'
+        padding: '24px 0'
       }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <h1 style={{ 
-                fontSize: '30px', 
+                fontSize: '24px', 
                 fontWeight: 'bold', 
                 color: '#ffffff',
                 margin: 0
@@ -302,56 +302,62 @@ export default function BarbeariaDashboard() {
               </h1>
               <p style={{ 
                 color: '#d1d5db', 
-                marginTop: '8px', 
-                fontSize: '18px',
+                marginTop: '4px', 
+                fontSize: '14px',
                 margin: 0
               }}>
                 Resumo geral do seu negócio
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <Link 
                 href="/dashboard/barbearia/receitas"
                 style={{
-                  padding: '12px 24px',
+                  padding: '10px 16px',
                   backgroundColor: '#2563eb',
                   color: 'white',
                   borderRadius: '8px',
                   textDecoration: 'none',
                   fontWeight: '500',
-                  transition: 'background-color 0.2s'
+                  transition: 'background-color 0.2s',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
               >
-                + Nova Receita
+                + Receita
               </Link>
               <Link 
                 href="/dashboard/barbearia/despesas"
                 style={{
-                  padding: '12px 24px',
+                  padding: '10px 16px',
                   backgroundColor: '#dc2626',
                   color: 'white',
                   borderRadius: '8px',
                   textDecoration: 'none',
                   fontWeight: '500',
-                  transition: 'background-color 0.2s'
+                  transition: 'background-color 0.2s',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
               >
-                + Nova Despesa
+                + Despesa
               </Link>
               <Link
                 href="/dashboard/barbearia/anotacoes"
                 style={{
-                  padding: '12px 24px',
+                  padding: '10px 16px',
                   backgroundColor: '#ca8a04',
                   color: 'white',
                   borderRadius: '8px',
                   textDecoration: 'none',
                   fontWeight: '500',
-                  transition: 'background-color 0.2s'
+                  transition: 'background-color 0.2s',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#a16207'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ca8a04'}
@@ -361,7 +367,7 @@ export default function BarbeariaDashboard() {
               <button
                 onClick={handleLogout}
                 style={{
-                  padding: '12px 24px',
+                  padding: '10px 16px',
                   backgroundColor: '#6b7280',
                   color: 'white',
                   borderRadius: '8px',
@@ -371,12 +377,14 @@ export default function BarbeariaDashboard() {
                   transition: 'background-color 0.2s',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '6px',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
               >
-                <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
                 Sair
@@ -387,40 +395,40 @@ export default function BarbeariaDashboard() {
       </div>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 16px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
         {/* Period Selector */}
         <PeriodSelector onPeriodChange={handlePeriodChange} />
 
         {/* Stats Cards */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '32px', 
-          marginBottom: '48px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+          gap: '20px', 
+          marginBottom: '32px' 
         }}>
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <div style={{ 
-                padding: '16px', 
+                padding: '12px', 
                 backgroundColor: '#10b981', 
                 borderRadius: '8px',
-                marginRight: '24px'
+                marginRight: '16px'
               }}>
-                <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
               <div>
-                <p style={{ color: '#d1d5db', fontSize: '18px', fontWeight: '500', margin: 0 }}>
+                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
                   Receitas do Período
                 </p>
                 <p style={{ 
-                  fontSize: '30px', 
+                  fontSize: '24px', 
                   fontWeight: 'bold', 
                   color: '#ffffff',
                   margin: 0
@@ -434,26 +442,26 @@ export default function BarbeariaDashboard() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <div style={{ 
-                padding: '16px', 
+                padding: '12px', 
                 backgroundColor: '#ef4444', 
                 borderRadius: '8px',
-                marginRight: '24px'
+                marginRight: '16px'
               }}>
-                <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
               <div>
-                <p style={{ color: '#d1d5db', fontSize: '18px', fontWeight: '500', margin: 0 }}>
+                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
                   Despesas do Período
                 </p>
                 <p style={{ 
-                  fontSize: '30px', 
+                  fontSize: '24px', 
                   fontWeight: 'bold', 
                   color: '#ffffff',
                   margin: 0
@@ -467,28 +475,28 @@ export default function BarbeariaDashboard() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <div style={{ 
-                padding: '16px', 
-                backgroundColor: '#3b82f6', 
+                padding: '12px', 
+                backgroundColor: stats.lucro >= 0 ? '#10b981' : '#ef4444', 
                 borderRadius: '8px',
-                marginRight: '24px'
+                marginRight: '16px'
               }}>
-                <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
               <div>
-                <p style={{ color: '#d1d5db', fontSize: '18px', fontWeight: '500', margin: 0 }}>
+                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
                   Lucro do Período
                 </p>
                 <p style={{ 
-                  fontSize: '30px', 
+                  fontSize: '24px', 
                   fontWeight: 'bold', 
-                  color: stats.lucro >= 0 ? '#4ade80' : '#f87171',
+                  color: stats.lucro >= 0 ? '#10b981' : '#ef4444',
                   margin: 0
                 }}>
                   R$ {stats.lucro.toFixed(2).replace('.', ',')}
