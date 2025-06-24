@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import PeriodSelector from '@/components/PeriodSelector'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 interface CategoriaReceita {
   id: string
@@ -34,18 +34,6 @@ interface DailyData {
   receitas: number
 }
 
-interface PaymentData {
-  id: string
-  valor: number
-  data_receita: string
-  forma_pagamento: string
-  observacoes?: string
-  categoria_receita: {
-    id: string
-    nome: string
-  } | null
-}
-
 export default function ReceitasPage() {
   const [receitas, setReceitas] = useState<Receita[]>([])
   const [filteredReceitas, setFilteredReceitas] = useState<Receita[]>([])
@@ -55,7 +43,6 @@ export default function ReceitasPage() {
   const [editingReceita, setEditingReceita] = useState<Receita | null>(null)
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [dailyData, setDailyData] = useState<DailyData[]>([])
-  const [paymentData, setPaymentData] = useState<PaymentData[]>([])
   const [formData, setFormData] = useState({
     valor: '',
     data_receita: '',
@@ -282,28 +269,6 @@ export default function ReceitasPage() {
     })).filter(item => item.value > 0)
   }
 
-  const totalReceitas = filteredReceitas.reduce((sum, receita) => sum + receita.valor, 0)
-
-  function getPaymentMethodsData() {
-    const paymentData = [
-      { name: 'Dinheiro', value: 0, color: '#10b981' },
-      { name: 'Débito', value: 0, color: '#3b82f6' },
-      { name: 'Crédito', value: 0, color: '#8b5cf6' },
-      { name: 'PIX', value: 0, color: '#f59e0b' }
-    ]
-    
-    filteredReceitas.forEach(receita => {
-      const index = paymentData.findIndex(item => 
-        item.name.toLowerCase() === receita.forma_pagamento.toLowerCase()
-      )
-      if (index !== -1) {
-        paymentData[index].value += receita.valor
-      }
-    })
-    
-    return paymentData.filter(item => item.value > 0)
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     
@@ -406,6 +371,8 @@ export default function ReceitasPage() {
       observacoes: ''
     })
   }
+
+  const totalReceitas = filteredReceitas.reduce((sum, receita) => sum + receita.valor, 0)
 
   if (loading) {
     return (
@@ -766,7 +733,7 @@ export default function ReceitasPage() {
                 fontSize: '16px',
                 margin: 0
               }}>
-                {filteredReceitas.length} receita{filteredReceitas.length !== 1 ? 's' : ''} registrada{filteredReceitas.length !== 1 ? 's' : ''}
+                {receitas.length} receita{receitas.length !== 1 ? 's' : ''} registrada{receitas.length !== 1 ? 's' : ''}
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -792,27 +759,26 @@ export default function ReceitasPage() {
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
-          gap: '24px', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '20px', 
           marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '24px',
+            padding: '20px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '18px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '20px',
-              margin: '0 0 20px 0'
+              margin: '0 0 16px 0'
             }}>
               Evolução Mensal (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="mes" stroke="#d1d5db" fontSize={12} />
@@ -822,11 +788,12 @@ export default function ReceitasPage() {
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend />
+                <Legend fontSize={12} />
                 <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
               </BarChart>
             </ResponsiveContainer>
@@ -836,19 +803,18 @@ export default function ReceitasPage() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '24px',
+            padding: '20px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '18px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '20px',
-              margin: '0 0 20px 0'
+              margin: '0 0 16px 0'
             }}>
               Evolução Diária (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="dia" stroke="#d1d5db" fontSize={12} />
@@ -858,170 +824,42 @@ export default function ReceitasPage() {
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend />
+                <Legend fontSize={12} />
                 <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Payment Methods Chart */}
-        {getPaymentMethodsData().length > 0 && (
-          <div style={{ 
-            backgroundColor: '#1f2937', 
-            borderRadius: '8px', 
-            padding: '24px',
-            border: '1px solid #374151',
-            marginBottom: '32px'
-          }}>
-            <h3 style={{ 
-              fontSize: '18px', 
-              fontWeight: 'bold', 
-              color: '#ffffff',
-              marginBottom: '20px',
-              margin: '0 0 20px 0'
-            }}>
-              Formas de Pagamento
-            </h3>
-            
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-              gap: '24px',
-              alignItems: 'center'
-            }}>
-              {/* Pie Chart */}
-              <div style={{ height: '250px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={getPaymentMethodsData()}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={70}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {getPaymentMethodsData().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: '#1f2937',
-                        border: '1px solid #374151',
-                        borderRadius: '8px',
-                        color: '#ffffff'
-                      }}
-                      formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Payment Methods List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {getPaymentMethodsData().map((item) => (
-                  <div key={item.name} style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between',
-                    padding: '12px', 
-                    backgroundColor: '#374151', 
-                    borderRadius: '8px',
-                    border: `2px solid ${item.color}`
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{
-                        width: '12px',
-                        height: '12px',
-                        backgroundColor: item.color,
-                        borderRadius: '50%'
-                      }}></div>
-                      <span style={{ 
-                        color: '#ffffff', 
-                        fontSize: '14px', 
-                        fontWeight: '600' 
-                      }}>
-                        {item.name}
-                      </span>
-                    </div>
-                    <span style={{ 
-                      color: item.color, 
-                      fontSize: '16px', 
-                      fontWeight: 'bold' 
-                    }}>
-                      R$ {item.value.toFixed(2).replace('.', ',')}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Categories Chart */}
         {getCategoriesData().length > 0 && (
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '24px',
+            padding: '20px',
             border: '1px solid #374151',
             marginBottom: '32px'
           }}>
             <h3 style={{ 
-              fontSize: '18px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '20px',
-              margin: '0 0 20px 0'
+              margin: '0 0 16px 0'
             }}>
               Receitas por Categoria
             </h3>
             
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-              gap: '24px',
-              alignItems: 'center'
+              gridTemplateColumns: '1fr', 
+              gap: '20px',
+              alignItems: 'start'
             }}>
-              {/* Pie Chart */}
-              <div style={{ height: '250px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={getCategoriesData()}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={70}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {getCategoriesData().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: '#1f2937',
-                        border: '1px solid #374151',
-                        borderRadius: '8px',
-                        color: '#ffffff'
-                      }}
-                      formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
               {/* Categories List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {getCategoriesData().map((item) => (
@@ -1034,7 +872,7 @@ export default function ReceitasPage() {
                     borderRadius: '8px',
                     border: `2px solid ${item.color}`
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{
                         width: '12px',
                         height: '12px',

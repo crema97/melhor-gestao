@@ -21,9 +21,9 @@ export default function DashboardPage() {
   useEffect(() => {
     async function checkUser() {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        
-        if (!user) {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
           router.push('/')
           return
         }
@@ -46,8 +46,8 @@ export default function DashboardPage() {
         // Se for admin, redirecionar para painel admin
         if (usuarioData.is_admin) {
           router.push('/admin')
-          return
-        }
+        return
+      }
 
         // Se for usuário normal, redirecionar para o dashboard específico
         if (usuarioData.tipo_negocio_id) {
@@ -65,7 +65,7 @@ export default function DashboardPage() {
           }
         }
 
-        setLoading(false)
+      setLoading(false)
       } catch (error) {
         console.error('Erro ao verificar usuário:', error)
         router.push('/')
@@ -158,8 +158,8 @@ export default function DashboardPage() {
                 Bem-vindo, {usuario.nome}
               </p>
             </div>
-            <button
-              onClick={handleLogout}
+        <button
+          onClick={handleLogout}
               style={{
                 padding: '10px 20px',
                 backgroundColor: '#dc2626',
@@ -173,13 +173,13 @@ export default function DashboardPage() {
               }}
               onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
               onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-            >
-              Sair
-            </button>
-          </div>
-        </div>
+        >
+          Sair
+        </button>
       </div>
-
+        </div>
+          </div>
+          
       {/* Main Content */}
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
         <div style={{ 

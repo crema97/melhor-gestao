@@ -509,41 +509,41 @@ export default function BarbeariaDashboard() {
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', 
-          gap: '32px', 
-          marginBottom: '48px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '20px', 
+          marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '20px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 16px 0'
             }}>
               Evolução Mensal (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="mes" stroke="#d1d5db" />
-                <YAxis stroke="#d1d5db" />
+                <XAxis dataKey="mes" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend />
+                <Legend fontSize={12} />
                 <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
                 <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />
                 <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />
@@ -555,33 +555,33 @@ export default function BarbeariaDashboard() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '20px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 16px 0'
             }}>
               Evolução Diária (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="dia" stroke="#d1d5db" />
-                <YAxis stroke="#d1d5db" />
+                <XAxis dataKey="dia" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend />
+                <Legend fontSize={12} />
                 <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
                 <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />
                 <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />
@@ -594,16 +594,16 @@ export default function BarbeariaDashboard() {
         <div style={{ 
           backgroundColor: '#1f2937', 
           borderRadius: '8px', 
-          padding: '32px',
+          padding: '20px',
           border: '1px solid #374151',
-          marginBottom: '48px'
+          marginBottom: '32px'
         }}>
           <h3 style={{ 
-            fontSize: '24px', 
+            fontSize: '18px', 
             fontWeight: 'bold', 
             color: '#ffffff',
-            marginBottom: '24px',
-            margin: '0 0 24px 0'
+            marginBottom: '16px',
+            margin: '0 0 16px 0'
           }}>
             Formas de Pagamento
           </h3>
@@ -611,12 +611,12 @@ export default function BarbeariaDashboard() {
           {getPaymentMethodsData().length > 0 ? (
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: '1fr 1fr', 
-              gap: '32px',
-              alignItems: 'center'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+              gap: '24px',
+              alignItems: 'start'
             }}>
               {/* Pie Chart */}
-              <div style={{ height: '300px' }}>
+              <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -625,7 +625,7 @@ export default function BarbeariaDashboard() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
+                      outerRadius={60}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -638,7 +638,8 @@ export default function BarbeariaDashboard() {
                         backgroundColor: '#1f2937',
                         border: '1px solid #374151',
                         borderRadius: '8px',
-                        color: '#ffffff'
+                        color: '#ffffff',
+                        fontSize: '12px'
                       }}
                       formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                     />
@@ -647,27 +648,27 @@ export default function BarbeariaDashboard() {
               </div>
 
               {/* Payment Methods List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {getPaymentMethodsData().map((item) => (
                   <div key={item.name} style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between',
-                    padding: '16px', 
+                    padding: '12px', 
                     backgroundColor: '#374151', 
                     borderRadius: '8px',
                     border: `2px solid ${item.color}`
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{
-                        width: '16px',
-                        height: '16px',
+                        width: '12px',
+                        height: '12px',
                         backgroundColor: item.color,
                         borderRadius: '50%'
                       }}></div>
                       <span style={{ 
                         color: '#ffffff', 
-                        fontSize: '16px', 
+                        fontSize: '14px', 
                         fontWeight: '600' 
                       }}>
                         {item.name}
@@ -675,7 +676,7 @@ export default function BarbeariaDashboard() {
                     </div>
                     <span style={{ 
                       color: item.color, 
-                      fontSize: '18px', 
+                      fontSize: '16px', 
                       fontWeight: 'bold' 
                     }}>
                       R$ {item.value.toFixed(2).replace('.', ',')}
@@ -685,23 +686,26 @@ export default function BarbeariaDashboard() {
               </div>
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '48px 0' }}>
+            <div style={{ textAlign: 'center', padding: '32px 0' }}>
               <div style={{
-                width: '64px',
-                height: '64px',
+                width: '48px',
+                height: '48px',
                 backgroundColor: '#6b7280',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                margin: '0 auto 16px auto'
+                margin: '0 auto 12px auto'
               }}>
-                <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
-              <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
-                Nenhum pagamento registrado no período
+              <p style={{ color: '#d1d5db', fontSize: '14px', margin: 0 }}>
+                Nenhuma receita registrada
+              </p>
+              <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
+                Adicione receitas para ver as formas de pagamento
               </p>
             </div>
           )}
@@ -710,7 +714,7 @@ export default function BarbeariaDashboard() {
         {/* Recent Transactions */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
           gap: '32px' 
         }}>
           {/* Recent Receitas */}
