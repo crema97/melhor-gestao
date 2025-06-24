@@ -4,80 +4,376 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 
+interface Usuario {
+  id: string
+  nome: string
+  email: string
+  nome_negocio: string
+  tipo_negocio_id: string
+  is_admin: boolean
+}
+
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null)
+  const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
     async function checkUser() {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) {
-        router.push('/login')
-        return
-      }
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (!user) {
+          router.push('/')
+          return
+        }
 
-      setUser(user)
-      setLoading(false)
+        // Buscar dados do usuário
+        const { data: usuarioData, error } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+
+        if (error) {
+          console.error('Erro ao buscar usuário:', error)
+          router.push('/')
+          return
+        }
+
+        setUsuario(usuarioData)
+        
+        // Se for admin, redirecionar para painel admin
+        if (usuarioData.is_admin) {
+          router.push('/admin')
+          return
+        }
+
+        setLoading(false)
+      } catch (error) {
+        console.error('Erro ao verificar usuário:', error)
+        router.push('/')
+      }
     }
     checkUser()
   }, [router])
 
   async function handleLogout() {
     await supabase.auth.signOut()
-    router.push('/login')
+    router.push('/')
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#1f2937', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            border: '4px solid #8b5cf6',
+            borderTop: '4px solid transparent',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto'
+          }}></div>
+          <p style={{ marginTop: '24px', color: '#e5e7eb', fontSize: '18px', fontWeight: '500' }}>
+            Carregando dashboard...
+          </p>
         </div>
       </div>
     )
   }
 
-  return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <button
-          onClick={handleLogout}
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-        >
-          Sair
-        </button>
-      </div>
+  if (!usuario) {
+    return null
+  }
 
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Bem-vindo ao Melhor Gestão!</h2>
-        <p className="text-gray-600 mb-4">
-          Esta é sua área de controle para gerenciar o faturamento do seu negócio.
-        </p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-blue-800">Faturamento</h3>
-            <p className="text-2xl font-bold text-blue-600">R$ 0,00</p>
-            <p className="text-sm text-blue-600">Este mês</p>
-          </div>
-          
-          <div className="bg-green-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-green-800">Clientes</h3>
-            <p className="text-2xl font-bold text-green-600">0</p>
-            <p className="text-sm text-green-600">Total</p>
-          </div>
-          
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-purple-800">Faturas</h3>
-            <p className="text-2xl font-bold text-purple-600">0</p>
-            <p className="text-sm text-purple-600">Este mês</p>
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#111827' }}>
+      {/* Header */}
+      <div style={{ 
+        backgroundColor: '#1f2937', 
+        borderBottom: '1px solid #374151',
+        padding: '32px 0'
+      }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1 style={{ 
+                fontSize: '30px', 
+                fontWeight: 'bold', 
+                color: '#ffffff',
+                margin: 0
+              }}>
+                Melhor Gestão
+              </h1>
+              <p style={{ 
+                color: '#d1d5db', 
+                marginTop: '8px', 
+                fontSize: '18px',
+                margin: 0
+              }}>
+                Bem-vindo, {usuario.nome}
+              </p>
+            </div>
+            <button
+              onClick={handleLogout}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#dc2626',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+            >
+              Sair
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Main Content */}
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 16px' }}>
+        <div style={{ 
+          backgroundColor: '#1f2937', 
+          borderRadius: '8px',
+          padding: '32px',
+          border: '1px solid #374151',
+          textAlign: 'center'
+        }}>
+          <h2 style={{ 
+            fontSize: '24px', 
+            fontWeight: 'bold', 
+            color: '#ffffff',
+            margin: '0 0 16px 0'
+          }}>
+            Selecione seu tipo de negócio
+          </h2>
+          <p style={{ 
+            color: '#d1d5db', 
+            fontSize: '16px',
+            margin: '0 0 32px 0'
+          }}>
+            Escolha o dashboard específico para o seu negócio
+          </p>
+          
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+            gap: '24px',
+            maxWidth: '800px',
+            margin: '0 auto'
+          }}>
+            <a 
+              href="/dashboard/barbearia"
+              style={{
+                display: 'block',
+                padding: '24px',
+                backgroundColor: '#374151',
+                borderRadius: '8px',
+                border: '1px solid #4b5563',
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#4b5563'
+                e.currentTarget.style.borderColor = '#8b5cf6'
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#374151'
+                e.currentTarget.style.borderColor = '#4b5563'
+              }}
+            >
+              <h3 style={{ 
+                fontSize: '20px', 
+                fontWeight: 'bold', 
+                color: '#ffffff',
+                margin: '0 0 8px 0'
+              }}>
+                Barbearia
+              </h3>
+              <p style={{ 
+                color: '#d1d5db', 
+                fontSize: '14px',
+                margin: 0
+              }}>
+                Gestão completa para barbearias
+              </p>
+            </a>
+
+            <a 
+              href="/dashboard/salao-beleza"
+              style={{
+                display: 'block',
+                padding: '24px',
+                backgroundColor: '#374151',
+                borderRadius: '8px',
+                border: '1px solid #4b5563',
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#4b5563'
+                e.currentTarget.style.borderColor = '#8b5cf6'
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#374151'
+                e.currentTarget.style.borderColor = '#4b5563'
+              }}
+            >
+              <h3 style={{ 
+                fontSize: '20px', 
+                fontWeight: 'bold', 
+                color: '#ffffff',
+                margin: '0 0 8px 0'
+              }}>
+                Salão de Beleza
+              </h3>
+              <p style={{ 
+                color: '#d1d5db', 
+                fontSize: '14px',
+                margin: 0
+              }}>
+                Gestão para salões de beleza
+              </p>
+            </a>
+
+            <a 
+              href="/dashboard/estetica"
+              style={{
+                display: 'block',
+                padding: '24px',
+                backgroundColor: '#374151',
+                borderRadius: '8px',
+                border: '1px solid #4b5563',
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#4b5563'
+                e.currentTarget.style.borderColor = '#8b5cf6'
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#374151'
+                e.currentTarget.style.borderColor = '#4b5563'
+              }}
+            >
+              <h3 style={{ 
+                fontSize: '20px', 
+                fontWeight: 'bold', 
+                color: '#ffffff',
+                margin: '0 0 8px 0'
+              }}>
+                Estética
+              </h3>
+              <p style={{ 
+                color: '#d1d5db', 
+                fontSize: '14px',
+                margin: 0
+              }}>
+                Gestão para clínicas estéticas
+              </p>
+            </a>
+
+            <a 
+              href="/dashboard/lavarapido"
+              style={{
+                display: 'block',
+                padding: '24px',
+                backgroundColor: '#374151',
+                borderRadius: '8px',
+                border: '1px solid #4b5563',
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#4b5563'
+                e.currentTarget.style.borderColor = '#8b5cf6'
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#374151'
+                e.currentTarget.style.borderColor = '#4b5563'
+              }}
+            >
+              <h3 style={{ 
+                fontSize: '20px', 
+                fontWeight: 'bold', 
+                color: '#ffffff',
+                margin: '0 0 8px 0'
+              }}>
+                Lava Rápido
+              </h3>
+              <p style={{ 
+                color: '#d1d5db', 
+                fontSize: '14px',
+                margin: 0
+              }}>
+                Gestão para lava rápidos
+              </p>
+            </a>
+
+            <a 
+              href="/dashboard/estacionamento"
+              style={{
+                display: 'block',
+                padding: '24px',
+                backgroundColor: '#374151',
+                borderRadius: '8px',
+                border: '1px solid #4b5563',
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#4b5563'
+                e.currentTarget.style.borderColor = '#8b5cf6'
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#374151'
+                e.currentTarget.style.borderColor = '#4b5563'
+              }}
+            >
+              <h3 style={{ 
+                fontSize: '20px', 
+                fontWeight: 'bold', 
+                color: '#ffffff',
+                margin: '0 0 8px 0'
+              }}>
+                Estacionamento
+              </h3>
+              <p style={{ 
+                color: '#d1d5db', 
+                fontSize: '14px',
+                margin: 0
+              }}>
+                Gestão para estacionamentos
+              </p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 } 
