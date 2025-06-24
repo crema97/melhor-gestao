@@ -44,7 +44,9 @@ interface DailyData {
 
 export default function EsteticaDashboard() {
   const [receitas, setReceitas] = useState<Receita[]>([])
+  const [filteredReceitas, setFilteredReceitas] = useState<Receita[]>([])
   const [despesas, setDespesas] = useState<Despesa[]>([])
+  const [filteredDespesas, setFilteredDespesas] = useState<Despesa[]>([])
   const [loading, setLoading] = useState(true)
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [dailyData, setDailyData] = useState<DailyData[]>([])
@@ -60,12 +62,9 @@ export default function EsteticaDashboard() {
       pix: 0
     }
   })
-  const [dateRange, setDateRange] = useState(() => {
-    const now = new Date()
-    return {
-      startDate: new Date(now.getFullYear(), now.getMonth(), 1),
-      endDate: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-    }
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
   })
   const router = useRouter()
 
@@ -77,13 +76,55 @@ export default function EsteticaDashboard() {
     if (usuarioId) {
       loadDashboardData(usuarioId)
     }
-  }, [dateRange, usuarioId])
+  }, [usuarioId])
 
   useEffect(() => {
     if (receitas.length > 0 || despesas.length > 0) {
       loadChartData()
     }
   }, [receitas, despesas])
+
+  useEffect(() => {
+    // Aplicar filtro de período quando as receitas e despesas mudarem
+    const filteredReceitasData = receitas.filter(receita => {
+      const receitaDate = new Date(receita.data_receita + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return receitaDate >= start && receitaDate <= end
+    })
+    setFilteredReceitas(filteredReceitasData)
+
+    const filteredDespesasData = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
+    })
+    setFilteredDespesas(filteredDespesasData)
+
+    // Atualizar stats
+    const receitasMes = filteredReceitasData.reduce((sum, r) => sum + r.valor, 0)
+    const despesasMes = filteredDespesasData.reduce((sum, d) => sum + d.valor, 0)
+    const lucro = receitasMes - despesasMes
+
+    const pagamentos = {
+      dinheiro: 0,
+      debito: 0,
+      credito: 0,
+      pix: 0
+    }
+
+    filteredReceitasData.forEach(receita => {
+      pagamentos[receita.forma_pagamento as keyof typeof pagamentos] += receita.valor
+    })
+
+    setStats({
+      receitasMes,
+      despesasMes,
+      lucro,
+      pagamentos
+    })
+  }, [receitas, despesas, dateRange])
 
   async function checkUserAndLoadData() {
     try {
@@ -127,8 +168,6 @@ export default function EsteticaDashboard() {
           categoria_receita:categorias_receita(nome)
         `)
         .eq('usuario_id', usuarioId)
-        .gte('data_receita', dateRange.startDate.toISOString().split('T')[0])
-        .lte('data_receita', dateRange.endDate.toISOString().split('T')[0])
         .order('data_receita', { ascending: false })
 
       const { data: despesasData } = await supabase
@@ -141,34 +180,10 @@ export default function EsteticaDashboard() {
           categoria_despesa:categorias_despesa(nome)
         `)
         .eq('usuario_id', usuarioId)
-        .gte('data_despesa', dateRange.startDate.toISOString().split('T')[0])
-        .lte('data_despesa', dateRange.endDate.toISOString().split('T')[0])
         .order('data_despesa', { ascending: false })
 
       setReceitas((receitasData as unknown as Receita[]) || [])
       setDespesas((despesasData as unknown as Despesa[]) || [])
-
-      const receitasMes = receitasData?.reduce((sum, r) => sum + r.valor, 0) || 0
-      const despesasMes = despesasData?.reduce((sum, d) => sum + d.valor, 0) || 0
-      const lucro = receitasMes - despesasMes
-
-      const pagamentos = {
-        dinheiro: 0,
-        debito: 0,
-        credito: 0,
-        pix: 0
-      }
-
-      receitasData?.forEach(receita => {
-        pagamentos[receita.forma_pagamento as keyof typeof pagamentos] += receita.valor
-      })
-
-      setStats({
-        receitasMes,
-        despesasMes,
-        lucro,
-        pagamentos
-      })
 
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
@@ -305,20 +320,20 @@ export default function EsteticaDashboard() {
               <p style={{ 
                 color: '#d1d5db', 
                 marginTop: '4px', 
-                fontSize: '14px',
+                fontSize: '16px',
                 margin: 0
               }}>
                 Resumo geral do seu negócio
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <Link 
                 href="/dashboard/estetica/receitas"
                 style={{
-                  padding: '10px 16px',
+                  padding: '10px 20px',
                   backgroundColor: '#2563eb',
                   color: 'white',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   textDecoration: 'none',
                   fontWeight: '500',
                   transition: 'background-color 0.2s',
@@ -328,15 +343,15 @@ export default function EsteticaDashboard() {
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
               >
-                + Receita
+                + Nova Receita
               </Link>
               <Link 
                 href="/dashboard/estetica/despesas"
                 style={{
-                  padding: '10px 16px',
+                  padding: '10px 20px',
                   backgroundColor: '#dc2626',
                   color: 'white',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   textDecoration: 'none',
                   fontWeight: '500',
                   transition: 'background-color 0.2s',
@@ -346,15 +361,15 @@ export default function EsteticaDashboard() {
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
               >
-                + Despesa
+                + Nova Despesa
               </Link>
               <Link
                 href="/dashboard/estetica/anotacoes"
                 style={{
-                  padding: '10px 16px',
+                  padding: '10px 20px',
                   backgroundColor: '#ca8a04',
                   color: 'white',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   textDecoration: 'none',
                   fontWeight: '500',
                   transition: 'background-color 0.2s',
@@ -369,10 +384,10 @@ export default function EsteticaDashboard() {
               <button
                 onClick={handleLogout}
                 style={{
-                  padding: '10px 16px',
+                  padding: '10px 20px',
                   backgroundColor: '#6b7280',
                   color: 'white',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   border: 'none',
                   fontWeight: '500',
                   cursor: 'pointer',
@@ -418,7 +433,7 @@ export default function EsteticaDashboard() {
               <div style={{ 
                 padding: '12px', 
                 backgroundColor: '#10b981', 
-                borderRadius: '8px',
+                borderRadius: '6px',
                 marginRight: '16px'
               }}>
                 <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -426,7 +441,7 @@ export default function EsteticaDashboard() {
                 </svg>
               </div>
               <div>
-                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
+                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0, whiteSpace: 'nowrap' }}>
                   Receitas do Período
                 </p>
                 <p style={{ 
@@ -451,7 +466,7 @@ export default function EsteticaDashboard() {
               <div style={{ 
                 padding: '12px', 
                 backgroundColor: '#ef4444', 
-                borderRadius: '8px',
+                borderRadius: '6px',
                 marginRight: '16px'
               }}>
                 <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -459,7 +474,7 @@ export default function EsteticaDashboard() {
                 </svg>
               </div>
               <div>
-                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
+                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0, whiteSpace: 'nowrap' }}>
                   Despesas do Período
                 </p>
                 <p style={{ 
@@ -484,21 +499,21 @@ export default function EsteticaDashboard() {
               <div style={{ 
                 padding: '12px', 
                 backgroundColor: '#3b82f6', 
-                borderRadius: '8px',
+                borderRadius: '6px',
                 marginRight: '16px'
               }}>
                 <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
               <div>
-                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
+                <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0, whiteSpace: 'nowrap' }}>
                   Lucro do Período
                 </p>
                 <p style={{ 
                   fontSize: '24px', 
                   fontWeight: 'bold', 
-                  color: '#ffffff',
+                  color: stats.lucro >= 0 ? '#4ade80' : '#f87171',
                   margin: 0
                 }}>
                   R$ {stats.lucro.toFixed(2).replace('.', ',')}
@@ -511,41 +526,40 @@ export default function EsteticaDashboard() {
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '20px', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+          gap: '24px', 
           marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '20px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '16px', 
+              fontSize: '18px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              margin: '0 0 16px 0'
+              margin: '0 0 20px 0'
             }}>
               Evolução Mensal (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="mes" stroke="#d1d5db" fontSize={12} />
-                <YAxis stroke="#d1d5db" fontSize={12} />
+                <XAxis dataKey="mes" stroke="#d1d5db" />
+                <YAxis stroke="#d1d5db" />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff',
-                    fontSize: '12px'
+                    color: '#ffffff'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend fontSize={12} />
+                <Legend />
                 <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
                 <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />
                 <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />
@@ -557,33 +571,32 @@ export default function EsteticaDashboard() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '20px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '16px', 
+              fontSize: '18px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              margin: '0 0 16px 0'
+              margin: '0 0 20px 0'
             }}>
               Evolução Diária (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="dia" stroke="#d1d5db" fontSize={12} />
-                <YAxis stroke="#d1d5db" fontSize={12} />
+                <XAxis dataKey="dia" stroke="#d1d5db" />
+                <YAxis stroke="#d1d5db" />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff',
-                    fontSize: '12px'
+                    color: '#ffffff'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend fontSize={12} />
+                <Legend />
                 <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
                 <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />
                 <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />
@@ -596,15 +609,15 @@ export default function EsteticaDashboard() {
         <div style={{ 
           backgroundColor: '#1f2937', 
           borderRadius: '8px', 
-          padding: '20px',
+          padding: '24px',
           border: '1px solid #374151',
           marginBottom: '32px'
         }}>
           <h3 style={{ 
-            fontSize: '18px', 
+            fontSize: '20px', 
             fontWeight: 'bold', 
             color: '#ffffff',
-            margin: '0 0 16px 0'
+            margin: '0 0 20px 0'
           }}>
             Formas de Pagamento
           </h3>
@@ -612,12 +625,12 @@ export default function EsteticaDashboard() {
           {getPaymentMethodsData().length > 0 ? (
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+              gridTemplateColumns: '1fr 1fr', 
               gap: '24px',
-              alignItems: 'start'
+              alignItems: 'center'
             }}>
               {/* Pie Chart */}
-              <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ height: '250px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -626,7 +639,7 @@ export default function EsteticaDashboard() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={60}
+                      outerRadius={70}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -639,9 +652,9 @@ export default function EsteticaDashboard() {
                         backgroundColor: '#1f2937',
                         border: '1px solid #374151',
                         borderRadius: '8px',
-                        color: '#ffffff',
-                        fontSize: '12px'
+                        color: '#ffffff'
                       }}
+                      itemStyle={{ color: '#ffffff' }}
                       formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                     />
                   </PieChart>
@@ -657,10 +670,10 @@ export default function EsteticaDashboard() {
                     justifyContent: 'space-between',
                     padding: '12px', 
                     backgroundColor: '#374151', 
-                    borderRadius: '8px',
-                    border: `2px solid ${item.color}`
+                    borderRadius: '6px',
+                    border: `1px solid ${item.color}`
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{
                         width: '12px',
                         height: '12px',
@@ -687,26 +700,23 @@ export default function EsteticaDashboard() {
               </div>
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '32px 0' }}>
+            <div style={{ textAlign: 'center', padding: '48px 0' }}>
               <div style={{
-                width: '48px',
-                height: '48px',
+                width: '64px',
+                height: '64px',
                 backgroundColor: '#6b7280',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                margin: '0 auto 12px auto'
+                margin: '0 auto 16px auto'
               }}>
-                <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
               </div>
-              <p style={{ color: '#d1d5db', fontSize: '14px', margin: 0 }}>
-                Nenhuma receita registrada
-              </p>
-              <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
-                Adicione receitas para ver as formas de pagamento
+              <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
+                Nenhum pagamento registrado no período
               </p>
             </div>
           )}
@@ -715,8 +725,8 @@ export default function EsteticaDashboard() {
         {/* Recent Transactions */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', 
-          gap: '32px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '20px' 
         }}>
           {/* Recent Receitas */}
           <div style={{ 
@@ -726,13 +736,13 @@ export default function EsteticaDashboard() {
             overflow: 'hidden'
           }}>
             <div style={{ 
-              padding: '24px', 
+              padding: '20px', 
               borderBottom: '1px solid #374151', 
               backgroundColor: '#374151' 
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ 
-                  fontSize: '20px', 
+                  fontSize: '18px', 
                   fontWeight: 'bold', 
                   color: '#ffffff',
                   margin: 0
@@ -743,7 +753,7 @@ export default function EsteticaDashboard() {
                   href="/dashboard/estetica/receitas" 
                   style={{ 
                     color: '#4ade80', 
-                    fontSize: '14px', 
+                    fontSize: '13px', 
                     fontWeight: '500',
                     textDecoration: 'none'
                   }}
@@ -752,29 +762,31 @@ export default function EsteticaDashboard() {
                 </Link>
               </div>
             </div>
-            <div style={{ padding: '24px' }}>
-              {receitas.slice(0, 5).length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {receitas.slice(0, 5).map((receita) => (
+            <div style={{ padding: '20px' }}>
+              {filteredReceitas.slice(0, 5).length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {filteredReceitas.slice(0, 5).map((receita) => (
                     <div key={receita.id} style={{ 
                       display: 'flex', 
                       justifyContent: 'space-between', 
                       alignItems: 'center', 
-                      padding: '16px', 
+                      padding: '12px', 
                       backgroundColor: '#374151', 
-                      borderRadius: '8px' 
+                      borderRadius: '6px',
+                      border: '1px solid #4b5563'
                     }}>
                       <div>
                         <p style={{ 
                           fontWeight: '600', 
                           color: '#ffffff',
-                          margin: '0 0 4px 0'
+                          margin: '0 0 3px 0',
+                          fontSize: '14px'
                         }}>
                           {receita.categoria_receita?.nome}
                         </p>
                         <p style={{ 
                           color: '#d1d5db', 
-                          fontSize: '14px',
+                          fontSize: '12px',
                           margin: 0
                         }}>
                           {new Date(receita.data_receita).toLocaleDateString('pt-BR')} • {receita.forma_pagamento}
@@ -783,7 +795,7 @@ export default function EsteticaDashboard() {
                       <p style={{ 
                         fontWeight: 'bold', 
                         color: '#4ade80', 
-                        fontSize: '20px',
+                        fontSize: '16px',
                         margin: 0
                       }}>
                         R$ {receita.valor.toFixed(2).replace('.', ',')}
@@ -823,13 +835,13 @@ export default function EsteticaDashboard() {
             overflow: 'hidden'
           }}>
             <div style={{ 
-              padding: '24px', 
+              padding: '20px', 
               borderBottom: '1px solid #374151', 
               backgroundColor: '#374151' 
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ 
-                  fontSize: '20px', 
+                  fontSize: '18px', 
                   fontWeight: 'bold', 
                   color: '#ffffff',
                   margin: 0
@@ -840,7 +852,7 @@ export default function EsteticaDashboard() {
                   href="/dashboard/estetica/despesas" 
                   style={{ 
                     color: '#f87171', 
-                    fontSize: '14px', 
+                    fontSize: '13px', 
                     fontWeight: '500',
                     textDecoration: 'none'
                   }}
@@ -849,29 +861,31 @@ export default function EsteticaDashboard() {
                 </Link>
               </div>
             </div>
-            <div style={{ padding: '24px' }}>
-              {despesas.slice(0, 5).length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {despesas.slice(0, 5).map((despesa) => (
+            <div style={{ padding: '20px' }}>
+              {filteredDespesas.slice(0, 5).length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {filteredDespesas.slice(0, 5).map((despesa) => (
                     <div key={despesa.id} style={{ 
                       display: 'flex', 
                       justifyContent: 'space-between', 
                       alignItems: 'center', 
-                      padding: '16px', 
+                      padding: '12px', 
                       backgroundColor: '#374151', 
-                      borderRadius: '8px' 
+                      borderRadius: '6px',
+                      border: '1px solid #4b5563'
                     }}>
                       <div>
                         <p style={{ 
                           fontWeight: '600', 
                           color: '#ffffff',
-                          margin: '0 0 4px 0'
+                          margin: '0 0 3px 0',
+                          fontSize: '14px'
                         }}>
                           {despesa.categoria_despesa?.nome}
                         </p>
                         <p style={{ 
                           color: '#d1d5db', 
-                          fontSize: '14px',
+                          fontSize: '12px',
                           margin: 0
                         }}>
                           {new Date(despesa.data_despesa).toLocaleDateString('pt-BR')}
@@ -880,7 +894,7 @@ export default function EsteticaDashboard() {
                       <p style={{ 
                         fontWeight: 'bold', 
                         color: '#f87171', 
-                        fontSize: '20px',
+                        fontSize: '16px',
                         margin: 0
                       }}>
                         R$ {despesa.valor.toFixed(2).replace('.', ',')}
