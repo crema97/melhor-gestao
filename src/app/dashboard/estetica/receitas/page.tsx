@@ -260,6 +260,28 @@ export default function ReceitasPage() {
     })).filter(item => item.value > 0)
   }
 
+  const totalReceitas = filteredReceitas.reduce((sum, receita) => sum + receita.valor, 0)
+
+  function getPaymentMethodsData() {
+    const paymentData = [
+      { name: 'Dinheiro', value: 0, color: '#10b981' },
+      { name: 'Débito', value: 0, color: '#3b82f6' },
+      { name: 'Crédito', value: 0, color: '#8b5cf6' },
+      { name: 'PIX', value: 0, color: '#f59e0b' }
+    ]
+    
+    filteredReceitas.forEach(receita => {
+      const index = paymentData.findIndex(item => 
+        item.name.toLowerCase() === receita.forma_pagamento.toLowerCase()
+      )
+      if (index !== -1) {
+        paymentData[index].value += receita.valor
+      }
+    })
+    
+    return paymentData.filter(item => item.value > 0)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     
@@ -514,99 +536,256 @@ export default function ReceitasPage() {
           </button>
         </div>
 
+        {/* Summary Card */}
+        <div style={{ 
+          backgroundColor: '#1f2937', 
+          borderRadius: '8px', 
+          padding: '24px',
+          border: '1px solid #374151',
+          marginBottom: '32px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h2 style={{ 
+                fontSize: '20px', 
+                fontWeight: 'bold', 
+                color: '#ffffff',
+                margin: '0 0 8px 0'
+              }}>
+                Resumo do Período
+              </h2>
+              <p style={{ 
+                color: '#d1d5db', 
+                fontSize: '16px',
+                margin: 0
+              }}>
+                {filteredReceitas.length} receita{filteredReceitas.length !== 1 ? 's' : ''} registrada{filteredReceitas.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ 
+                color: '#d1d5db', 
+                fontSize: '16px',
+                margin: '0 0 4px 0'
+              }}>
+                Total do Período
+              </p>
+              <p style={{ 
+                fontSize: '32px', 
+                fontWeight: 'bold', 
+                color: '#10b981',
+                margin: 0
+              }}>
+                R$ {totalReceitas.toFixed(2).replace('.', ',')}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', 
-          gap: '30px', 
-          marginBottom: '30px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+          gap: '24px', 
+          marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}
-          <div style={{
-            backgroundColor: '#1F2937',
+          <div style={{ 
+            backgroundColor: '#1f2937', 
+            borderRadius: '8px', 
             padding: '24px',
-            borderRadius: '12px',
             border: '1px solid #374151'
           }}>
-            <h3 style={{ color: '#ffffff', fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>
-              Receitas Mensais (Últimos 6 meses)
+            <h3 style={{ 
+              fontSize: '18px', 
+              fontWeight: 'bold', 
+              color: '#ffffff',
+              marginBottom: '20px',
+              margin: '0 0 20px 0'
+            }}>
+              Evolução Mensal (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="mes" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
+                <XAxis dataKey="mes" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1F2937', 
+                  contentStyle={{
+                    backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
                     color: '#ffffff'
                   }}
-                  formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Receitas']}
+                  formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Bar dataKey="receitas" fill="#10B981" />
+                <Legend />
+                <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           {/* Daily Chart */}
-          <div style={{
-            backgroundColor: '#1F2937',
+          <div style={{ 
+            backgroundColor: '#1f2937', 
+            borderRadius: '8px', 
             padding: '24px',
-            borderRadius: '12px',
             border: '1px solid #374151'
           }}>
-            <h3 style={{ color: '#ffffff', fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>
-              Receitas Diárias (Últimos 7 dias)
+            <h3 style={{ 
+              fontSize: '18px', 
+              fontWeight: 'bold', 
+              color: '#ffffff',
+              marginBottom: '20px',
+              margin: '0 0 20px 0'
+            }}>
+              Evolução Diária (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="dia" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
+                <XAxis dataKey="dia" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1F2937', 
+                  contentStyle={{
+                    backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
                     color: '#ffffff'
                   }}
-                  formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Receitas']}
+                  formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Bar dataKey="receitas" fill="#10B981" />
+                <Legend />
+                <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
+
+        {/* Payment Methods Chart */}
+        {getPaymentMethodsData().length > 0 && (
+          <div style={{ 
+            backgroundColor: '#1f2937', 
+            borderRadius: '8px', 
+            padding: '24px',
+            border: '1px solid #374151',
+            marginBottom: '32px'
+          }}>
+            <h3 style={{ 
+              fontSize: '18px', 
+              fontWeight: 'bold', 
+              color: '#ffffff',
+              marginBottom: '20px',
+              margin: '0 0 20px 0'
+            }}>
+              Formas de Pagamento
+            </h3>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+              gap: '24px',
+              alignItems: 'center'
+            }}>
+              {/* Pie Chart */}
+              <div style={{ height: '250px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={getPaymentMethodsData()}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={70}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {getPaymentMethodsData().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#1f2937',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#ffffff'
+                      }}
+                      formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Payment Methods List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {getPaymentMethodsData().map((item) => (
+                  <div key={item.name} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    padding: '12px', 
+                    backgroundColor: '#374151', 
+                    borderRadius: '8px',
+                    border: `2px solid ${item.color}`
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{
+                        width: '12px',
+                        height: '12px',
+                        backgroundColor: item.color,
+                        borderRadius: '50%'
+                      }}></div>
+                      <span style={{ 
+                        color: '#ffffff', 
+                        fontSize: '14px', 
+                        fontWeight: '600' 
+                      }}>
+                        {item.name}
+                      </span>
+                    </div>
+                    <span style={{ 
+                      color: item.color, 
+                      fontSize: '16px', 
+                      fontWeight: 'bold' 
+                    }}>
+                      R$ {item.value.toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Categories Chart */}
         {getCategoriesData().length > 0 && (
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151',
             marginBottom: '32px'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '18px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              marginBottom: '20px',
+              margin: '0 0 20px 0'
             }}>
               Receitas por Categoria
             </h3>
             
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: '1fr 1fr', 
-              gap: '32px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+              gap: '24px',
               alignItems: 'center'
             }}>
               {/* Pie Chart */}
-              <div style={{ height: '300px' }}>
+              <div style={{ height: '250px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -614,7 +793,8 @@ export default function ReceitasPage() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      outerRadius={80}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={70}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -636,27 +816,27 @@ export default function ReceitasPage() {
               </div>
 
               {/* Categories List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {getCategoriesData().map((item) => (
                   <div key={item.name} style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between',
-                    padding: '16px', 
+                    padding: '12px', 
                     backgroundColor: '#374151', 
                     borderRadius: '8px',
                     border: `2px solid ${item.color}`
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{
-                        width: '16px',
-                        height: '16px',
+                        width: '12px',
+                        height: '12px',
                         backgroundColor: item.color,
                         borderRadius: '50%'
                       }}></div>
                       <span style={{ 
                         color: '#ffffff', 
-                        fontSize: '16px', 
+                        fontSize: '14px', 
                         fontWeight: '600' 
                       }}>
                         {item.name}
@@ -664,7 +844,7 @@ export default function ReceitasPage() {
                     </div>
                     <span style={{ 
                       color: item.color, 
-                      fontSize: '18px', 
+                      fontSize: '16px', 
                       fontWeight: 'bold' 
                     }}>
                       R$ {item.value.toFixed(2).replace('.', ',')}
