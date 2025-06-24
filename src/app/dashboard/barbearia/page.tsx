@@ -661,6 +661,7 @@ export default function BarbeariaDashboard() {
                       }}
                       formatter={(value: number, name: string) => [`R$ ${value.toFixed(2).replace('.', ',')}`, name]}
                       labelStyle={{ color: '#ffffff' }}
+                      itemStyle={{ color: '#ffffff' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
