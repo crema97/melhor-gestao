@@ -128,7 +128,7 @@ export default function AdminDashboard() {
     try {
       const dataObj = new Date(data)
       return dataObj.toLocaleDateString('pt-BR')
-    } catch (error) {
+    } catch {
       return 'Data inválida'
     }
   }

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     // Calcular data de vencimento baseada no plano
     const hoje = new Date()
-    let dataVencimento = new Date()
+    const dataVencimento = new Date()
     
     switch (plano) {
       case 'mensal':

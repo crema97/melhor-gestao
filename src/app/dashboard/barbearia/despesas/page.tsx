@@ -35,7 +35,6 @@ interface DailyData {
 
 export default function DespesasPage() {
   const [despesas, setDespesas] = useState<Despesa[]>([])
-  const [filteredDespesas, setFilteredDespesas] = useState<Despesa[]>([])
   const [categorias, setCategorias] = useState<CategoriaDespesa[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -48,7 +47,7 @@ export default function DespesasPage() {
     categoria_despesa_id: '',
     observacoes: ''
   })
-  const [dateRange, setDateRange] = useState({
+  const [dateRange] = useState({
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
   })
@@ -120,7 +119,6 @@ export default function DespesasPage() {
 
       if (error) throw error
       setDespesas((data as unknown as Despesa[]) || [])
-      setFilteredDespesas((data as unknown as Despesa[]) || [])
     } catch (error) {
       console.error('Erro ao carregar despesas:', error)
     } finally {
@@ -151,7 +149,6 @@ export default function DespesasPage() {
       const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59)
       return despesaDate >= start && despesaDate <= end
     })
-    setFilteredDespesas(filtered)
   }
 
   function loadChartData() {

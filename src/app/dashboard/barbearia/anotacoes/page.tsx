@@ -31,7 +31,7 @@ export default function AnotacoesPage() {
 
   useEffect(() => {
     checkUserAndLoadData()
-  }, [])
+  }, [checkUserAndLoadData])
 
   async function checkUserAndLoadData() {
     try {
@@ -639,7 +639,7 @@ export default function AnotacoesPage() {
                   Nenhuma anotação registrada
                 </p>
                 <p style={{ color: '#9ca3af', fontSize: '16px', marginTop: '8px', margin: '8px 0 0 0' }}>
-                  Clique em "Nova Anotação" para começar
+                  Clique em &quot;Nova Anotação&quot; para começar
                 </p>
               </div>
             )}
