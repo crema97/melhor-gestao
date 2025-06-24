@@ -44,7 +44,9 @@ interface DailyData {
 
 export default function BarbeariaDashboard() {
   const [receitas, setReceitas] = useState<Receita[]>([])
+  const [filteredReceitas, setFilteredReceitas] = useState<Receita[]>([])
   const [despesas, setDespesas] = useState<Despesa[]>([])
+  const [filteredDespesas, setFilteredDespesas] = useState<Despesa[]>([])
   const [loading, setLoading] = useState(true)
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [dailyData, setDailyData] = useState<DailyData[]>([])
@@ -74,13 +76,55 @@ export default function BarbeariaDashboard() {
     if (usuarioId) {
       loadDashboardData(usuarioId)
     }
-  }, [dateRange, usuarioId])
+  }, [usuarioId])
 
   useEffect(() => {
     if (receitas.length > 0 || despesas.length > 0) {
       loadChartData()
     }
   }, [receitas, despesas])
+
+  useEffect(() => {
+    // Aplicar filtro de período quando as receitas e despesas mudarem
+    const filteredReceitasData = receitas.filter(receita => {
+      const receitaDate = new Date(receita.data_receita + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return receitaDate >= start && receitaDate <= end
+    })
+    setFilteredReceitas(filteredReceitasData)
+
+    const filteredDespesasData = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
+    })
+    setFilteredDespesas(filteredDespesasData)
+
+    // Atualizar stats
+    const receitasMes = filteredReceitasData.reduce((sum, r) => sum + r.valor, 0)
+    const despesasMes = filteredDespesasData.reduce((sum, d) => sum + d.valor, 0)
+    const lucro = receitasMes - despesasMes
+
+    const pagamentos = {
+      dinheiro: 0,
+      debito: 0,
+      credito: 0,
+      pix: 0
+    }
+
+    filteredReceitasData.forEach(receita => {
+      pagamentos[receita.forma_pagamento as keyof typeof pagamentos] += receita.valor
+    })
+
+    setStats({
+      receitasMes,
+      despesasMes,
+      lucro,
+      pagamentos
+    })
+  }, [receitas, despesas, dateRange])
 
   async function checkUserAndLoadData() {
     try {
@@ -124,8 +168,6 @@ export default function BarbeariaDashboard() {
           categoria_receita:categorias_receita(nome)
         `)
         .eq('usuario_id', usuarioId)
-        .gte('data_receita', dateRange.startDate.toISOString().split('T')[0])
-        .lte('data_receita', dateRange.endDate.toISOString().split('T')[0])
         .order('data_receita', { ascending: false })
 
       const { data: despesasData } = await supabase
@@ -138,34 +180,10 @@ export default function BarbeariaDashboard() {
           categoria_despesa:categorias_despesa(nome)
         `)
         .eq('usuario_id', usuarioId)
-        .gte('data_despesa', dateRange.startDate.toISOString().split('T')[0])
-        .lte('data_despesa', dateRange.endDate.toISOString().split('T')[0])
         .order('data_despesa', { ascending: false })
 
       setReceitas((receitasData as unknown as Receita[]) || [])
       setDespesas((despesasData as unknown as Despesa[]) || [])
-
-      const receitasMes = receitasData?.reduce((sum, r) => sum + r.valor, 0) || 0
-      const despesasMes = despesasData?.reduce((sum, d) => sum + d.valor, 0) || 0
-      const lucro = receitasMes - despesasMes
-
-      const pagamentos = {
-        dinheiro: 0,
-        debito: 0,
-        credito: 0,
-        pix: 0
-      }
-
-      receitasData?.forEach(receita => {
-        pagamentos[receita.forma_pagamento as keyof typeof pagamentos] += receita.valor
-      })
-
-      setStats({
-        receitasMes,
-        despesasMes,
-        lucro,
-        pagamentos
-      })
 
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
@@ -243,10 +261,6 @@ export default function BarbeariaDashboard() {
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
     setDateRange({ startDate, endDate })
-    // Recarregar dados com o novo período
-    if (usuarioId) {
-      loadDashboardData(usuarioId)
-    }
   }
 
   async function handleLogout() {
@@ -756,9 +770,9 @@ export default function BarbeariaDashboard() {
               </div>
             </div>
             <div style={{ padding: '24px' }}>
-              {receitas.slice(0, 5).length > 0 ? (
+              {filteredReceitas.slice(0, 5).length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {receitas.slice(0, 5).map((receita) => (
+                  {filteredReceitas.slice(0, 5).map((receita) => (
                     <div key={receita.id} style={{ 
                       display: 'flex', 
                       justifyContent: 'space-between', 
@@ -853,9 +867,9 @@ export default function BarbeariaDashboard() {
               </div>
             </div>
             <div style={{ padding: '24px' }}>
-              {despesas.slice(0, 5).length > 0 ? (
+              {filteredDespesas.slice(0, 5).length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {despesas.slice(0, 5).map((despesa) => (
+                  {filteredDespesas.slice(0, 5).map((despesa) => (
                     <div key={despesa.id} style={{ 
                       display: 'flex', 
                       justifyContent: 'space-between', 

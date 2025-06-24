@@ -35,6 +35,7 @@ interface DailyData {
 
 export default function DespesasPage() {
   const [despesas, setDespesas] = useState<Despesa[]>([])
+  const [filteredDespesas, setFilteredDespesas] = useState<Despesa[]>([])
   const [categorias, setCategorias] = useState<CategoriaDespesa[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -69,6 +70,17 @@ export default function DespesasPage() {
       loadChartData()
     }
   }, [despesas])
+
+  useEffect(() => {
+    // Aplicar filtro de período quando as despesas mudarem
+    const filtered = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
+    })
+    setFilteredDespesas(filtered)
+  }, [despesas, dateRange])
 
   async function checkUserAndLoadData() {
     try {
@@ -113,8 +125,6 @@ export default function DespesasPage() {
           categoria_despesa:categorias_despesa(nome)
         `)
         .eq('usuario_id', usuarioId)
-        .gte('data_despesa', dateRange.startDate.toISOString().split('T')[0])
-        .lte('data_despesa', dateRange.endDate.toISOString().split('T')[0])
         .order('data_despesa', { ascending: false })
 
       if (error) throw error
@@ -147,7 +157,7 @@ export default function DespesasPage() {
   }
 
   function loadChartData() {
-    if (despesas.length === 0) {
+    if (filteredDespesas.length === 0) {
       setMonthlyData([])
       setDailyData([])
       return
@@ -162,7 +172,7 @@ export default function DespesasPage() {
       date.setMonth(date.getMonth() - i)
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
       
-      const monthDespesas = despesas.filter(d => d.data_despesa.startsWith(monthKey))
+      const monthDespesas = filteredDespesas.filter(d => d.data_despesa.startsWith(monthKey))
         .reduce((sum, d) => sum + d.valor, 0)
       
       monthlyDataArray.push({
@@ -180,7 +190,7 @@ export default function DespesasPage() {
       date.setDate(date.getDate() - i)
       const dateKey = date.toISOString().split('T')[0]
       
-      const dayDespesas = despesas.filter(d => d.data_despesa === dateKey)
+      const dayDespesas = filteredDespesas.filter(d => d.data_despesa === dateKey)
         .reduce((sum, d) => sum + d.valor, 0)
       
       dailyDataArray.push({
@@ -620,7 +630,7 @@ export default function DespesasPage() {
                 fontSize: '16px',
                 margin: 0
               }}>
-                {despesas.length} despesa{despesas.length !== 1 ? 's' : ''} registrada{despesas.length !== 1 ? 's' : ''}
+                {filteredDespesas.length} despesa{filteredDespesas.length !== 1 ? 's' : ''} registrada{filteredDespesas.length !== 1 ? 's' : ''}
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -632,12 +642,12 @@ export default function DespesasPage() {
                 Total do Período
               </p>
               <p style={{ 
-                fontSize: '32px', 
+                fontSize: '28px', 
                 fontWeight: 'bold', 
                 color: '#ef4444',
                 margin: 0
               }}>
-                R$ {totalDespesas.toFixed(2).replace('.', ',')}
+                R$ {filteredDespesas.reduce((sum, d) => sum + d.valor, 0).toFixed(2).replace('.', ',')}
               </p>
             </div>
           </div>
@@ -745,9 +755,9 @@ export default function DespesasPage() {
             </h2>
           </div>
           <div style={{ padding: '24px' }}>
-            {despesas.length > 0 ? (
+            {filteredDespesas.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {despesas.map((despesa) => (
+                {filteredDespesas.map((despesa) => (
                   <div key={despesa.id} style={{ 
                     display: 'flex', 
                     justifyContent: 'space-between', 

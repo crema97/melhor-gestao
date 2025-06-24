@@ -257,23 +257,6 @@ export default function AnotacoesPage() {
               >
                 ← Voltar
               </Link>
-              <button
-                onClick={() => setShowForm(true)}
-                style={{
-                  padding: '12px 24px',
-                  backgroundColor: '#ca8a04',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#a16207'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ca8a04'}
-              >
-                + Nova Anotação
-              </button>
             </div>
           </div>
         </div>
@@ -485,7 +468,7 @@ export default function AnotacoesPage() {
 
         {/* Botão Nova Anotação */}
         {!showForm && (
-          <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'flex-start' }}>
             <button
               onClick={() => setShowForm(true)}
               style={{

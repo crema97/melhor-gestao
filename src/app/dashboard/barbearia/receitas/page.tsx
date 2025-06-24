@@ -745,7 +745,7 @@ export default function ReceitasPage() {
                 Total do Período
               </p>
               <p style={{ 
-                fontSize: '32px', 
+                fontSize: '28px', 
                 fontWeight: 'bold', 
                 color: '#10b981',
                 margin: 0
