@@ -47,7 +47,7 @@ export default function DespesasPage() {
     categoria_despesa_id: '',
     observacoes: ''
   })
-  const [dateRange] = useState({
+  const [dateRange, setDateRange] = useState({
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
   })
@@ -143,12 +143,7 @@ export default function DespesasPage() {
   }
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
-    const filtered = despesas.filter(despesa => {
-      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
-      const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
-      const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59)
-      return despesaDate >= start && despesaDate <= end
-    })
+    setDateRange({ startDate, endDate })
   }
 
   function loadChartData() {
@@ -651,37 +646,38 @@ export default function DespesasPage() {
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', 
-          gap: '32px', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+          gap: '20px', 
           marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '18px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              marginBottom: '20px',
+              margin: '0 0 20px 0'
             }}>
               Evolução Mensal (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="mes" stroke="#d1d5db" />
-                <YAxis stroke="#d1d5db" />
+                <XAxis dataKey="mes" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
@@ -695,29 +691,30 @@ export default function DespesasPage() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '18px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              marginBottom: '20px',
+              margin: '0 0 20px 0'
             }}>
               Evolução Diária (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="dia" stroke="#d1d5db" />
-                <YAxis stroke="#d1d5db" />
+                <XAxis dataKey="dia" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
@@ -760,10 +757,12 @@ export default function DespesasPage() {
                     padding: '20px', 
                     backgroundColor: '#374151', 
                     borderRadius: '8px',
-                    border: '1px solid #4b5563'
+                    border: '1px solid #4b5563',
+                    flexWrap: 'wrap',
+                    gap: '12px'
                   }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
                         <h3 style={{ 
                           fontWeight: '600', 
                           color: '#ffffff',
@@ -791,11 +790,11 @@ export default function DespesasPage() {
                         </p>
                       )}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                       <p style={{ 
                         fontWeight: 'bold', 
                         color: '#ef4444', 
-                        fontSize: '24px',
+                        fontSize: '20px',
                         margin: 0
                       }}>
                         R$ {despesa.valor.toFixed(2).replace('.', ',')}
@@ -812,7 +811,8 @@ export default function DespesasPage() {
                             fontSize: '14px',
                             fontWeight: '500',
                             cursor: 'pointer',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
                           }}
                           onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
                           onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
@@ -830,7 +830,8 @@ export default function DespesasPage() {
                             fontSize: '14px',
                             fontWeight: '500',
                             cursor: 'pointer',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
                           }}
                           onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
                           onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}

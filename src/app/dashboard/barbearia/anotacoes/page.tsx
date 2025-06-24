@@ -280,7 +280,7 @@ export default function AnotacoesPage() {
       </div>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 32px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
         {/* Form */}
         {showForm && (
           <div style={{ 
@@ -288,7 +288,7 @@ export default function AnotacoesPage() {
             borderRadius: '8px', 
             padding: '32px',
             border: '1px solid #374151',
-            marginBottom: '48px'
+            marginBottom: '32px'
           }}>
             <h2 style={{ 
               fontSize: '24px', 
@@ -483,6 +483,31 @@ export default function AnotacoesPage() {
           </div>
         )}
 
+        {/* Botão Nova Anotação */}
+        {!showForm && (
+          <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              onClick={() => setShowForm(true)}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#ca8a04',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                fontSize: '14px',
+                whiteSpace: 'nowrap'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#a16207'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ca8a04'}
+            >
+              + Nova Anotação
+            </button>
+          </div>
+        )}
+
         {/* Anotações List */}
         <div style={{ 
           backgroundColor: '#1f2937', 
@@ -516,9 +541,9 @@ export default function AnotacoesPage() {
                     border: '1px solid #4b5563',
                     borderLeft: anotacao.importante ? '4px solid #ca8a04' : '1px solid #4b5563'
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                      <div style={{ flex: 1, minWidth: '200px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
                           <h4 style={{ 
                             fontSize: '20px', 
                             fontWeight: 'bold', 
@@ -573,7 +598,8 @@ export default function AnotacoesPage() {
                             borderRadius: '6px',
                             cursor: 'pointer',
                             fontSize: '14px',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
                           }}
                           onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
                           onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
@@ -590,7 +616,8 @@ export default function AnotacoesPage() {
                             borderRadius: '6px',
                             cursor: 'pointer',
                             fontSize: '14px',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
                           }}
                           onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
                           onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}

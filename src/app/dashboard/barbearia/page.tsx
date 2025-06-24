@@ -243,6 +243,10 @@ export default function BarbeariaDashboard() {
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
     setDateRange({ startDate, endDate })
+    // Recarregar dados com o novo período
+    if (usuarioId) {
+      loadDashboardData(usuarioId)
+    }
   }
 
   async function handleLogout() {
