@@ -715,7 +715,7 @@ export default function BarbeariaDashboard() {
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
-          gap: '32px' 
+          gap: '20px' 
         }}>
           {/* Recent Receitas */}
           <div style={{ 

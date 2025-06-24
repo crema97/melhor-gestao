@@ -869,7 +869,7 @@ export default function ReceitasPage() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
                       outerRadius={60}
                       fill="#8884d8"
                       dataKey="value"
@@ -886,7 +886,7 @@ export default function ReceitasPage() {
                         color: '#ffffff',
                         fontSize: '12px'
                       }}
-                      formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
+                      formatter={(value: number, name: string) => [`R$ ${value.toFixed(2).replace('.', ',')}`, name]}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -1119,10 +1119,12 @@ export default function ReceitasPage() {
                     padding: '20px', 
                     backgroundColor: '#374151', 
                     borderRadius: '8px',
-                    border: '1px solid #4b5563'
+                    border: '1px solid #4b5563',
+                    flexWrap: 'wrap',
+                    gap: '12px'
                   }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
                         <h3 style={{ 
                           fontWeight: '600', 
                           color: '#ffffff',
@@ -1161,11 +1163,11 @@ export default function ReceitasPage() {
                         </p>
                       )}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                       <p style={{ 
                         fontWeight: 'bold', 
                         color: '#10b981', 
-                        fontSize: '24px',
+                        fontSize: '20px',
                         margin: 0
                       }}>
                         R$ {receita.valor.toFixed(2).replace('.', ',')}
@@ -1182,7 +1184,8 @@ export default function ReceitasPage() {
                             fontSize: '14px',
                             fontWeight: '500',
                             cursor: 'pointer',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
                           }}
                           onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
                           onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
@@ -1200,7 +1203,8 @@ export default function ReceitasPage() {
                             fontSize: '14px',
                             fontWeight: '500',
                             cursor: 'pointer',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
                           }}
                           onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
                           onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}

@@ -77,7 +77,40 @@ export default function PeriodSelector({ onPeriodChange, initialPeriod = 'month'
       const endDate = new Date(customEndDate)
       return `${formatDate(startDate)} - ${formatDate(endDate)}`
     }
-    const { startDate, endDate } = getDateRange(selectedPeriod)
+    
+    const today = new Date()
+    let startDate = new Date()
+    let endDate = new Date()
+
+    switch (selectedPeriod) {
+      case 'today':
+        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59)
+        break
+      case 'week':
+        const dayOfWeek = today.getDay()
+        const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysToSubtract)
+        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + (6 - dayOfWeek), 23, 59, 59)
+        break
+      case 'month':
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1)
+        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59)
+        break
+      case 'quarter':
+        const quarter = Math.floor(today.getMonth() / 3)
+        startDate = new Date(today.getFullYear(), quarter * 3, 1)
+        endDate = new Date(today.getFullYear(), (quarter + 1) * 3, 0, 23, 59, 59)
+        break
+      case 'year':
+        startDate = new Date(today.getFullYear(), 0, 1)
+        endDate = new Date(today.getFullYear(), 11, 31, 23, 59, 59)
+        break
+      default:
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1)
+        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59)
+    }
+    
     return `${formatDate(startDate)} - ${formatDate(endDate)}`
   }
 
