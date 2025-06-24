@@ -153,6 +153,7 @@ export default function DespesasPage() {
   }
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
+    console.log('handlePeriodChange chamado:', startDate, endDate)
     setDateRange({ startDate, endDate })
   }
 
@@ -642,7 +643,7 @@ export default function DespesasPage() {
                 Total do Período
               </p>
               <p style={{ 
-                fontSize: '28px', 
+                fontSize: '24px', 
                 fontWeight: 'bold', 
                 color: '#ef4444',
                 margin: 0

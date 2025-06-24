@@ -745,7 +745,7 @@ export default function ReceitasPage() {
                 Total do Período
               </p>
               <p style={{ 
-                fontSize: '28px', 
+                fontSize: '24px', 
                 fontWeight: 'bold', 
                 color: '#10b981',
                 margin: 0
@@ -887,6 +887,7 @@ export default function ReceitasPage() {
                         fontSize: '12px'
                       }}
                       formatter={(value: number, name: string) => [`R$ ${value.toFixed(2).replace('.', ',')}`, name]}
+                      labelStyle={{ color: '#ffffff' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
