@@ -828,6 +828,8 @@ export default function DespesasPage() {
                         color: '#ffffff'
                       }}
                       formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
+                      labelStyle={{ color: '#ffffff' }}
+                      itemStyle={{ color: '#ffffff' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>

@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import PeriodSelector from '@/components/PeriodSelector'
-import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, ResponsiveContainer } from 'recharts'
+import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 interface CategoriaDespesa {
   id: string
@@ -33,6 +33,12 @@ interface DailyData {
   despesas: number
 }
 
+interface CategoryData {
+  name: string
+  value: number
+  color: string
+}
+
 export default function DespesasPage() {
   const [despesas, setDespesas] = useState<Despesa[]>([])
   const [filteredDespesas, setFilteredDespesas] = useState<Despesa[]>([])
@@ -41,7 +47,16 @@ export default function DespesasPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingDespesa, setEditingDespesa] = useState<Despesa | null>(null)
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
-  const [dailyData, setDailyData] = useState<DailyData[]>([])
+  const [dailyData, setDailyData] = useState<DailyData[]>([
+    { dia: 'Seg', despesas: 0 },
+    { dia: 'Ter', despesas: 0 },
+    { dia: 'Qua', despesas: 0 },
+    { dia: 'Qui', despesas: 0 },
+    { dia: 'Sex', despesas: 0 },
+    { dia: 'Sab', despesas: 0 },
+    { dia: 'Dom', despesas: 0 }
+  ])
+  const [categoryData, setCategoryData] = useState<CategoryData[]>([])
   const [formData, setFormData] = useState({
     valor: '',
     data_despesa: '',
@@ -68,6 +83,7 @@ export default function DespesasPage() {
   useEffect(() => {
     if (despesas.length > 0) {
       loadChartData()
+      loadCategoryData()
     }
   }, [despesas])
 
@@ -266,13 +282,11 @@ export default function DespesasPage() {
 
   function loadChartData() {
     if (despesas.length === 0) {
-      setMonthlyData([])
-      setDailyData([])
       return
     }
 
     // Dados mensais dos últimos 6 meses
-    const monthlyDataArray: MonthlyData[] = []
+    const monthlyDataArray = [...monthlyData]
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
     
     for (let i = 5; i >= 0; i--) {
@@ -283,16 +297,16 @@ export default function DespesasPage() {
       const monthDespesas = despesas.filter(d => d.data_despesa.startsWith(monthKey))
         .reduce((sum, d) => sum + d.valor, 0)
       
-      monthlyDataArray.push({
+      monthlyDataArray[i] = {
         mes: months[date.getMonth()],
         despesas: monthDespesas
-      })
+      }
     }
     
     setMonthlyData(monthlyDataArray)
 
     // Dados diários dos últimos 7 dias
-    const dailyDataArray: DailyData[] = []
+    const dailyDataArray = [...dailyData]
     for (let i = 6; i >= 0; i--) {
       const date = new Date()
       date.setDate(date.getDate() - i)
@@ -301,13 +315,32 @@ export default function DespesasPage() {
       const dayDespesas = despesas.filter(d => d.data_despesa === dateKey)
         .reduce((sum, d) => sum + d.valor, 0)
       
-      dailyDataArray.push({
-        dia: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+      dailyDataArray[i] = {
+        dia: date.toLocaleDateString('pt-BR', { weekday: 'short' }),
         despesas: dayDespesas
-      })
+      }
     }
     
     setDailyData(dailyDataArray)
+  }
+
+  function loadCategoryData() {
+    const categorias: { [key: string]: number } = {}
+    
+    filteredDespesas.forEach(despesa => {
+      const categoriaNome = despesa.categoria_despesa?.nome || 'Sem categoria'
+      categorias[categoriaNome] = (categorias[categoriaNome] || 0) + despesa.valor
+    })
+
+    const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#ec4899']
+
+    const categoryData = Object.entries(categorias).map(([name, value], index) => ({
+      name,
+      value: value as number,
+      color: colors[index % colors.length]
+    })).filter(item => item.value > 0)
+
+    setCategoryData(categoryData)
   }
 
   if (loading) {
@@ -498,6 +531,104 @@ export default function DespesasPage() {
             </ResponsiveContainer>
           </div>
         </div>
+
+        {/* Categories Chart */}
+        {categoryData.length > 0 && (
+          <div style={{ 
+            backgroundColor: '#1f2937', 
+            borderRadius: '8px', 
+            padding: '32px',
+            border: '1px solid #374151',
+            marginBottom: '32px'
+          }}>
+            <h3 style={{ 
+              fontSize: '20px', 
+              fontWeight: 'bold', 
+              color: '#ffffff',
+              marginBottom: '24px',
+              margin: '0 0 24px 0'
+            }}>
+              Despesas por Categoria
+            </h3>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: '1fr 1fr', 
+              gap: '32px',
+              alignItems: 'center'
+            }}>
+              {/* Pie Chart */}
+              <div style={{ height: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#1f2937',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#ffffff'
+                      }}
+                      formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
+                      labelStyle={{ color: '#ffffff' }}
+                      itemStyle={{ color: '#ffffff' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Categories List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {categoryData.map((item) => (
+                  <div key={item.name} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '16px',
+                    backgroundColor: '#374151',
+                    borderRadius: '8px',
+                    border: `2px solid ${item.color}`
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: item.color,
+                        borderRadius: '50%'
+                      }}></div>
+                      <span style={{ 
+                        color: '#ffffff', 
+                        fontSize: '16px', 
+                        fontWeight: '600' 
+                      }}>
+                        {item.name}
+                      </span>
+                    </div>
+                    <span style={{ 
+                      color: item.color, 
+                      fontSize: '18px', 
+                      fontWeight: 'bold' 
+                    }}>
+                      R$ {item.value.toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Form Modal */}
         {showForm && (

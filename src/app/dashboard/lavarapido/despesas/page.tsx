@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import PeriodSelector from '@/components/PeriodSelector'
 
 interface CategoriaDespesa {
@@ -33,6 +33,12 @@ interface DailyData {
   despesas: number
 }
 
+interface CategoryData {
+  name: string
+  value: number
+  color: string
+}
+
 export default function DespesasPage() {
   const [despesas, setDespesas] = useState<Despesa[]>([])
   const [categorias, setCategorias] = useState<CategoriaDespesa[]>([])
@@ -48,6 +54,7 @@ export default function DespesasPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [dailyData, setDailyData] = useState<DailyData[]>([])
+  const [categoryData, setCategoryData] = useState<CategoryData[]>([])
   const [filteredDespesas, setFilteredDespesas] = useState<Despesa[]>([])
   const router = useRouter()
 
@@ -58,6 +65,7 @@ export default function DespesasPage() {
   useEffect(() => {
     if (despesas.length > 0) {
       loadChartData()
+      loadCategoryData()
     }
   }, [despesas])
 
@@ -182,6 +190,25 @@ export default function DespesasPage() {
       })
     }
     setDailyData(dailyData)
+  }
+
+  function loadCategoryData() {
+    const categorias: { [key: string]: number } = {}
+    
+    filteredDespesas.forEach(despesa => {
+      const categoriaNome = despesa.categoria_despesa?.nome || 'Sem categoria'
+      categorias[categoriaNome] = (categorias[categoriaNome] || 0) + despesa.valor
+    })
+
+    const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#ec4899']
+
+    const categoryData = Object.entries(categorias).map(([name, value], index) => ({
+      name,
+      value: value as number,
+      color: colors[index % colors.length]
+    })).filter(item => item.value > 0)
+
+    setCategoryData(categoryData)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -688,6 +715,104 @@ export default function DespesasPage() {
             </ResponsiveContainer>
           </div>
         </div>
+
+        {/* Categories Chart */}
+        {categoryData.length > 0 && (
+          <div style={{ 
+            backgroundColor: '#1f2937', 
+            borderRadius: '8px', 
+            padding: '32px',
+            border: '1px solid #374151',
+            marginBottom: '32px'
+          }}>
+            <h3 style={{ 
+              fontSize: '20px', 
+              fontWeight: 'bold', 
+              color: '#ffffff',
+              marginBottom: '24px',
+              margin: '0 0 24px 0'
+            }}>
+              Despesas por Categoria
+            </h3>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: '1fr 1fr', 
+              gap: '32px',
+              alignItems: 'center'
+            }}>
+              {/* Pie Chart */}
+              <div style={{ height: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#1f2937',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#ffffff'
+                      }}
+                      formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
+                      labelStyle={{ color: '#ffffff' }}
+                      itemStyle={{ color: '#ffffff' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Categories List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {categoryData.map((item) => (
+                  <div key={item.name} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '16px',
+                    backgroundColor: '#374151',
+                    borderRadius: '8px',
+                    border: `2px solid ${item.color}`
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: item.color,
+                        borderRadius: '50%'
+                      }}></div>
+                      <span style={{ 
+                        color: '#ffffff', 
+                        fontSize: '16px', 
+                        fontWeight: '600' 
+                      }}>
+                        {item.name}
+                      </span>
+                    </div>
+                    <span style={{ 
+                      color: item.color, 
+                      fontSize: '18px', 
+                      fontWeight: 'bold' 
+                    }}>
+                      R$ {item.value.toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Despesas List */}
         <div style={{ 
