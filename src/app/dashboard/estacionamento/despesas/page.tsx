@@ -73,6 +73,13 @@ export default function DespesasPage() {
   }, [despesas])
 
   useEffect(() => {
+    if (filteredDespesas.length > 0) {
+      loadChartData()
+      loadCategoryData()
+    }
+  }, [filteredDespesas])
+
+  useEffect(() => {
     const loadDataForPeriod = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
@@ -163,11 +170,10 @@ export default function DespesasPage() {
   }
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
+    const startStr = startDate.toISOString().split('T')[0]
+    const endStr = endDate.toISOString().split('T')[0]
     const filtered = despesas.filter(despesa => {
-      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
-      const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
-      const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59)
-      return despesaDate >= start && despesaDate <= end
+      return despesa.data_despesa >= startStr && despesa.data_despesa <= endStr
     })
     setFilteredDespesas(filtered)
   }
@@ -181,7 +187,7 @@ export default function DespesasPage() {
       const mes = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1)
       const mesStr = mes.toLocaleDateString('pt-BR', { month: 'short' })
       
-      const despesasMes = despesas.filter(d => {
+      const despesasMes = filteredDespesas.filter(d => {
         const dataDespesa = new Date(d.data_despesa + 'T00:00:00')
         return dataDespesa.getMonth() === mes.getMonth() && dataDespesa.getFullYear() === mes.getFullYear()
       }).reduce((sum, d) => sum + d.valor, 0)
@@ -201,7 +207,7 @@ export default function DespesasPage() {
       dia.setDate(dia.getDate() - i)
       const diaStr = dia.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
       
-      const despesasDia = despesas.filter(d => {
+      const despesasDia = filteredDespesas.filter(d => {
         const dataDespesa = new Date(d.data_despesa + 'T00:00:00')
         return dataDespesa.toDateString() === dia.toDateString()
       }).reduce((sum, d) => sum + d.valor, 0)
@@ -218,7 +224,7 @@ export default function DespesasPage() {
   function loadCategoryData() {
     const categorias: { [key: string]: number } = {}
     
-    despesas.forEach(despesa => {
+    filteredDespesas.forEach(despesa => {
       const categoriaNome = despesa.categoria_despesa?.nome || 'Sem categoria'
       categorias[categoriaNome] = (categorias[categoriaNome] || 0) + despesa.valor
     })
@@ -669,7 +675,7 @@ export default function DespesasPage() {
                 fontSize: '16px',
                 margin: 0
               }}>
-                {despesas.length} despesa{despesas.length !== 1 ? 's' : ''} registrada{despesas.length !== 1 ? 's' : ''}
+                {filteredDespesas.length} despesa{filteredDespesas.length !== 1 ? 's' : ''} registrada{filteredDespesas.length !== 1 ? 's' : ''}
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
