@@ -781,102 +781,95 @@ export default function DespesasPage() {
         {/* Categories Chart */}
         {categoryData.length > 0 && (
           <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
-            gap: '32px', 
-            marginBottom: '32px' 
+            backgroundColor: '#1f2937', 
+            borderRadius: '8px', 
+            padding: '32px',
+            border: '1px solid #374151',
+            marginBottom: '32px'
           }}>
-            {/* Pie Chart */}
-            <div style={{ 
-              backgroundColor: '#1f2937', 
-              borderRadius: '8px', 
-              padding: '32px',
-              border: '1px solid #374151'
+            <h3 style={{ 
+              fontSize: '20px', 
+              fontWeight: 'bold', 
+              color: '#ffffff',
+              marginBottom: '24px',
+              margin: '0 0 24px 0'
             }}>
-              <h3 style={{ 
-                fontSize: '20px', 
-                fontWeight: 'bold', 
-                color: '#ffffff',
-                marginBottom: '24px',
-                margin: '0 0 24px 0'
-              }}>
-                Despesas por Categoria
-              </h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: '#1f2937',
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#ffffff'
-                    }}
-                    formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+              Despesas por Categoria
+            </h3>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: '1fr 1fr', 
+              gap: '32px',
+              alignItems: 'center'
+            }}>
+              {/* Pie Chart */}
+              <div style={{ height: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#1f2937',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#ffffff'
+                      }}
+                      formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
-            {/* Categories List */}
-            <div style={{ 
-              backgroundColor: '#1f2937', 
-              borderRadius: '8px', 
-              padding: '32px',
-              border: '1px solid #374151'
-            }}>
-              <h3 style={{ 
-                fontSize: '20px', 
-                fontWeight: 'bold', 
-                color: '#ffffff',
-                marginBottom: '24px',
-                margin: '0 0 24px 0'
-              }}>
-                Detalhamento por Categoria
-              </h3>
+              {/* Categories List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {categoryData.map((item, index) => (
-                  <div key={index} style={{ 
+                {categoryData.map((item) => (
+                  <div key={item.name} style={{ 
                     display: 'flex', 
-                    justifyContent: 'space-between', 
                     alignItems: 'center',
+                    justifyContent: 'space-between',
                     padding: '16px',
                     backgroundColor: '#374151',
                     borderRadius: '8px',
-                    border: '1px solid #4b5563'
+                    border: `2px solid ${item.color}`
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{
-                        width: '12px',
-                        height: '12px',
+                        width: '16px',
+                        height: '16px',
                         backgroundColor: item.color,
                         borderRadius: '50%'
                       }}></div>
-                      <span style={{ color: '#ffffff', fontWeight: '500' }}>{item.name}</span>
+                      <span style={{ 
+                        color: '#ffffff', 
+                        fontSize: '16px', 
+                        fontWeight: '600' 
+                      }}>
+                        {item.name}
+                      </span>
                     </div>
                     <span style={{ 
-                      color: '#ef4444', 
-                      fontWeight: 'bold',
-                      fontSize: '18px'
+                      color: item.color, 
+                      fontSize: '18px', 
+                      fontWeight: 'bold' 
                     }}>
                       R$ {item.value.toFixed(2).replace('.', ',')}
                     </span>
                   </div>
                 ))}
-                </div>
+              </div>
             </div>
           </div>
         )}
