@@ -30,6 +30,16 @@ export default function AdminDashboard() {
     plano: 'mensal'
   })
 
+  const [editPasswordForm, setEditPasswordForm] = useState({
+    email: '',
+    novaSenha: '',
+    confirmarSenha: ''
+  })
+
+  const [showEditPasswordModal, setShowEditPasswordModal] = useState(false)
+  const [editingUser, setEditingUser] = useState<Usuario | null>(null)
+  const [updatingPassword, setUpdatingPassword] = useState(false)
+
   const [tiposNegocio, setTiposNegocio] = useState<TipoNegocio[]>([])
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [carregando, setCarregando] = useState(false)
@@ -110,6 +120,70 @@ export default function AdminDashboard() {
     } finally {
       setDeletando(null)
     }
+  }
+
+  function handleEditPassword(usuario: Usuario) {
+    setEditingUser(usuario)
+    setEditPasswordForm({
+      email: usuario.email,
+      novaSenha: '',
+      confirmarSenha: ''
+    })
+    setShowEditPasswordModal(true)
+  }
+
+  async function handleUpdatePassword(e: React.FormEvent) {
+    e.preventDefault()
+    
+    if (editPasswordForm.novaSenha !== editPasswordForm.confirmarSenha) {
+      alert('As senhas não coincidem!')
+      return
+    }
+
+    if (editPasswordForm.novaSenha.length < 6) {
+      alert('A senha deve ter pelo menos 6 caracteres!')
+      return
+    }
+
+    setUpdatingPassword(true)
+
+    try {
+      const response = await fetch('/api/update-user-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: editPasswordForm.email,
+          novaSenha: editPasswordForm.novaSenha
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        alert('Erro ao atualizar senha: ' + result.error)
+        setUpdatingPassword(false)
+        return
+      }
+
+      alert('Senha atualizada com sucesso!')
+      setShowEditPasswordModal(false)
+      setEditPasswordForm({ email: '', novaSenha: '', confirmarSenha: '' })
+      setEditingUser(null)
+
+    } catch (error) {
+      console.error('Erro ao atualizar senha:', error)
+      alert('Erro inesperado ao atualizar senha')
+    } finally {
+      setUpdatingPassword(false)
+    }
+  }
+
+  function handleCancelEditPassword() {
+    setShowEditPasswordModal(false)
+    setEditPasswordForm({ email: '', novaSenha: '', confirmarSenha: '' })
+    setEditingUser(null)
   }
 
   async function handleLogout() {
@@ -203,166 +277,47 @@ export default function AdminDashboard() {
                   fontSize: '14px',
                   margin: 0
                 }}>
-                  Gerenciamento de clientes e mensalidades
+                  Gerencie seus clientes
                 </p>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                <div style={{ 
+              <button
+                onClick={handleLogout}
+                style={{
                   padding: '10px 16px',
-                  backgroundColor: '#8b5cf6',
+                  backgroundColor: '#6b7280',
                   color: 'white',
                   borderRadius: '8px',
+                  border: 'none',
                   fontWeight: '500',
-                  fontSize: '14px'
-                }}>
-                  {usuarios.length} Clientes
-                </div>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#dc2626',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s',
-                    fontSize: '14px'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-                >
-                  Sair
-                </button>
-              </div>
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
+              >
+                <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Sair
+              </button>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
         <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
-          {/* Stats Cards */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-            gap: '20px', 
-            marginBottom: '32px' 
-          }}>
-            <div style={{ 
-              backgroundColor: '#1f2937', 
-              borderRadius: '8px', 
-              padding: '24px',
-              border: '1px solid #374151'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ 
-                  padding: '12px', 
-                  backgroundColor: '#8b5cf6', 
-                  borderRadius: '8px',
-                  marginRight: '16px'
-                }}>
-                  <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
-                    Total de Clientes
-                  </p>
-                  <p style={{ 
-                    fontSize: '24px', 
-                    fontWeight: 'bold', 
-                    color: '#ffffff',
-                    margin: 0
-                  }}>
-                    {usuarios.length}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ 
-              backgroundColor: '#1f2937', 
-              borderRadius: '8px', 
-              padding: '24px',
-              border: '1px solid #374151'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ 
-                  padding: '12px', 
-                  backgroundColor: '#10b981', 
-                  borderRadius: '8px',
-                  marginRight: '16px'
-                }}>
-                  <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
-                    Clientes Ativos
-                  </p>
-                  <p style={{ 
-                    fontSize: '24px', 
-                    fontWeight: 'bold', 
-                    color: '#ffffff',
-                    margin: 0
-                  }}>
-                    {usuarios.filter(u => u.status_pagamento === 'ativo').length}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ 
-              backgroundColor: '#1f2937', 
-              borderRadius: '8px', 
-              padding: '24px',
-              border: '1px solid #374151'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ 
-                  padding: '12px', 
-                  backgroundColor: '#f59e0b', 
-                  borderRadius: '8px',
-                  marginRight: '16px'
-                }}>
-                  <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p style={{ color: '#d1d5db', fontSize: '14px', fontWeight: '500', margin: 0 }}>
-                    Vencendo em 7 dias
-                  </p>
-                  <p style={{ 
-                    fontSize: '24px', 
-                    fontWeight: 'bold', 
-                    color: '#ffffff',
-                    margin: 0
-                  }}>
-                    {usuarios.filter(u => {
-                      if (!u.data_vencimento) return false
-                      const vencimento = new Date(u.data_vencimento)
-                      const hoje = new Date()
-                      const diffTime = vencimento.getTime() - hoje.getTime()
-                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-                      return diffDays <= 7 && diffDays > 0
-                    }).length}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Form Section */}
+          {/* Create User Form */}
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
             padding: '32px',
             border: '1px solid #374151',
-            marginBottom: '48px'
+            marginBottom: '32px'
           }}>
             <h2 style={{ 
               fontSize: '24px', 
@@ -374,7 +329,11 @@ export default function AdminDashboard() {
               Cadastrar Novo Cliente
             </h2>
 
-            <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+            <form onSubmit={handleSubmit} style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+              gap: '20px' 
+            }}>
               <div>
                 <label style={{ 
                   display: 'block', 
@@ -383,13 +342,13 @@ export default function AdminDashboard() {
                   fontWeight: '500', 
                   marginBottom: '8px' 
                 }}>
-                  Nome Completo
+                  Nome
                 </label>
-          <input
-            type="text"
-                  placeholder="Digite o nome completo"
-            value={form.nome}
-            onChange={e => setForm({ ...form, nome: e.target.value })}
+                <input
+                  type="text"
+                  placeholder="Digite o nome"
+                  value={form.nome}
+                  onChange={e => setForm({ ...form, nome: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -399,8 +358,8 @@ export default function AdminDashboard() {
                     color: '#ffffff',
                     fontSize: '16px'
                   }}
-            required
-          />
+                  required
+                />
               </div>
 
               <div>
@@ -413,11 +372,11 @@ export default function AdminDashboard() {
                 }}>
                   Email
                 </label>
-          <input
-            type="email"
+                <input
+                  type="email"
                   placeholder="Digite o email"
-            value={form.email}
-            onChange={e => setForm({ ...form, email: e.target.value })}
+                  value={form.email}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -427,8 +386,8 @@ export default function AdminDashboard() {
                     color: '#ffffff',
                     fontSize: '16px'
                   }}
-            required
-          />
+                  required
+                />
               </div>
 
               <div>
@@ -441,11 +400,11 @@ export default function AdminDashboard() {
                 }}>
                   Senha
                 </label>
-          <input
-            type="password"
+                <input
+                  type="password"
                   placeholder="Digite a senha"
-            value={form.senha}
-            onChange={e => setForm({ ...form, senha: e.target.value })}
+                  value={form.senha}
+                  onChange={e => setForm({ ...form, senha: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -455,8 +414,8 @@ export default function AdminDashboard() {
                     color: '#ffffff',
                     fontSize: '16px'
                   }}
-            required
-          />
+                  required
+                />
               </div>
 
               <div>
@@ -469,11 +428,11 @@ export default function AdminDashboard() {
                 }}>
                   Nome do Negócio
                 </label>
-          <input
-            type="text"
+                <input
+                  type="text"
                   placeholder="Digite o nome do negócio"
-            value={form.nome_negocio}
-            onChange={e => setForm({ ...form, nome_negocio: e.target.value })}
+                  value={form.nome_negocio}
+                  onChange={e => setForm({ ...form, nome_negocio: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -483,8 +442,8 @@ export default function AdminDashboard() {
                     color: '#ffffff',
                     fontSize: '16px'
                   }}
-            required
-          />
+                  required
+                />
               </div>
 
               <div>
@@ -497,9 +456,9 @@ export default function AdminDashboard() {
                 }}>
                   Tipo de Negócio
                 </label>
-          <select
-            value={form.tipo_negocio_id}
-            onChange={e => setForm({ ...form, tipo_negocio_id: e.target.value })}
+                <select
+                  value={form.tipo_negocio_id}
+                  onChange={e => setForm({ ...form, tipo_negocio_id: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -509,13 +468,13 @@ export default function AdminDashboard() {
                     color: '#ffffff',
                     fontSize: '16px'
                   }}
-            required
-          >
-            <option value="">Selecione o tipo de negócio</option>
-            {tiposNegocio.map((t) => (
-              <option key={t.id} value={t.id}>{t.nome}</option>
-            ))}
-          </select>
+                  required
+                >
+                  <option value="">Selecione o tipo de negócio</option>
+                  {tiposNegocio.map((t) => (
+                    <option key={t.id} value={t.id}>{t.nome}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -549,9 +508,9 @@ export default function AdminDashboard() {
               </div>
 
               <div style={{ gridColumn: '1 / -1' }}>
-          <button
-            type="submit"
-            disabled={carregando}
+                <button
+                  type="submit"
+                  disabled={carregando}
                   style={{
                     width: '100%',
                     padding: '16px 24px',
@@ -566,11 +525,11 @@ export default function AdminDashboard() {
                   }}
                   onMouseOver={(e) => !carregando && (e.currentTarget.style.backgroundColor = '#7c3aed')}
                   onMouseOut={(e) => !carregando && (e.currentTarget.style.backgroundColor = '#8b5cf6')}
-          >
-            {carregando ? 'Cadastrando...' : 'Cadastrar Cliente'}
-          </button>
+                >
+                  {carregando ? 'Cadastrando...' : 'Cadastrar Cliente'}
+                </button>
               </div>
-        </form>
+            </form>
           </div>
 
           {/* Users List Section */}
@@ -600,96 +559,108 @@ export default function AdminDashboard() {
                 Nenhum cliente cadastrado ainda
               </div>
             ) : (
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
-                gap: '20px' 
-              }}>
-          {usuarios.map((u, i) => (
-                  <div key={i} style={{ 
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {usuarios.map((u) => (
+                  <div key={u.email} style={{ 
                     backgroundColor: '#374151', 
-                    borderRadius: '8px', 
+                    borderRadius: '8px',
                     padding: '24px',
-                    border: '1px solid #4b5563',
-                    position: 'relative'
+                    border: '1px solid #4b5563'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
-                      <div style={{ 
-                        width: '48px', 
-                        height: '48px', 
-                        backgroundColor: '#8b5cf6', 
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: '16px'
-                      }}>
-                        <span style={{ 
-                          color: 'white', 
-                          fontSize: '20px', 
-                          fontWeight: 'bold' 
-                        }}>
-                          {u.nome.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'flex-start',
+                      marginBottom: '16px',
+                      flexWrap: 'wrap',
+                      gap: '12px'
+                    }}>
                       <div style={{ flex: 1 }}>
                         <h3 style={{ 
-                          color: '#ffffff', 
-                          fontSize: '18px', 
-                          fontWeight: '600',
-                          margin: '0 0 4px 0'
+                          fontSize: '20px', 
+                          fontWeight: 'bold', 
+                          color: '#ffffff',
+                          margin: '0 0 8px 0'
                         }}>
                           {u.nome}
                         </h3>
                         <p style={{ 
                           color: '#d1d5db', 
-                          fontSize: '14px',
+                          fontSize: '16px',
                           margin: 0
                         }}>
                           {u.email}
                         </p>
                       </div>
-                      <button
-                        onClick={() => handleDeleteUser(u.email, u.nome)}
-                        disabled={deletando === u.email}
-                        style={{
-                          padding: '8px 12px',
-                          backgroundColor: deletando === u.email ? '#6b7280' : '#dc2626',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          fontSize: '14px',
-                          fontWeight: '500',
-                          cursor: deletando === u.email ? 'not-allowed' : 'pointer',
-                          transition: 'background-color 0.2s',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}
-                        onMouseOver={(e) => deletando !== u.email && (e.currentTarget.style.backgroundColor = '#b91c1c')}
-                        onMouseOut={(e) => deletando !== u.email && (e.currentTarget.style.backgroundColor = '#dc2626')}
-                      >
-                        {deletando === u.email ? (
-                          <>
-                            <div style={{
-                              width: '12px',
-                              height: '12px',
-                              border: '2px solid #ffffff',
-                              borderTop: '2px solid transparent',
-                              borderRadius: '50%',
-                              animation: 'spin 1s linear infinite'
-                            }}></div>
-                            Excluindo...
-                          </>
-                        ) : (
-                          <>
-                            <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Excluir
-                          </>
-                        )}
-                      </button>
+
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => handleEditPassword(u)}
+                          style={{
+                            padding: '8px 12px',
+                            backgroundColor: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+                        >
+                          <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                          Editar Senha
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(u.email, u.nome)}
+                          style={{
+                            padding: '8px 12px',
+                            backgroundColor: '#dc2626',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: deletando === u.email ? 'not-allowed' : 'pointer',
+                            transition: 'background-color 0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseOver={(e) => deletando !== u.email && (e.currentTarget.style.backgroundColor = '#b91c1c')}
+                          onMouseOut={(e) => deletando !== u.email && (e.currentTarget.style.backgroundColor = '#dc2626')}
+                        >
+                          {deletando === u.email ? (
+                            <>
+                              <div style={{
+                                width: '12px',
+                                height: '12px',
+                                border: '2px solid #ffffff',
+                                borderTop: '2px solid transparent',
+                                borderRadius: '50%',
+                                animation: 'spin 1s linear infinite'
+                              }}></div>
+                              Excluindo...
+                            </>
+                          ) : (
+                            <>
+                              <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              Excluir
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
 
                     <div style={{ 
@@ -850,7 +821,160 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
+
+          {/* Edit Password Modal */}
+          {showEditPasswordModal && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '20px'
+            }}>
+              <div style={{
+                backgroundColor: '#1f2937',
+                borderRadius: '12px',
+                padding: '32px',
+                border: '1px solid #374151',
+                maxWidth: '500px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflow: 'auto'
+              }}>
+                <h2 style={{
+                  fontSize: '24px',
+                  fontWeight: 'bold',
+                  color: '#ffffff',
+                  marginBottom: '24px',
+                  margin: '0 0 24px 0'
+                }}>
+                  Editar Senha do Cliente
+                </h2>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <p style={{ color: '#d1d5db', fontSize: '16px', margin: '0 0 8px 0' }}>
+                    <strong>Cliente:</strong> {editingUser?.nome}
+                  </p>
+                  <p style={{ color: '#d1d5db', fontSize: '16px', margin: 0 }}>
+                    <strong>Email:</strong> {editingUser?.email}
+                  </p>
+                </div>
+
+                <form onSubmit={handleUpdatePassword}>
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{
+                      display: 'block',
+                      color: '#d1d5db',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      marginBottom: '8px'
+                    }}>
+                      Nova Senha
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="Digite a nova senha"
+                      value={editPasswordForm.novaSenha}
+                      onChange={e => setEditPasswordForm({ ...editPasswordForm, novaSenha: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        backgroundColor: '#374151',
+                        border: '1px solid #4b5563',
+                        borderRadius: '8px',
+                        color: '#ffffff',
+                        fontSize: '16px'
+                      }}
+                      required
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={{
+                      display: 'block',
+                      color: '#d1d5db',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      marginBottom: '8px'
+                    }}>
+                      Confirmar Nova Senha
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="Confirme a nova senha"
+                      value={editPasswordForm.confirmarSenha}
+                      onChange={e => setEditPasswordForm({ ...editPasswordForm, confirmarSenha: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        backgroundColor: '#374151',
+                        border: '1px solid #4b5563',
+                        borderRadius: '8px',
+                        color: '#ffffff',
+                        fontSize: '16px'
+                      }}
+                      required
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      onClick={handleCancelEditPassword}
+                      style={{
+                        padding: '12px 24px',
+                        backgroundColor: '#6b7280',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
+                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={updatingPassword}
+                      style={{
+                        padding: '12px 24px',
+                        backgroundColor: updatingPassword ? '#6b7280' : '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        fontWeight: '500',
+                        cursor: updatingPassword ? 'not-allowed' : 'pointer',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseOver={(e) => !updatingPassword && (e.currentTarget.style.backgroundColor = '#2563eb')}
+                      onMouseOut={(e) => !updatingPassword && (e.currentTarget.style.backgroundColor = '#3b82f6')}
+                    >
+                      {updatingPassword ? 'Atualizando...' : 'Atualizar Senha'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
+
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     </AdminProtected>
   )
