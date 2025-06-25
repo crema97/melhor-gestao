@@ -211,7 +211,7 @@ export default function ReceitasPage() {
         .reduce((sum, r) => sum + r.valor, 0)
       
       dailyDataArray.push({
-        dia: date.toLocaleDateString('pt-BR', { weekday: 'short' }),
+        dia: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
         receitas: dayReceitas
       })
     }
@@ -223,9 +223,8 @@ export default function ReceitasPage() {
     const categoriesMap = new Map<string, number>()
     
     filteredReceitas.forEach(receita => {
-      const categoriaNome = receita.categoria_receita?.nome || 'Sem categoria'
-      const valorAtual = categoriesMap.get(categoriaNome) || 0
-      categoriesMap.set(categoriaNome, valorAtual + receita.valor)
+      const categoryName = receita.categoria_receita?.nome || 'Sem categoria'
+      categoriesMap.set(categoryName, (categoriesMap.get(categoryName) || 0) + receita.valor)
     })
     
     const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#f97316']
@@ -234,35 +233,22 @@ export default function ReceitasPage() {
       name,
       value,
       color: colors[index % colors.length]
-    })).filter(item => item.value > 0)
+    }))
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     
+    if (!usuarioId) return
+
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { data: usuario } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-
-      if (!usuario) return
-
-      // Garantir que a data seja tratada corretamente
-      const dataReceita = new Date(formData.data_receita + 'T00:00:00')
-      const dataFormatada = dataReceita.toISOString().split('T')[0]
-
       const receitaData = {
-        usuario_id: usuario.id,
         valor: parseFloat(formData.valor),
-        data_receita: dataFormatada,
+        data_receita: formData.data_receita,
         forma_pagamento: formData.forma_pagamento,
         categoria_receita_id: formData.categoria_receita_id || null,
-        observacoes: formData.observacoes || null
+        observacoes: formData.observacoes || null,
+        usuario_id: usuarioId
       }
 
       if (editingReceita) {
@@ -279,17 +265,20 @@ export default function ReceitasPage() {
 
         if (error) throw error
       }
-      
+
+      // Reset form
       setFormData({
         valor: '',
-        data_receita: '',
+        data_receita: new Date().toISOString().split('T')[0],
         forma_pagamento: 'dinheiro',
         categoria_receita_id: '',
         observacoes: ''
       })
       setShowForm(false)
       setEditingReceita(null)
-      await loadReceitas(usuario.id)
+
+      // Reload data
+      await loadReceitas(usuarioId)
     } catch (error) {
       console.error('Erro ao salvar receita:', error)
       alert('Erro ao salvar receita')
@@ -307,9 +296,7 @@ export default function ReceitasPage() {
 
       if (error) throw error
 
-      if (usuarioId) {
-        await loadReceitas(usuarioId)
-      }
+      await loadReceitas(usuarioId!)
     } catch (error) {
       console.error('Erro ao excluir receita:', error)
       alert('Erro ao excluir receita')
@@ -317,6 +304,7 @@ export default function ReceitasPage() {
   }
 
   function handleEdit(receita: Receita) {
+    setEditingReceita(receita)
     setFormData({
       valor: receita.valor.toString(),
       data_receita: receita.data_receita,
@@ -324,54 +312,49 @@ export default function ReceitasPage() {
       categoria_receita_id: receita.categoria_receita?.id || '',
       observacoes: receita.observacoes || ''
     })
-    setEditingReceita(receita)
     setShowForm(true)
   }
 
   function handleCancel() {
+    setShowForm(false)
+    setEditingReceita(null)
     setFormData({
       valor: '',
-      data_receita: '',
+      data_receita: new Date().toISOString().split('T')[0],
       forma_pagamento: 'dinheiro',
       categoria_receita_id: '',
       observacoes: ''
     })
-    setShowForm(false)
-    setEditingReceita(null)
   }
 
   function aplicarFiltros() {
-    let receitasFiltradas = [...receitas]
+    let filtered = [...receitas]
 
-    // Filtro por categoria
     if (filtros.categoria) {
-      receitasFiltradas = receitasFiltradas.filter(receita => 
+      filtered = filtered.filter(receita => 
         receita.categoria_receita?.id === filtros.categoria
       )
     }
 
-    // Filtro por forma de pagamento
     if (filtros.formaPagamento) {
-      receitasFiltradas = receitasFiltradas.filter(receita => 
+      filtered = filtered.filter(receita => 
         receita.forma_pagamento === filtros.formaPagamento
       )
     }
 
-    // Filtro por data de início
     if (filtros.dataInicio) {
-      receitasFiltradas = receitasFiltradas.filter(receita => 
+      filtered = filtered.filter(receita => 
         receita.data_receita >= filtros.dataInicio
       )
     }
 
-    // Filtro por data de fim
     if (filtros.dataFim) {
-      receitasFiltradas = receitasFiltradas.filter(receita => 
+      filtered = filtered.filter(receita => 
         receita.data_receita <= filtros.dataFim
       )
     }
 
-    setFilteredReceitas(receitasFiltradas)
+    setFilteredReceitas(filtered)
   }
 
   function limparFiltros() {
@@ -383,20 +366,30 @@ export default function ReceitasPage() {
     })
   }
 
+  const totalReceitas = filteredReceitas.reduce((sum, receita) => sum + receita.valor, 0)
+
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#1f2937', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{
-            width: '48px',
-            height: '48px',
-            border: '4px solid #374151',
-            borderTop: '4px solid #3b82f6',
+            width: '64px',
+            height: '64px',
+            border: '4px solid #8b5cf6',
+            borderTop: '4px solid transparent',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
             margin: '0 auto'
           }}></div>
-          <p style={{ marginTop: '16px', color: '#d1d5db' }}>Carregando receitas...</p>
+          <p style={{ marginTop: '24px', color: '#e5e7eb', fontSize: '18px', fontWeight: '500' }}>
+            Carregando...
+          </p>
         </div>
       </div>
     )
@@ -456,35 +449,6 @@ export default function ReceitasPage() {
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 32px' }}>
         {/* Period Selector */}
         <PeriodSelector onPeriodChange={handlePeriodChange} />
-
-        {/* Estatísticas do Período */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          margin: '32px 0 32px 0',
-          backgroundColor: '#1f2937',
-          borderRadius: '8px',
-          padding: '24px',
-          border: '1px solid #374151'
-        }}>
-          <div>
-            <h2 style={{ color: '#ffffff', fontSize: '22px', fontWeight: 'bold', margin: 0 }}>
-              Estatísticas do Período
-            </h2>
-            <p style={{ color: '#d1d5db', fontSize: '16px', margin: 0 }}>
-              {filteredReceitas.length} receita{filteredReceitas.length !== 1 ? 's' : ''} registrada{filteredReceitas.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ color: '#d1d5db', fontSize: '16px', margin: '0 0 4px 0' }}>
-              Total do Período
-            </p>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#10b981', margin: 0, whiteSpace: 'nowrap' }}>
-              R$ {filteredReceitas.reduce((sum, receita) => sum + receita.valor, 0).toFixed(2).replace('.', ',')}
-            </p>
-          </div>
-        </div>
 
         {/* Quick Action Button */}
         <div style={{ 
@@ -663,13 +627,15 @@ export default function ReceitasPage() {
                   }}
                 >
                   <option value="">Selecione uma categoria</option>
-                  {categorias.map((categoria) => (
-                    <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>
+                  {categorias.map(categoria => (
+                    <option key={categoria.id} value={categoria.id}>
+                      {categoria.nome}
+                    </option>
                   ))}
                 </select>
               </div>
 
-              <div style={{ gridColumn: '1 / -1' }}>
+              <div style={{ minWidth: '0', width: '100%' }}>
                 <label style={{ 
                   display: 'block', 
                   color: '#d1d5db', 
@@ -680,9 +646,9 @@ export default function ReceitasPage() {
                   Observações
                 </label>
                 <textarea
-                  placeholder="Observações opcionais..."
                   value={formData.observacoes}
                   onChange={e => setFormData({ ...formData, observacoes: e.target.value })}
+                  placeholder="Observações opcionais..."
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -697,14 +663,14 @@ export default function ReceitasPage() {
                 />
               </div>
 
-              <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                 <button
                   type="button"
                   onClick={handleCancel}
                   style={{
                     padding: '12px 24px',
-                    backgroundColor: '#374151',
-                    color: '#ffffff',
+                    backgroundColor: '#6b7280',
+                    color: 'white',
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: '16px',
@@ -713,7 +679,7 @@ export default function ReceitasPage() {
                     transition: 'background-color 0.2s'
                   }}
                   onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#374151'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
                 >
                   Cancelar
                 </button>
@@ -726,7 +692,7 @@ export default function ReceitasPage() {
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: '16px',
-                    fontWeight: '600',
+                    fontWeight: '500',
                     cursor: 'pointer',
                     transition: 'background-color 0.2s'
                   }}
@@ -740,44 +706,91 @@ export default function ReceitasPage() {
           </div>
         )}
 
+        {/* Summary Card */}
+        <div style={{ 
+          backgroundColor: '#1f2937', 
+          borderRadius: '8px', 
+          padding: '24px',
+          border: '1px solid #374151',
+          marginBottom: '32px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h2 style={{ 
+                fontSize: '20px', 
+                fontWeight: 'bold', 
+                color: '#ffffff',
+                margin: '0 0 8px 0'
+              }}>
+                Resumo do Período
+              </h2>
+              <p style={{ 
+                color: '#d1d5db', 
+                fontSize: '16px',
+                margin: 0
+              }}>
+                {filteredReceitas.length} receita{filteredReceitas.length !== 1 ? 's' : ''} registrada{filteredReceitas.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ 
+                color: '#d1d5db', 
+                fontSize: '16px',
+                margin: '0 0 4px 0'
+              }}>
+                Total do Período
+              </p>
+              <p style={{ 
+                fontSize: '20px', 
+                fontWeight: 'bold', 
+                color: '#10b981',
+                margin: 0,
+                whiteSpace: 'nowrap'
+              }}>
+                R$ {totalReceitas.toFixed(2).replace('.', ',')}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', 
-          gap: '32px', 
-          marginBottom: '48px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '20px', 
+          marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '20px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 16px 0'
             }}>
               Evolução Mensal (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="mes" stroke="#d1d5db" />
-                <YAxis stroke="#d1d5db" />
+                <XAxis dataKey="mes" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend />
+                <Legend fontSize={12} />
                 <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
               </BarChart>
             </ResponsiveContainer>
@@ -787,33 +800,33 @@ export default function ReceitasPage() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '20px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 16px 0'
             }}>
               Evolução Diária (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="dia" stroke="#d1d5db" />
-                <YAxis stroke="#d1d5db" />
+                <XAxis dataKey="dia" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend />
+                <Legend fontSize={12} />
                 <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
               </BarChart>
             </ResponsiveContainer>
@@ -822,81 +835,84 @@ export default function ReceitasPage() {
 
         {/* Categories Chart */}
         {getCategoriesData().length > 0 && (
-            <div style={{ 
-              backgroundColor: '#1f2937', 
-              borderRadius: '8px', 
-              padding: '32px',
+          <div style={{ 
+            backgroundColor: '#1f2937', 
+            borderRadius: '8px', 
+            padding: '20px',
             border: '1px solid #374151',
             marginBottom: '32px'
+          }}>
+            <h3 style={{ 
+              fontSize: '16px', 
+              fontWeight: 'bold', 
+              color: '#ffffff',
+              margin: '0 0 16px 0'
             }}>
-              <h3 style={{ 
-                fontSize: '20px', 
-                fontWeight: 'bold', 
-                color: '#ffffff',
-                marginBottom: '24px',
-                margin: '0 0 24px 0'
-              }}>
               Receitas por Categoria
-              </h3>
+            </h3>
             
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: '1fr 1fr', 
-              gap: '32px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+              gap: '20px',
               alignItems: 'center'
             }}>
               {/* Pie Chart */}
-              <div style={{ height: '300px' }}>
+              <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
+                  <PieChart>
+                    <Pie
                       data={getCategoriesData()}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      outerRadius={60}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
                       {getCategoriesData().map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: '#1f2937',
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#ffffff'
-                    }}
-                    formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#1f2937',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#ffffff',
+                        fontSize: '12px'
+                      }}
+                      formatter={(value: number, name: string) => [`R$ ${value.toFixed(2).replace('.', ',')}`, name]}
+                      labelStyle={{ color: '#ffffff' }}
+                      itemStyle={{ color: '#ffffff' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
               {/* Categories List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {getCategoriesData().map((item) => (
                   <div key={item.name} style={{ 
                     display: 'flex', 
-                    alignItems: 'center',
+                    alignItems: 'center', 
                     justifyContent: 'space-between',
-                    padding: '16px',
-                    backgroundColor: '#374151',
+                    padding: '12px', 
+                    backgroundColor: '#374151', 
                     borderRadius: '8px',
                     border: `2px solid ${item.color}`
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{
-                        width: '16px',
-                        height: '16px',
+                        width: '12px',
+                        height: '12px',
                         backgroundColor: item.color,
                         borderRadius: '50%'
                       }}></div>
                       <span style={{ 
                         color: '#ffffff', 
-                        fontSize: '16px', 
+                        fontSize: '14px', 
                         fontWeight: '600' 
                       }}>
                         {item.name}
@@ -904,7 +920,7 @@ export default function ReceitasPage() {
                     </div>
                     <span style={{ 
                       color: item.color, 
-                      fontSize: '18px', 
+                      fontSize: '16px', 
                       fontWeight: 'bold' 
                     }}>
                       R$ {item.value.toFixed(2).replace('.', ',')}
@@ -916,7 +932,7 @@ export default function ReceitasPage() {
           </div>
         )}
 
-        {/* Receitas List */}
+        {/* Filters and List */}
         <div style={{ 
           backgroundColor: '#1f2937', 
           borderRadius: '8px',
@@ -932,23 +948,14 @@ export default function ReceitasPage() {
               fontSize: '20px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              margin: 0
+              margin: '0 0 16px 0'
             }}>
-              Lista de Receitas
+              Filtros
             </h2>
-          </div>
-
-          {/* Filtros */}
-          <div style={{ 
-            padding: '24px', 
-            borderBottom: '1px solid #374151',
-            backgroundColor: '#1f2937'
-          }}>
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '16px',
-              marginBottom: '16px'
+              gap: '16px' 
             }}>
               {/* Filtro por Categoria */}
               <div>
@@ -975,8 +982,10 @@ export default function ReceitasPage() {
                   }}
                 >
                   <option value="">Todas as categorias</option>
-                  {categorias.map((categoria) => (
-                    <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>
+                  {categorias.map(categoria => (
+                    <option key={categoria.id} value={categoria.id}>
+                      {categoria.nome}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -1069,7 +1078,7 @@ export default function ReceitasPage() {
             </div>
 
             {/* Botão Limpar Filtros */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
               <button
                 onClick={limparFiltros}
                 style={{
@@ -1102,10 +1111,12 @@ export default function ReceitasPage() {
                     padding: '20px', 
                     backgroundColor: '#374151', 
                     borderRadius: '8px',
-                    border: '1px solid #4b5563'
+                    border: '1px solid #4b5563',
+                    flexWrap: 'wrap',
+                    gap: '12px'
                   }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
                         <h3 style={{ 
                           fontWeight: '600', 
                           color: '#ffffff',
@@ -1144,11 +1155,11 @@ export default function ReceitasPage() {
                         </p>
                       )}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                       <p style={{ 
                         fontWeight: 'bold', 
                         color: '#10b981', 
-                        fontSize: '24px',
+                        fontSize: '20px',
                         margin: 0
                       }}>
                         R$ {receita.valor.toFixed(2).replace('.', ',')}
@@ -1165,7 +1176,8 @@ export default function ReceitasPage() {
                             fontSize: '14px',
                             fontWeight: '500',
                             cursor: 'pointer',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
                           }}
                           onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
                           onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
@@ -1183,7 +1195,8 @@ export default function ReceitasPage() {
                             fontSize: '14px',
                             fontWeight: '500',
                             cursor: 'pointer',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
                           }}
                           onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
                           onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}

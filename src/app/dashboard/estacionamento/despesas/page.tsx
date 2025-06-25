@@ -208,8 +208,7 @@ export default function DespesasPage() {
       const diaStr = dia.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
       
       const despesasDia = filteredDespesas.filter(d => {
-        const dataDespesa = new Date(d.data_despesa + 'T00:00:00')
-        return dataDespesa.toDateString() === dia.toDateString()
+        return d.data_despesa === dia.toISOString().split('T')[0]
       }).reduce((sum, d) => sum + d.valor, 0)
       
       dailyData.push({
@@ -222,22 +221,22 @@ export default function DespesasPage() {
   }
 
   function loadCategoryData() {
-    const categorias: { [key: string]: number } = {}
+    const categoryMap = new Map<string, number>()
     
     filteredDespesas.forEach(despesa => {
-      const categoriaNome = despesa.categoria_despesa?.nome || 'Sem categoria'
-      categorias[categoriaNome] = (categorias[categoriaNome] || 0) + despesa.valor
+      const categoryName = despesa.categoria_despesa?.nome || 'Sem categoria'
+      categoryMap.set(categoryName, (categoryMap.get(categoryName) || 0) + despesa.valor)
     })
-
-    const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#ec4899']
-
-    const categoryData = Object.entries(categorias).map(([name, value], index) => ({
+    
+    const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6']
+    
+    const data = Array.from(categoryMap.entries()).map(([name, value], index) => ({
       name,
-      value: value as number,
+      value,
       color: colors[index % colors.length]
-    })).filter(item => item.value > 0)
-
-    setCategoryData(categoryData)
+    }))
+    
+    setCategoryData(data)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -256,15 +255,14 @@ export default function DespesasPage() {
       if (!usuario) return
 
       const despesaData = {
-        usuario_id: usuario.id,
         valor: parseFloat(formData.valor),
         data_despesa: formData.data_despesa,
-        categoria_despesa_id: formData.categoria_id,
-        observacoes: formData.observacoes || null
+        categoria_despesa_id: formData.categoria_id || null,
+        observacoes: formData.observacoes || null,
+        usuario_id: usuario.id
       }
 
       if (editingId) {
-        // Editar despesa existente
         const { error } = await supabase
           .from('despesas')
           .update(despesaData)
@@ -272,7 +270,6 @@ export default function DespesasPage() {
 
         if (error) throw error
       } else {
-        // Criar nova despesa
         const { error } = await supabase
           .from('despesas')
           .insert([despesaData])
@@ -280,10 +277,7 @@ export default function DespesasPage() {
         if (error) throw error
       }
 
-      // Recarregar dados
-      await loadData(usuario.id)
-      
-      // Limpar formulário
+      // Reset form
       setFormData({
         valor: '',
         data_despesa: new Date().toISOString().split('T')[0],
@@ -292,9 +286,12 @@ export default function DespesasPage() {
       })
       setShowForm(false)
       setEditingId(null)
+
+      // Reload data
+      await loadData(usuario.id)
     } catch (error) {
       console.error('Erro ao salvar despesa:', error)
-      alert('Erro ao salvar despesa. Tente novamente.')
+      alert('Erro ao salvar despesa')
     }
   }
 
@@ -309,7 +306,6 @@ export default function DespesasPage() {
 
       if (error) throw error
 
-      // Recarregar dados
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { data: usuario } = await supabase
@@ -317,55 +313,63 @@ export default function DespesasPage() {
           .select('id')
           .eq('user_id', user.id)
           .single()
-        
+
         if (usuario) {
           await loadData(usuario.id)
         }
       }
     } catch (error) {
       console.error('Erro ao excluir despesa:', error)
-      alert('Erro ao excluir despesa. Tente novamente.')
+      alert('Erro ao excluir despesa')
     }
   }
 
   function handleEdit(despesa: Despesa) {
+    setEditingId(despesa.id)
     setFormData({
       valor: despesa.valor.toString(),
       data_despesa: despesa.data_despesa,
-      categoria_id: '',
+      categoria_id: despesa.categoria_despesa?.id || '',
       observacoes: despesa.observacoes || ''
     })
-    setEditingId(despesa.id)
     setShowForm(true)
   }
 
   function handleCancel() {
+    setShowForm(false)
+    setEditingId(null)
     setFormData({
       valor: '',
       data_despesa: new Date().toISOString().split('T')[0],
       categoria_id: '',
       observacoes: ''
     })
-    setShowForm(false)
-    setEditingId(null)
   }
 
-  const totalDespesas = filteredDespesas.reduce((sum, d) => sum + d.valor, 0)
+  const totalDespesas = filteredDespesas.reduce((sum, despesa) => sum + despesa.valor, 0)
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#1f2937', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{
-            width: '48px',
-            height: '48px',
-            border: '4px solid #374151',
-            borderTop: '4px solid #ef4444',
+            width: '64px',
+            height: '64px',
+            border: '4px solid #8b5cf6',
+            borderTop: '4px solid transparent',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
             margin: '0 auto'
           }}></div>
-          <p style={{ marginTop: '16px', color: '#d1d5db' }}>Carregando despesas...</p>
+          <p style={{ marginTop: '24px', color: '#e5e7eb', fontSize: '18px', fontWeight: '500' }}>
+            Carregando...
+          </p>
         </div>
       </div>
     )
@@ -483,9 +487,9 @@ export default function DespesasPage() {
               marginBottom: '24px',
               margin: '0 0 24px 0'
             }}>
-                {editingId ? 'Editar Despesa' : 'Nova Despesa'}
-              </h2>
-              
+              {editingId ? 'Editar Despesa' : 'Nova Despesa'}
+            </h2>
+
             <form onSubmit={handleSubmit} style={{ 
               display: 'grid !important', 
               gridTemplateColumns: '1fr !important', 
@@ -570,10 +574,9 @@ export default function DespesasPage() {
                     color: '#ffffff',
                     fontSize: '16px'
                   }}
-                  required
                 >
                   <option value="">Selecione uma categoria</option>
-                  {categorias.map((categoria) => (
+                  {categorias.map(categoria => (
                     <option key={categoria.id} value={categoria.id}>
                       {categoria.nome}
                     </option>
@@ -589,11 +592,12 @@ export default function DespesasPage() {
                   fontWeight: '500', 
                   marginBottom: '8px' 
                 }}>
-                  Observações (opcional)
+                  Observações
                 </label>
                 <textarea
                   value={formData.observacoes}
                   onChange={e => setFormData({ ...formData, observacoes: e.target.value })}
+                  placeholder="Observações opcionais..."
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -605,18 +609,17 @@ export default function DespesasPage() {
                     minHeight: '100px',
                     resize: 'vertical'
                   }}
-                  placeholder="Observações sobre a despesa..."
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                 <button
                   type="button"
                   onClick={handleCancel}
                   style={{
                     padding: '12px 24px',
-                    backgroundColor: '#374151',
-                    color: '#ffffff',
+                    backgroundColor: '#6b7280',
+                    color: 'white',
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: '16px',
@@ -625,7 +628,7 @@ export default function DespesasPage() {
                     transition: 'background-color 0.2s'
                   }}
                   onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#374151'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
                 >
                   Cancelar
                 </button>
@@ -634,11 +637,11 @@ export default function DespesasPage() {
                   style={{
                     padding: '12px 24px',
                     backgroundColor: '#ef4444',
-                    color: '#ffffff',
+                    color: 'white',
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: '16px',
-                    fontWeight: '600',
+                    fontWeight: '500',
                     cursor: 'pointer',
                     transition: 'background-color 0.2s'
                   }}
@@ -687,10 +690,11 @@ export default function DespesasPage() {
                 Total do Período
               </p>
               <p style={{ 
-                fontSize: '32px', 
+                fontSize: '20px', 
                 fontWeight: 'bold', 
                 color: '#ef4444',
-                margin: 0
+                margin: 0,
+                whiteSpace: 'nowrap'
               }}>
                 R$ {totalDespesas.toFixed(2).replace('.', ',')}
               </p>
@@ -698,44 +702,44 @@ export default function DespesasPage() {
           </div>
         </div>
 
-        {/* Charts */}
+        {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', 
-          gap: '32px', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '20px', 
           marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '20px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 16px 0'
             }}>
               Evolução Mensal (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="mes" stroke="#d1d5db" />
-                <YAxis stroke="#d1d5db" />
+                <XAxis dataKey="mes" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend />
+                <Legend fontSize={12} />
                 <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />
               </BarChart>
             </ResponsiveContainer>
@@ -745,33 +749,33 @@ export default function DespesasPage() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '20px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 16px 0'
             }}>
               Evolução Diária (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="dia" stroke="#d1d5db" />
-                <YAxis stroke="#d1d5db" />
+                <XAxis dataKey="dia" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend />
+                <Legend fontSize={12} />
                 <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />
               </BarChart>
             </ResponsiveContainer>
@@ -783,28 +787,27 @@ export default function DespesasPage() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '20px',
             border: '1px solid #374151',
             marginBottom: '32px'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 16px 0'
             }}>
               Despesas por Categoria
             </h3>
             
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: '1fr 1fr', 
-              gap: '32px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+              gap: '20px',
               alignItems: 'center'
             }}>
               {/* Pie Chart */}
-              <div style={{ height: '300px' }}>
+              <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -812,7 +815,8 @@ export default function DespesasPage() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      outerRadius={80}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      outerRadius={60}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -825,9 +829,10 @@ export default function DespesasPage() {
                         backgroundColor: '#1f2937',
                         border: '1px solid #374151',
                         borderRadius: '8px',
-                        color: '#ffffff'
+                        color: '#ffffff',
+                        fontSize: '12px'
                       }}
-                      formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
+                      formatter={(value: number, name: string) => [`R$ ${value.toFixed(2).replace('.', ',')}`, name]}
                       labelStyle={{ color: '#ffffff' }}
                       itemStyle={{ color: '#ffffff' }}
                     />
@@ -836,27 +841,27 @@ export default function DespesasPage() {
               </div>
 
               {/* Categories List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {categoryData.map((item) => (
                   <div key={item.name} style={{ 
                     display: 'flex', 
-                    alignItems: 'center',
+                    alignItems: 'center', 
                     justifyContent: 'space-between',
-                    padding: '16px',
-                    backgroundColor: '#374151',
+                    padding: '12px', 
+                    backgroundColor: '#374151', 
                     borderRadius: '8px',
                     border: `2px solid ${item.color}`
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{
-                        width: '16px',
-                        height: '16px',
+                        width: '12px',
+                        height: '12px',
                         backgroundColor: item.color,
                         borderRadius: '50%'
                       }}></div>
                       <span style={{ 
                         color: '#ffffff', 
-                        fontSize: '16px', 
+                        fontSize: '14px', 
                         fontWeight: '600' 
                       }}>
                         {item.name}
@@ -864,7 +869,7 @@ export default function DespesasPage() {
                     </div>
                     <span style={{ 
                       color: item.color, 
-                      fontSize: '18px', 
+                      fontSize: '16px', 
                       fontWeight: 'bold' 
                     }}>
                       R$ {item.value.toFixed(2).replace('.', ',')}
@@ -897,7 +902,7 @@ export default function DespesasPage() {
               Lista de Despesas
             </h2>
           </div>
-          
+
           <div style={{ padding: '24px' }}>
             {filteredDespesas.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -905,127 +910,127 @@ export default function DespesasPage() {
                   <div key={despesa.id} style={{ 
                     display: 'flex', 
                     justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    padding: '20px',
-                    backgroundColor: '#374151',
+                    alignItems: 'center', 
+                    padding: '20px', 
+                    backgroundColor: '#374151', 
                     borderRadius: '8px',
-                    border: '1px solid #4b5563'
+                    border: '1px solid #4b5563',
+                    flexWrap: 'wrap',
+                    gap: '12px'
                   }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div>
-                          <p style={{ 
-                            fontSize: '18px', 
-                            fontWeight: '600', 
-                            color: '#ffffff',
-                            margin: '0 0 4px 0'
-                          }}>
-                            {despesa.categoria_despesa?.nome || 'Sem categoria'}
-                          </p>
-                          <p style={{ 
-                            fontSize: '14px', 
-                            color: '#9ca3af',
-                            margin: '0 0 4px 0'
-                          }}>
-                            {new Date(despesa.data_despesa + 'T00:00:00').toLocaleDateString('pt-BR')}
-                          </p>
-                          {despesa.observacoes && (
-                            <p style={{ 
-                              fontSize: '14px', 
-                              color: '#6b7280',
-                              margin: 0
-                            }}>
-                              {despesa.observacoes}
-                            </p>
-                          )}
-                        </div>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                        <h3 style={{ 
+                          fontWeight: '600', 
+                          color: '#ffffff',
+                          margin: 0,
+                          fontSize: '18px'
+                        }}>
+                          {despesa.categoria_despesa?.nome || 'Sem categoria'}
+                        </h3>
                       </div>
-                    </div>
-                    
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <p style={{ 
-                        fontSize: '24px', 
+                        color: '#d1d5db', 
+                        fontSize: '14px',
+                        margin: '0 0 8px 0'
+                      }}>
+                        {new Date(despesa.data_despesa + 'T00:00:00').toLocaleDateString('pt-BR')}
+                      </p>
+                      {despesa.observacoes && (
+                        <p style={{ 
+                          color: '#9ca3af', 
+                          fontSize: '14px',
+                          margin: 0,
+                          fontStyle: 'italic'
+                        }}>
+                          {despesa.observacoes}
+                        </p>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      <p style={{ 
                         fontWeight: 'bold', 
-                        color: '#ef4444',
+                        color: '#ef4444', 
+                        fontSize: '20px',
                         margin: 0
                       }}>
                         R$ {despesa.valor.toFixed(2).replace('.', ',')}
                       </p>
                       <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => handleEdit(despesa)}
+                        <button
+                          onClick={() => handleEdit(despesa)}
                           style={{
-                            padding: '8px',
+                            padding: '8px 12px',
                             backgroundColor: '#3b82f6',
                             color: 'white',
                             border: 'none',
                             borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
                             cursor: 'pointer',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
                           }}
                           onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
                           onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
                         >
-                          <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(despesa.id)}
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(despesa.id)}
                           style={{
-                            padding: '8px',
+                            padding: '8px 12px',
                             backgroundColor: '#ef4444',
                             color: 'white',
                             border: 'none',
                             borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
                             cursor: 'pointer',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
                           }}
                           onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
                           onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
                         >
-                          <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                          Excluir
+                        </button>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '48px' }}>
-                <p style={{ 
-                  fontSize: '18px', 
-                  color: '#9ca3af', 
-                  marginBottom: '24px',
-                  margin: '0 0 24px 0'
+              <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  backgroundColor: '#ef4444',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px auto'
                 }}>
-                  Nenhuma despesa registrada no período selecionado
+                  <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
+                  Nenhuma despesa registrada no período
                 </p>
-                <button
-                  onClick={() => setShowForm(true)}
-                  style={{
-                    padding: '16px 32px',
-                    backgroundColor: '#ef4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '12px',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
-                >
-                  Registrar Primeira Despesa
-                </button>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 } 
