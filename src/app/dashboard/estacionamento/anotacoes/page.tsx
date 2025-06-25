@@ -10,23 +10,23 @@ interface Anotacao {
   titulo: string
   conteudo: string
   categoria?: string
-  importante?: boolean
-  data_anotacao?: string
-  created_at?: string
+  importante: boolean
+  data_anotacao: string
+  created_at: string
 }
 
 export default function AnotacoesPage() {
   const [anotacoes, setAnotacoes] = useState<Anotacao[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [editingAnotacao, setEditingAnotacao] = useState<Anotacao | null>(null)
   const [formData, setFormData] = useState({
     titulo: '',
     conteudo: '',
     categoria: '',
     importante: false,
-    data_anotacao: new Date().toISOString().split('T')[0]
+    data_anotacao: ''
   })
-  const [editingId, setEditingId] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -91,11 +91,11 @@ export default function AnotacoesPage() {
         importante: formData.importante,
         data_anotacao: formData.data_anotacao
       }
-      if (editingId) {
+      if (editingAnotacao) {
         const { error } = await supabase
           .from('anotacoes')
           .update(anotacaoData)
-          .eq('id', editingId)
+          .eq('id', editingAnotacao.id)
         if (error) throw error
       } else {
         const { error } = await supabase
@@ -109,10 +109,10 @@ export default function AnotacoesPage() {
         conteudo: '',
         categoria: '',
         importante: false,
-        data_anotacao: new Date().toISOString().split('T')[0]
+        data_anotacao: ''
       })
       setShowForm(false)
-      setEditingId(null)
+      setEditingAnotacao(null)
     } catch (error) {
       console.error('Erro ao salvar anotação:', error)
       alert('Erro ao salvar anotação. Tente novamente.')
@@ -152,10 +152,10 @@ export default function AnotacoesPage() {
       titulo: anotacao.titulo,
       conteudo: anotacao.conteudo,
       categoria: anotacao.categoria || '',
-      importante: anotacao.importante || false,
-      data_anotacao: anotacao.data_anotacao || new Date().toISOString().split('T')[0]
+      importante: anotacao.importante,
+      data_anotacao: anotacao.data_anotacao
     })
-    setEditingId(anotacao.id)
+    setEditingAnotacao(anotacao)
     setShowForm(true)
   }
 
@@ -165,10 +165,10 @@ export default function AnotacoesPage() {
       conteudo: '',
       categoria: '',
       importante: false,
-      data_anotacao: new Date().toISOString().split('T')[0]
+      data_anotacao: ''
     })
     setShowForm(false)
-    setEditingId(null)
+    setEditingAnotacao(null)
   }
 
   const anotacoesImportantes = anotacoes.filter(a => a.importante)
@@ -244,48 +244,7 @@ export default function AnotacoesPage() {
       </div>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 32px' }}>
-        {/* Quick Action Button */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'flex-start', 
-          marginBottom: '32px' 
-        }}>
-          <button
-            onClick={() => setShowForm(true)}
-            style={{
-              padding: '16px 32px',
-              backgroundColor: '#f59e0b',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '18px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#d97706'
-              e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 6px 12px -1px rgba(0, 0, 0, 0.2)'
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = '#f59e0b'
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            <svg style={{ width: '24px', height: '24px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Nova Anotação
-          </button>
-        </div>
-
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
         {/* Form */}
         {showForm && (
           <div style={{ 
@@ -302,7 +261,7 @@ export default function AnotacoesPage() {
               marginBottom: '24px',
               margin: '0 0 24px 0'
             }}>
-                {editingId ? 'Editar Anotação' : 'Nova Anotação'}
+                {editingAnotacao ? 'Editar Anotação' : 'Nova Anotação'}
               </h2>
 
             <form onSubmit={handleSubmit} style={{ 
@@ -374,6 +333,58 @@ export default function AnotacoesPage() {
                   fontWeight: '500', 
                   marginBottom: '8px' 
                 }}>
+                  Categoria
+                </label>
+                <input
+                  type="text"
+                  value={formData.categoria}
+                  onChange={e => setFormData({ ...formData, categoria: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '16px'
+                  }}
+                  placeholder="Categoria (opcional)"
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <input
+                  type="checkbox"
+                  id="importante"
+                  checked={formData.importante}
+                  onChange={(e) => setFormData({ ...formData, importante: e.target.checked })}
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    accentColor: '#ca8a04'
+                  }}
+                />
+                <label 
+                  htmlFor="importante"
+                  style={{ 
+                    color: '#d1d5db', 
+                    fontSize: '16px', 
+                    fontWeight: '500',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Marcar como importante
+                </label>
+              </div>
+
+              <div style={{ minWidth: '0', width: '100%' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  marginBottom: '8px' 
+                }}>
                   Conteúdo
                 </label>
                 <textarea
@@ -431,7 +442,7 @@ export default function AnotacoesPage() {
                   onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
                   onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
                 >
-                  {editingId ? 'Atualizar' : 'Salvar'}
+                  {editingAnotacao ? 'Atualizar' : 'Salvar'}
                 </button>
               </div>
             </form>

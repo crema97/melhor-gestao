@@ -10,23 +10,23 @@ interface Anotacao {
   titulo: string
   conteudo: string
   categoria?: string
-  importante?: boolean
-  data_anotacao?: string
-  created_at?: string
+  importante: boolean
+  data_anotacao: string
+  created_at: string
 }
 
 export default function AnotacoesPage() {
   const [anotacoes, setAnotacoes] = useState<Anotacao[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [editingAnotacao, setEditingAnotacao] = useState<Anotacao | null>(null)
   const [formData, setFormData] = useState({
     titulo: '',
     conteudo: '',
     categoria: '',
     importante: false,
-    data_anotacao: new Date().toISOString().split('T')[0]
+    data_anotacao: ''
   })
-  const [editingAnotacao, setEditingAnotacao] = useState<Anotacao | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const router = useRouter()
 
@@ -76,16 +76,26 @@ export default function AnotacoesPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    
     try {
-      if (!userId) return
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!usuario) return
 
       const anotacaoData = {
-        usuario_id: userId,
+        usuario_id: usuario.id,
         titulo: formData.titulo,
         conteudo: formData.conteudo,
         categoria: formData.categoria || null,
         importante: formData.importante,
-        data_anotacao: formData.data_anotacao
+        data_anotacao: formData.data_anotacao || new Date().toISOString().split('T')[0]
       }
 
       if (editingAnotacao) {
@@ -93,46 +103,58 @@ export default function AnotacoesPage() {
           .from('anotacoes')
           .update(anotacaoData)
           .eq('id', editingAnotacao.id)
+
         if (error) throw error
       } else {
         const { error } = await supabase
           .from('anotacoes')
           .insert([anotacaoData])
+
         if (error) throw error
       }
 
-      await loadAnotacoes(userId)
       setFormData({
         titulo: '',
         conteudo: '',
         categoria: '',
         importante: false,
-        data_anotacao: new Date().toISOString().split('T')[0]
+        data_anotacao: ''
       })
       setShowForm(false)
       setEditingAnotacao(null)
+      await loadAnotacoes(usuario.id)
     } catch (error) {
       console.error('Erro ao salvar anotação:', error)
-      alert('Erro ao salvar anotação. Tente novamente.')
+      alert('Erro ao salvar anotação')
     }
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Tem certeza que deseja excluir esta anotação?')) return
+
     try {
       const { error } = await supabase
         .from('anotacoes')
         .delete()
         .eq('id', id)
+
       if (error) throw error
 
-      // Recarregar dados
-      if (userId) {
-        await loadAnotacoes(userId)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: usuario } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+
+        if (usuario) {
+          await loadAnotacoes(usuario.id)
+        }
       }
     } catch (error) {
       console.error('Erro ao excluir anotação:', error)
-      alert('Erro ao excluir anotação. Tente novamente.')
+      alert('Erro ao excluir anotação')
     }
   }
 
@@ -141,8 +163,8 @@ export default function AnotacoesPage() {
       titulo: anotacao.titulo,
       conteudo: anotacao.conteudo,
       categoria: anotacao.categoria || '',
-      importante: anotacao.importante || false,
-      data_anotacao: anotacao.data_anotacao || new Date().toISOString().split('T')[0]
+      importante: anotacao.importante,
+      data_anotacao: anotacao.data_anotacao
     })
     setEditingAnotacao(anotacao)
     setShowForm(true)
@@ -154,7 +176,7 @@ export default function AnotacoesPage() {
       conteudo: '',
       categoria: '',
       importante: false,
-      data_anotacao: new Date().toISOString().split('T')[0]
+      data_anotacao: ''
     })
     setShowForm(false)
     setEditingAnotacao(null)
