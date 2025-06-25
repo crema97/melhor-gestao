@@ -43,8 +43,11 @@ export default function PeriodSelector({ onPeriodChange, initialPeriod = 'month'
         break
       case 'custom':
         if (customStartDate && customEndDate) {
-          startDate = new Date(customStartDate)
-          endDate = new Date(customEndDate + 'T23:59:59')
+          const [startYear, startMonth, startDay] = customStartDate.split('-').map(Number)
+          const [endYear, endMonth, endDay] = customEndDate.split('-').map(Number)
+          
+          startDate = new Date(startYear, startMonth - 1, startDay)
+          endDate = new Date(endYear, endMonth - 1, endDay, 23, 59, 59)
         }
         break
     }
@@ -73,8 +76,11 @@ export default function PeriodSelector({ onPeriodChange, initialPeriod = 'month'
 
   const getCurrentRangeText = () => {
     if (selectedPeriod === 'custom' && customStartDate && customEndDate) {
-      const startDate = new Date(customStartDate)
-      const endDate = new Date(customEndDate)
+      const [startYear, startMonth, startDay] = customStartDate.split('-').map(Number)
+      const [endYear, endMonth, endDay] = customEndDate.split('-').map(Number)
+      
+      const startDate = new Date(startYear, startMonth - 1, startDay)
+      const endDate = new Date(endYear, endMonth - 1, endDay)
       return `${formatDate(startDate)} - ${formatDate(endDate)}`
     }
     
