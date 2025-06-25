@@ -86,19 +86,16 @@ export default function EstacionamentoDashboard() {
 
   useEffect(() => {
     // Aplicar filtro de período quando as receitas e despesas mudarem
+    const startDateStr = dateRange.startDate.toISOString().split('T')[0]
+    const endDateStr = dateRange.endDate.toISOString().split('T')[0]
+    
     const filteredReceitasData = receitas.filter(receita => {
-      const receitaDate = new Date(receita.data_receita + 'T00:00:00')
-      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
-      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
-      return receitaDate >= start && receitaDate <= end
+      return receita.data_receita >= startDateStr && receita.data_receita <= endDateStr
     })
     setFilteredReceitas(filteredReceitasData)
 
     const filteredDespesasData = despesas.filter(despesa => {
-      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
-      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
-      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
-      return despesaDate >= start && despesaDate <= end
+      return despesa.data_despesa >= startDateStr && despesa.data_despesa <= endDateStr
     })
     setFilteredDespesas(filteredDespesasData)
 
