@@ -782,18 +782,12 @@ export default function DespesasPage() {
             
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-              gap: '32px',
-              alignItems: 'start'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+              gap: '20px',
+              alignItems: 'center'
             }}>
               {/* Pie Chart */}
-              <div style={{ 
-                height: '350px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                minHeight: '300px'
-              }}>
+              <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -802,7 +796,7 @@ export default function DespesasPage() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                      outerRadius={100}
+                      outerRadius={60}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -816,13 +810,9 @@ export default function DespesasPage() {
                         border: '1px solid #374151',
                         borderRadius: '8px',
                         color: '#ffffff',
-                        fontSize: '14px',
-                        padding: '12px'
+                        fontSize: '12px'
                       }}
-                      formatter={(value: number, name: string) => [
-                        `R$ ${value.toFixed(2).replace('.', ',')}`, 
-                        name
-                      ]}
+                      formatter={(value: number, name: string) => [`R$ ${value.toFixed(2).replace('.', ',')}`, name]}
                       labelStyle={{ color: '#ffffff' }}
                       itemStyle={{ color: '#ffffff' }}
                     />
@@ -835,45 +825,32 @@ export default function DespesasPage() {
                 {categoryData.map((item) => (
                   <div key={item.name} style={{ 
                     display: 'flex', 
-                    alignItems: 'center',
+                    alignItems: 'center', 
                     justifyContent: 'space-between',
-                    padding: '16px',
-                    backgroundColor: '#374151',
+                    padding: '12px', 
+                    backgroundColor: '#374151', 
                     borderRadius: '8px',
-                    border: `2px solid ${item.color}`,
-                    minHeight: '60px'
+                    border: `2px solid ${item.color}`
                   }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '12px',
-                      flex: 1,
-                      minWidth: 0
-                    }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{
-                        width: '16px',
-                        height: '16px',
+                        width: '12px',
+                        height: '12px',
                         backgroundColor: item.color,
-                        borderRadius: '50%',
-                        flexShrink: 0
+                        borderRadius: '50%'
                       }}></div>
                       <span style={{ 
                         color: '#ffffff', 
-                        fontSize: '16px', 
-                        fontWeight: '600',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
+                        fontSize: '14px', 
+                        fontWeight: '600' 
                       }}>
                         {item.name}
                       </span>
                     </div>
                     <span style={{ 
                       color: item.color, 
-                      fontSize: '18px', 
-                      fontWeight: 'bold',
-                      marginLeft: '12px',
-                      flexShrink: 0
+                      fontSize: '16px', 
+                      fontWeight: 'bold' 
                     }}>
                       R$ {item.value.toFixed(2).replace('.', ',')}
                     </span>
