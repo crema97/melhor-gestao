@@ -187,11 +187,10 @@ export default function ReceitasPage() {
   }
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
+    const startStr = startDate.toISOString().split('T')[0]
+    const endStr = endDate.toISOString().split('T')[0]
     const filtered = receitas.filter(receita => {
-      const receitaDate = new Date(receita.data_receita + 'T00:00:00')
-      const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
-      const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59)
-      return receitaDate >= start && receitaDate <= end
+      return receita.data_receita >= startStr && receita.data_receita <= endStr
     })
     setFilteredReceitas(filtered)
   }
@@ -472,6 +471,35 @@ export default function ReceitasPage() {
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 32px' }}>
         {/* Period Selector */}
         <PeriodSelector onPeriodChange={handlePeriodChange} />
+
+        {/* Estatísticas do Período */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          margin: '32px 0 32px 0',
+          backgroundColor: '#1f2937',
+          borderRadius: '8px',
+          padding: '24px',
+          border: '1px solid #374151'
+        }}>
+          <div>
+            <h2 style={{ color: '#ffffff', fontSize: '22px', fontWeight: 'bold', margin: 0 }}>
+              Estatísticas do Período
+            </h2>
+            <p style={{ color: '#d1d5db', fontSize: '16px', margin: 0 }}>
+              {filteredReceitas.length} receita{filteredReceitas.length !== 1 ? 's' : ''} registrada{filteredReceitas.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ color: '#d1d5db', fontSize: '16px', margin: '0 0 4px 0' }}>
+              Total do Período
+            </p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#10b981', margin: 0, whiteSpace: 'nowrap' }}>
+              R$ {filteredReceitas.reduce((sum, receita) => sum + receita.valor, 0).toFixed(2).replace('.', ',')}
+            </p>
+          </div>
+        </div>
 
         {/* Quick Action Button */}
         <div style={{ 

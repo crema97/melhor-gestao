@@ -733,7 +733,7 @@ export default function ReceitasPage() {
                 fontSize: '16px',
                 margin: 0
               }}>
-                {receitas.length} receita{receitas.length !== 1 ? 's' : ''} registrada{receitas.length !== 1 ? 's' : ''}
+                {filteredReceitas.length} receita{filteredReceitas.length !== 1 ? 's' : ''} registrada{filteredReceitas.length !== 1 ? 's' : ''}
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
