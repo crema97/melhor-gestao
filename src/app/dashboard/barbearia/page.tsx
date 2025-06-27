@@ -42,6 +42,14 @@ interface DailyData {
   lucro: number
 }
 
+interface Usuario {
+  id: string
+  nome: string
+  email: string
+  nome_negocio: string
+  tipo_negocio_id: string
+}
+
 export default function BarbeariaDashboard() {
   const [receitas, setReceitas] = useState<Receita[]>([])
   const [filteredReceitas, setFilteredReceitas] = useState<Receita[]>([])
@@ -51,6 +59,7 @@ export default function BarbeariaDashboard() {
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [dailyData, setDailyData] = useState<DailyData[]>([])
   const [usuarioId, setUsuarioId] = useState<string>('')
+  const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [stats, setStats] = useState({
     receitasMes: 0,
     despesasMes: 0,
@@ -140,18 +149,19 @@ export default function BarbeariaDashboard() {
         return
       }
 
-      const { data: usuario } = await supabase
+      const { data: usuarioData } = await supabase
         .from('usuarios')
         .select('*')
         .eq('user_id', user.id)
         .single()
 
-      if (!usuario) {
+      if (!usuarioData) {
         router.push('/login')
         return
       }
 
-      setUsuarioId(usuario.id)
+      setUsuarioId(usuarioData.id)
+      setUsuario(usuarioData)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
       router.push('/login')
@@ -328,7 +338,7 @@ export default function BarbeariaDashboard() {
                 color: '#ffffff',
                 margin: 0
               }}>
-                Dashboard Barbearia
+                {usuario?.nome_negocio || 'Dashboard Barbearia'}
               </h1>
               <p style={{ 
                 color: '#d1d5db', 
@@ -393,6 +403,24 @@ export default function BarbeariaDashboard() {
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ca8a04'}
               >
                 Anotações
+              </Link>
+              <Link
+                href="/dashboard/barbearia/minha-conta"
+                style={{
+                  padding: '10px 16px',
+                  backgroundColor: '#7c3aed',
+                  color: 'white',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  fontWeight: '500',
+                  transition: 'background-color 0.2s',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#6d28d9'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#7c3aed'}
+              >
+                Minha Conta
               </Link>
               <button
                 onClick={handleLogout}

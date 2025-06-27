@@ -42,6 +42,14 @@ interface DailyData {
   lucro: number
 }
 
+interface Usuario {
+  id: string
+  nome: string
+  email: string
+  nome_negocio: string
+  tipo_negocio_id: string
+}
+
 export default function LavaRapidoDashboard() {
   const [receitas, setReceitas] = useState<Receita[]>([])
   const [filteredReceitas, setFilteredReceitas] = useState<Receita[]>([])
@@ -51,6 +59,7 @@ export default function LavaRapidoDashboard() {
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [dailyData, setDailyData] = useState<DailyData[]>([])
   const [usuarioId, setUsuarioId] = useState<string>('')
+  const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [stats, setStats] = useState({
     receitasMes: 0,
     despesasMes: 0,
@@ -66,6 +75,14 @@ export default function LavaRapidoDashboard() {
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
   })
+  
+  // Estados para os filtros dos gráficos
+  const [chartFilters, setChartFilters] = useState({
+    receitas: true,
+    despesas: true,
+    lucro: true
+  })
+  
   const router = useRouter()
 
   useEffect(() => {
@@ -144,6 +161,7 @@ export default function LavaRapidoDashboard() {
       }
 
       setUsuarioId(usuario.id)
+      setUsuario(usuario)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
       router.push('/login')
@@ -259,6 +277,13 @@ export default function LavaRapidoDashboard() {
     setDateRange({ startDate, endDate })
   }
 
+  function handleChartFilterChange(filterType: 'receitas' | 'despesas' | 'lucro') {
+    setChartFilters(prev => ({
+      ...prev,
+      [filterType]: !prev[filterType]
+    }))
+  }
+
   async function handleLogout() {
     try {
       await supabase.auth.signOut()
@@ -312,7 +337,7 @@ export default function LavaRapidoDashboard() {
                 color: '#ffffff',
                 margin: 0
               }}>
-                Dashboard Lava-Rápido
+                {usuario?.nome_negocio || 'Dashboard Lava-Rápido'}
               </h1>
               <p style={{ 
                 color: '#d1d5db', 
@@ -377,6 +402,24 @@ export default function LavaRapidoDashboard() {
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ca8a04'}
               >
                 Anotações
+              </Link>
+              <Link
+                href="/dashboard/lavarapido/minha-conta"
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#7c3aed',
+                  color: 'white',
+                  borderRadius: '6px',
+                  textDecoration: 'none',
+                  fontWeight: '500',
+                  transition: 'background-color 0.2s',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#6d28d9'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#7c3aed'}
+              >
+                Minha Conta
               </Link>
               <button
                 onClick={handleLogout}

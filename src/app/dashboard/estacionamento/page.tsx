@@ -42,6 +42,14 @@ interface DailyData {
   lucro: number
 }
 
+interface Usuario {
+  id: string
+  nome: string
+  email: string
+  nome_negocio: string
+  tipo_negocio_id: string
+}
+
 export default function EstacionamentoDashboard() {
   const [receitas, setReceitas] = useState<Receita[]>([])
   const [filteredReceitas, setFilteredReceitas] = useState<Receita[]>([])
@@ -51,6 +59,7 @@ export default function EstacionamentoDashboard() {
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [dailyData, setDailyData] = useState<DailyData[]>([])
   const [usuarioId, setUsuarioId] = useState<string>('')
+  const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [stats, setStats] = useState({
     receitasMes: 0,
     despesasMes: 0,
@@ -66,6 +75,14 @@ export default function EstacionamentoDashboard() {
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
   })
+  
+  // Estados para os filtros dos gráficos
+  const [chartFilters, setChartFilters] = useState({
+    receitas: true,
+    despesas: true,
+    lucro: true
+  })
+  
   const router = useRouter()
 
   useEffect(() => {
@@ -144,6 +161,7 @@ export default function EstacionamentoDashboard() {
       }
 
       setUsuarioId(usuario.id)
+      setUsuario(usuario)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
       router.push('/login')
@@ -260,6 +278,13 @@ export default function EstacionamentoDashboard() {
     setDateRange({ startDate, endDate })
   }
 
+  function handleChartFilterChange(filterType: 'receitas' | 'despesas' | 'lucro') {
+    setChartFilters(prev => ({
+      ...prev,
+      [filterType]: !prev[filterType]
+    }))
+  }
+
   async function handleLogout() {
     try {
       await supabase.auth.signOut()
@@ -313,7 +338,7 @@ export default function EstacionamentoDashboard() {
                 color: '#ffffff',
                 margin: 0
               }}>
-                Dashboard Estacionamento
+                {usuario?.nome_negocio || 'Dashboard Estacionamento'}
               </h1>
               <p style={{ 
                 color: '#d1d5db', 
@@ -378,6 +403,24 @@ export default function EstacionamentoDashboard() {
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ca8a04'}
               >
                 Anotações
+              </Link>
+              <Link
+                href="/dashboard/estacionamento/minha-conta"
+                style={{
+                  padding: '10px 16px',
+                  backgroundColor: '#7c3aed',
+                  color: 'white',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  fontWeight: '500',
+                  transition: 'background-color 0.2s',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#6d28d9'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#7c3aed'}
+              >
+                Minha Conta
               </Link>
               <button
                 onClick={handleLogout}
@@ -558,12 +601,93 @@ export default function EstacionamentoDashboard() {
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend fontSize={12} />
-                <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
-                <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />
-                <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />
+                {chartFilters.receitas && <Bar dataKey="receitas" fill="#10b981" name="Receitas" />}
+                {chartFilters.despesas && <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />}
+                {chartFilters.lucro && <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />}
               </BarChart>
             </ResponsiveContainer>
+            
+            {/* Filtros do gráfico mensal - posicionados na parte de baixo */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: '20px', 
+              marginTop: '16px',
+              flexWrap: 'wrap'
+            }}>
+              <label style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: '#d1d5db',
+                padding: '8px 12px',
+                backgroundColor: chartFilters.receitas ? '#10b981' : '#374151',
+                borderRadius: '6px',
+                transition: 'background-color 0.2s'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={chartFilters.receitas}
+                  onChange={() => handleChartFilterChange('receitas')}
+                  style={{ 
+                    width: '16px', 
+                    height: '16px',
+                    accentColor: '#10b981'
+                  }}
+                />
+                Receitas
+              </label>
+              <label style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: '#d1d5db',
+                padding: '8px 12px',
+                backgroundColor: chartFilters.despesas ? '#ef4444' : '#374151',
+                borderRadius: '6px',
+                transition: 'background-color 0.2s'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={chartFilters.despesas}
+                  onChange={() => handleChartFilterChange('despesas')}
+                  style={{ 
+                    width: '16px', 
+                    height: '16px',
+                    accentColor: '#ef4444'
+                  }}
+                />
+                Despesas
+              </label>
+              <label style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: '#d1d5db',
+                padding: '8px 12px',
+                backgroundColor: chartFilters.lucro ? '#3b82f6' : '#374151',
+                borderRadius: '6px',
+                transition: 'background-color 0.2s'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={chartFilters.lucro}
+                  onChange={() => handleChartFilterChange('lucro')}
+                  style={{ 
+                    width: '16px', 
+                    height: '16px',
+                    accentColor: '#3b82f6'
+                  }}
+                />
+                Lucro
+              </label>
+            </div>
           </div>
 
           {/* Daily Chart */}
@@ -596,12 +720,93 @@ export default function EstacionamentoDashboard() {
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
-                <Legend fontSize={12} />
-                <Bar dataKey="receitas" fill="#10b981" name="Receitas" />
-                <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />
-                <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />
+                {chartFilters.receitas && <Bar dataKey="receitas" fill="#10b981" name="Receitas" />}
+                {chartFilters.despesas && <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />}
+                {chartFilters.lucro && <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />}
               </BarChart>
             </ResponsiveContainer>
+            
+            {/* Filtros do gráfico diário - posicionados na parte de baixo */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: '20px', 
+              marginTop: '16px',
+              flexWrap: 'wrap'
+            }}>
+              <label style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: '#d1d5db',
+                padding: '8px 12px',
+                backgroundColor: chartFilters.receitas ? '#10b981' : '#374151',
+                borderRadius: '6px',
+                transition: 'background-color 0.2s'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={chartFilters.receitas}
+                  onChange={() => handleChartFilterChange('receitas')}
+                  style={{ 
+                    width: '16px', 
+                    height: '16px',
+                    accentColor: '#10b981'
+                  }}
+                />
+                Receitas
+              </label>
+              <label style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: '#d1d5db',
+                padding: '8px 12px',
+                backgroundColor: chartFilters.despesas ? '#ef4444' : '#374151',
+                borderRadius: '6px',
+                transition: 'background-color 0.2s'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={chartFilters.despesas}
+                  onChange={() => handleChartFilterChange('despesas')}
+                  style={{ 
+                    width: '16px', 
+                    height: '16px',
+                    accentColor: '#ef4444'
+                  }}
+                />
+                Despesas
+              </label>
+              <label style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: '#d1d5db',
+                padding: '8px 12px',
+                backgroundColor: chartFilters.lucro ? '#3b82f6' : '#374151',
+                borderRadius: '6px',
+                transition: 'background-color 0.2s'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={chartFilters.lucro}
+                  onChange={() => handleChartFilterChange('lucro')}
+                  style={{ 
+                    width: '16px', 
+                    height: '16px',
+                    accentColor: '#3b82f6'
+                  }}
+                />
+                Lucro
+              </label>
+            </div>
           </div>
         </div>
 
