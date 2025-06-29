@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { supabase } from '@/lib/supabaseClient'
 
 interface Usuario {
   id: string
@@ -22,7 +22,6 @@ export default function MinhaContaLavaRapido() {
   const [mensagem, setMensagem] = useState('')
   const [tipoMensagem, setTipoMensagem] = useState<'sucesso' | 'erro'>('sucesso')
   const router = useRouter()
-  const supabase = createClientComponentClient()
 
   useEffect(() => {
     checkUserAndLoadData()
