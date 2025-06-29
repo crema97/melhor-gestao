@@ -623,7 +623,8 @@ export default function LavaRapidoDashboard() {
                 padding: '8px 12px',
                 backgroundColor: chartFilters.receitas ? '#10b981' : '#374151',
                 borderRadius: '6px',
-                transition: 'background-color 0.2s'
+                transition: 'background-color 0.2s',
+                userSelect: 'none'
               }}>
                 <input
                   type="checkbox"
@@ -632,7 +633,9 @@ export default function LavaRapidoDashboard() {
                   style={{ 
                     width: '16px', 
                     height: '16px',
-                    accentColor: '#10b981'
+                    accentColor: '#10b981',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto'
                   }}
                 />
                 Receitas
@@ -647,7 +650,8 @@ export default function LavaRapidoDashboard() {
                 padding: '8px 12px',
                 backgroundColor: chartFilters.despesas ? '#ef4444' : '#374151',
                 borderRadius: '6px',
-                transition: 'background-color 0.2s'
+                transition: 'background-color 0.2s',
+                userSelect: 'none'
               }}>
                 <input
                   type="checkbox"
@@ -656,7 +660,9 @@ export default function LavaRapidoDashboard() {
                   style={{ 
                     width: '16px', 
                     height: '16px',
-                    accentColor: '#ef4444'
+                    accentColor: '#ef4444',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto'
                   }}
                 />
                 Despesas
@@ -671,7 +677,8 @@ export default function LavaRapidoDashboard() {
                 padding: '8px 12px',
                 backgroundColor: chartFilters.lucro ? '#3b82f6' : '#374151',
                 borderRadius: '6px',
-                transition: 'background-color 0.2s'
+                transition: 'background-color 0.2s',
+                userSelect: 'none'
               }}>
                 <input
                   type="checkbox"
@@ -680,7 +687,9 @@ export default function LavaRapidoDashboard() {
                   style={{ 
                     width: '16px', 
                     height: '16px',
-                    accentColor: '#3b82f6'
+                    accentColor: '#3b82f6',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto'
                   }}
                 />
                 Lucro
@@ -741,7 +750,8 @@ export default function LavaRapidoDashboard() {
                 padding: '8px 12px',
                 backgroundColor: chartFilters.receitas ? '#10b981' : '#374151',
                 borderRadius: '6px',
-                transition: 'background-color 0.2s'
+                transition: 'background-color 0.2s',
+                userSelect: 'none'
               }}>
                 <input
                   type="checkbox"
@@ -750,7 +760,9 @@ export default function LavaRapidoDashboard() {
                   style={{ 
                     width: '16px', 
                     height: '16px',
-                    accentColor: '#10b981'
+                    accentColor: '#10b981',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto'
                   }}
                 />
                 Receitas
@@ -765,7 +777,8 @@ export default function LavaRapidoDashboard() {
                 padding: '8px 12px',
                 backgroundColor: chartFilters.despesas ? '#ef4444' : '#374151',
                 borderRadius: '6px',
-                transition: 'background-color 0.2s'
+                transition: 'background-color 0.2s',
+                userSelect: 'none'
               }}>
                 <input
                   type="checkbox"
@@ -774,7 +787,9 @@ export default function LavaRapidoDashboard() {
                   style={{ 
                     width: '16px', 
                     height: '16px',
-                    accentColor: '#ef4444'
+                    accentColor: '#ef4444',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto'
                   }}
                 />
                 Despesas
@@ -789,7 +804,8 @@ export default function LavaRapidoDashboard() {
                 padding: '8px 12px',
                 backgroundColor: chartFilters.lucro ? '#3b82f6' : '#374151',
                 borderRadius: '6px',
-                transition: 'background-color 0.2s'
+                transition: 'background-color 0.2s',
+                userSelect: 'none'
               }}>
                 <input
                   type="checkbox"
@@ -798,7 +814,9 @@ export default function LavaRapidoDashboard() {
                   style={{ 
                     width: '16px', 
                     height: '16px',
-                    accentColor: '#3b82f6'
+                    accentColor: '#3b82f6',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto'
                   }}
                 />
                 Lucro

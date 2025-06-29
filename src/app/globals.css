@@ -287,3 +287,29 @@ body {
     transform: rotate(360deg);
   }
 }
+
+/* Regras específicas para checkboxes dos dashboards */
+input[type="checkbox"] {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  z-index: 1;
+  position: relative;
+}
+
+label input[type="checkbox"] {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+/* Garantir que as labels das checkboxes sejam clicáveis */
+label[style*="cursor: pointer"] {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  user-select: none;
+}
+
+/* Remover qualquer interferência do Tailwind */
+input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: none;
+}
