@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import PeriodSelector from '@/components/PeriodSelector'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
+import { formatarData } from '@/lib/utils'
 
 interface Receita {
   id: string
@@ -998,7 +999,7 @@ export default function BarbeariaDashboard() {
                           fontSize: '14px',
                           margin: 0
                         }}>
-                          {new Date(receita.data_receita).toLocaleDateString('pt-BR')} • {receita.forma_pagamento}
+                          {formatarData(receita.data_receita)} • {receita.forma_pagamento}
                         </p>
                       </div>
                       <p style={{ 
@@ -1095,7 +1096,7 @@ export default function BarbeariaDashboard() {
                           fontSize: '14px',
                           margin: 0
                         }}>
-                          {new Date(despesa.data_despesa).toLocaleDateString('pt-BR')}
+                          {formatarData(despesa.data_despesa)}
                         </p>
                       </div>
                       <p style={{ 
