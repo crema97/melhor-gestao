@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste API Categorias</title>
+</head>
+<body>
+    <h1>Teste da API de Categorias</h1>
+    <button onclick="testarAPI()">Testar API</button>
+    <div id="resultado"></div>
+
+    <script>
+        async function testarAPI() {
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = 'Testando...';
+            
+            try {
+                const response = await fetch('/api/admin/categorias-por-tipo?tipo=04c82ce2-c099-44ca-85ce-b48549e5a592');
+                const data = await response.json();
+                
+                resultado.innerHTML = `
+                    <h3>Status: ${response.status}</h3>
+                    <h3>Resposta:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultado.innerHTML = `
+                    <h3>Erro:</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 

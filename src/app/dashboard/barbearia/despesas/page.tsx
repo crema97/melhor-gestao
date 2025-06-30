@@ -130,7 +130,7 @@ export default function DespesasPage() {
       }
 
       setUsuarioId(usuario.id)
-      await loadCategorias(usuario.tipo_negocio_id)
+      await loadCategoriasAtivas(usuario.id)
       setLoading(false)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
@@ -142,6 +142,8 @@ export default function DespesasPage() {
   async function loadDespesas(usuarioId: string) {
     try {
       setLoading(true)
+      
+      // Buscar TODAS as despesas do usuário (sem filtrar por categorias ativas)
       const { data, error } = await supabase
         .from('despesas')
         .select(`
@@ -149,12 +151,16 @@ export default function DespesasPage() {
           valor,
           data_despesa,
           observacoes,
-          categoria_despesa:categorias_despesa(nome)
+          categoria_despesa:categorias_despesa(id, nome)
         `)
         .eq('usuario_id', usuarioId)
         .order('data_despesa', { ascending: false })
 
       if (error) throw error
+      
+      console.log('Despesas carregadas:', data?.length || 0)
+      console.log('Despesas:', data)
+      
       setDespesas((data as unknown as Despesa[]) || [])
     } catch (error) {
       console.error('Erro ao carregar despesas:', error)
@@ -163,19 +169,18 @@ export default function DespesasPage() {
     }
   }
 
-  async function loadCategorias(tipoNegocioId: string) {
+  async function loadCategoriasAtivas(usuarioId: string) {
     try {
-      const { data, error } = await supabase
-        .from('categorias_despesa')
-        .select('*')
-        .eq('tipo_negocio_id', tipoNegocioId)
-        .eq('ativo', true)
-        .order('nome')
-
-      if (error) throw error
-      setCategorias(data || [])
+      const response = await fetch(`/api/usuario/categorias-ativas?usuario_id=${usuarioId}`)
+      const data = await response.json()
+      if (data.success) {
+        setCategorias(data.categorias.despesas || [])
+      } else {
+        setCategorias([])
+      }
     } catch (error) {
-      console.error('Erro ao carregar categorias:', error)
+      console.error('Erro ao carregar categorias ativas:', error)
+      setCategorias([])
     }
   }
 

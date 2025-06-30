@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = 'https://yfiygrsowmctczlnrdky.supabase.co'
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey!)
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 export async function POST(request: NextRequest) {
   try {
-    const { nome, email, senha, nome_negocio, tipo_negocio_id, plano = 'mensal', categoriasSelecionadas = [] } = await request.json()
+    const { 
+      nome, 
+      email, 
+      senha, 
+      nome_negocio, 
+      tipo_negocio_id, 
+      plano = 'mensal',
+      categoriasSelecionadas = { receitas: [], despesas: [] }
+    } = await request.json()
 
-    // Verificar se todos os campos estão presentes
+    console.log('=== CRIAÇÃO DE USUÁRIO ===')
+    console.log('Categorias selecionadas:', categoriasSelecionadas)
+
+    // Verificar campos obrigatórios
     if (!nome || !email || !senha || !nome_negocio || !tipo_negocio_id) {
       return NextResponse.json(
         { error: 'Todos os campos são obrigatórios' },
@@ -18,7 +24,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Calcular data de vencimento baseada no plano
+    // Calcular data de vencimento
     const hoje = new Date()
     const dataVencimento = new Date()
     
@@ -51,8 +57,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 2. Salvar dados na tabela usuarios com informações de mensalidade
-    const { data: usuario, error: insertError } = await supabaseAdmin
+    console.log('✅ Usuário criado no auth com ID:', authUser.user.id)
+
+    // 2. Salvar dados na tabela usuarios
+    const { data: usuarioInserido, error: insertError } = await supabaseAdmin
       .from('usuarios')
       .insert({
         user_id: authUser.user.id,
@@ -65,7 +73,7 @@ export async function POST(request: NextRequest) {
         status_pagamento: 'ativo',
         plano: plano
       })
-      .select()
+      .select('id, user_id, nome, email')
       .single()
 
     if (insertError) {
@@ -76,35 +84,91 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 3. Salvar categorias selecionadas na tabela usuario_categorias_ativas
-    if (categoriasSelecionadas.length > 0) {
-      const categoriasParaSalvar = categoriasSelecionadas.map((cat: any) => ({
-        usuario_id: usuario.id,
-        categoria_receita_id: cat.receita_id || null,
-        categoria_despesa_id: cat.despesa_id || null,
-        ativo: true
-      }))
+    console.log('✅ Usuário salvo na tabela usuarios com ID:', usuarioInserido.id)
+    console.log('User ID do Auth:', usuarioInserido.user_id)
 
-      const { error: categoriasError } = await supabaseAdmin
-        .from('usuario_categorias_ativas')
-        .insert(categoriasParaSalvar)
+    // 3. Salvar categorias usando o ID correto da tabela usuarios
+    let categoriasSalvas = 0
+    let categoriasErros = 0
 
-      if (categoriasError) {
-        console.error('Erro ao salvar categorias:', categoriasError)
-        // Não retorna erro aqui, pois o usuário já foi criado
-        console.warn('Usuário criado, mas categorias não foram salvas')
+    if (categoriasSelecionadas.receitas?.length > 0 || categoriasSelecionadas.despesas?.length > 0) {
+      console.log('3. Salvando categorias usando usuario_id:', usuarioInserido.id)
+      
+      // Preparar dados para inserção
+      const categoriasParaInserir: Array<{
+        usuario_id: string
+        categoria_receita_id: string | null
+        categoria_despesa_id: string | null
+        ativo: boolean
+      }> = []
+
+      // Adicionar categorias de receita
+      if (categoriasSelecionadas.receitas && categoriasSelecionadas.receitas.length > 0) {
+        categoriasSelecionadas.receitas.forEach((categoriaId: string) => {
+          categoriasParaInserir.push({
+            usuario_id: usuarioInserido.id, // Usar o ID da tabela usuarios, não do Auth
+            categoria_receita_id: categoriaId,
+            categoria_despesa_id: null,
+            ativo: true
+          })
+        })
       }
+
+      // Adicionar categorias de despesa
+      if (categoriasSelecionadas.despesas && categoriasSelecionadas.despesas.length > 0) {
+        categoriasSelecionadas.despesas.forEach((categoriaId: string) => {
+          categoriasParaInserir.push({
+            usuario_id: usuarioInserido.id, // Usar o ID da tabela usuarios, não do Auth
+            categoria_receita_id: null,
+            categoria_despesa_id: categoriaId,
+            ativo: true
+          })
+        })
+      }
+
+      console.log('Total de categorias para inserir:', categoriasParaInserir.length)
+
+      // Inserir categorias uma por vez
+      for (let i = 0; i < categoriasParaInserir.length; i++) {
+        const categoria = categoriasParaInserir[i]
+        console.log(`Inserindo categoria ${i + 1}:`, categoria)
+
+        try {
+          const { data, error } = await supabaseAdmin
+            .from('usuario_categorias_ativas')
+            .insert(categoria)
+            .select()
+
+          if (error) {
+            console.error(`❌ Erro ao inserir categoria ${i + 1}:`, error)
+            categoriasErros++
+          } else {
+            console.log(`✅ Categoria ${i + 1} inserida com sucesso`)
+            categoriasSalvas++
+          }
+        } catch (err) {
+          console.error(`❌ Exceção ao inserir categoria ${i + 1}:`, err)
+          categoriasErros++
+        }
+      }
+
+      console.log(`Resultado: ${categoriasSalvas} sucessos, ${categoriasErros} erros`)
+    } else {
+      console.log('3. Nenhuma categoria selecionada')
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Cliente cadastrado com sucesso!',
+      message: `Cliente cadastrado com sucesso! (${categoriasSalvas} categorias salvas)`,
       user: authUser.user,
-      vencimento: dataVencimento.toISOString().split('T')[0]
+      usuario_id: usuarioInserido.id, // Retornar o ID correto para uso futuro
+      vencimento: dataVencimento.toISOString().split('T')[0],
+      categorias_salvas: categoriasSalvas,
+      categorias_erros: categoriasErros
     })
 
   } catch (error) {
-    console.error('Erro geral:', error)
+    console.error('❌ Erro geral na criação de usuário:', error)
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }
