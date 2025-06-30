@@ -10,6 +10,25 @@ interface TipoNegocio {
   nome: string
 }
 
+interface CategoriaReceita {
+  id: string
+  nome: string
+  tipo_negocio_id: string
+}
+
+interface CategoriaDespesa {
+  id: string
+  nome: string
+  tipo_negocio_id: string
+}
+
+interface CategoriaSelecionada {
+  receita_id?: string
+  despesa_id?: string
+  nome: string
+  tipo: 'receita' | 'despesa'
+}
+
 interface Usuario {
   nome: string
   email: string
@@ -46,6 +65,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [deletando, setDeletando] = useState<string | null>(null)
 
+  // Estados para categorias
+  const [categoriasReceita, setCategoriasReceita] = useState<CategoriaReceita[]>([])
+  const [categoriasDespesa, setCategoriasDespesa] = useState<CategoriaDespesa[]>([])
+  const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<CategoriaSelecionada[]>([])
+  const [carregandoCategorias, setCarregandoCategorias] = useState(false)
+
   const router = useRouter()
 
   useEffect(() => {
@@ -60,12 +85,92 @@ export default function AdminDashboard() {
     }
   }
 
+  async function fetchCategoriasPorTipo(tipoNegocioId: string) {
+    if (!tipoNegocioId) {
+      setCategoriasReceita([])
+      setCategoriasDespesa([])
+      setCategoriasSelecionadas([])
+      return
+    }
+
+    setCarregandoCategorias(true)
+    try {
+      const response = await fetch(`/api/admin/categorias-por-tipo?tipo=${tipoNegocioId}`)
+      const data = await response.json()
+
+      if (response.ok) {
+        setCategoriasReceita(data.receitas || [])
+        setCategoriasDespesa(data.despesas || [])
+        
+        // Pré-selecionar todas as categorias por padrão
+        const todasCategorias: CategoriaSelecionada[] = [
+          ...data.receitas.map((cat: CategoriaReceita) => ({
+            receita_id: cat.id,
+            nome: cat.nome,
+            tipo: 'receita' as const
+          })),
+          ...data.despesas.map((cat: CategoriaDespesa) => ({
+            despesa_id: cat.id,
+            nome: cat.nome,
+            tipo: 'despesa' as const
+          }))
+        ]
+        setCategoriasSelecionadas(todasCategorias)
+      } else {
+        console.error('Erro ao buscar categorias:', data.error)
+        setCategoriasReceita([])
+        setCategoriasDespesa([])
+        setCategoriasSelecionadas([])
+      }
+    } catch (error) {
+      console.error('Erro ao buscar categorias:', error)
+      setCategoriasReceita([])
+      setCategoriasDespesa([])
+      setCategoriasSelecionadas([])
+    } finally {
+      setCarregandoCategorias(false)
+    }
+  }
+
   async function fetchUsuarios() {
     const { data } = await supabase.from('usuarios').select('nome, email, nome_negocio, data_cadastro, data_vencimento, status_pagamento, plano')
     if (data) {
       setUsuarios(data)
     }
     setLoading(false)
+  }
+
+  function toggleCategoria(categoria: CategoriaSelecionada) {
+    setCategoriasSelecionadas(prev => {
+      const existe = prev.find(cat => 
+        (cat.receita_id && cat.receita_id === categoria.receita_id) ||
+        (cat.despesa_id && cat.despesa_id === categoria.despesa_id)
+      )
+      
+      if (existe) {
+        // Remove se já existe
+        return prev.filter(cat => 
+          !((cat.receita_id && cat.receita_id === categoria.receita_id) ||
+            (cat.despesa_id && cat.despesa_id === categoria.despesa_id))
+        )
+      } else {
+        // Adiciona se não existe
+        return [...prev, categoria]
+      }
+    })
+  }
+
+  function isCategoriaSelecionada(categoria: CategoriaSelecionada) {
+    return categoriasSelecionadas.some(cat => 
+      (cat.receita_id && cat.receita_id === categoria.receita_id) ||
+      (cat.despesa_id && cat.despesa_id === categoria.despesa_id)
+    )
+  }
+
+  function handleTipoNegocioChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const tipoId = e.target.value
+    setForm(prev => ({ ...prev, tipo_negocio_id: tipoId }))
+    fetchCategoriasPorTipo(tipoId)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -78,7 +183,10 @@ export default function AdminDashboard() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(form)
+        body: JSON.stringify({
+          ...form,
+          categoriasSelecionadas
+        })
       })
 
       const result = await response.json()
@@ -90,6 +198,9 @@ export default function AdminDashboard() {
       }
 
       setForm({ nome: '', email: '', senha: '', nome_negocio: '', tipo_negocio_id: '', plano: 'mensal' })
+      setCategoriasSelecionadas([])
+      setCategoriasReceita([])
+      setCategoriasDespesa([])
       await fetchUsuarios()
       setCarregando(false)
       alert(`Cliente cadastrado com sucesso! Vencimento: ${result.vencimento}`)
@@ -458,7 +569,7 @@ export default function AdminDashboard() {
                 </label>
                 <select
                   value={form.tipo_negocio_id}
-                  onChange={e => setForm({ ...form, tipo_negocio_id: e.target.value })}
+                  onChange={handleTipoNegocioChange}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -506,6 +617,178 @@ export default function AdminDashboard() {
                   <option value="anual">Anual</option>
                 </select>
               </div>
+
+              {/* Seção de Seleção de Categorias */}
+              {form.tipo_negocio_id && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <div style={{ 
+                    border: '1px solid #4b5563', 
+                    borderRadius: '8px', 
+                    padding: '20px',
+                    backgroundColor: '#374151',
+                    marginTop: '20px'
+                  }}>
+                    <h3 style={{ 
+                      fontSize: '18px', 
+                      fontWeight: '600', 
+                      color: '#ffffff',
+                      marginBottom: '16px'
+                    }}>
+                      Categorias Disponíveis
+                      {carregandoCategorias && (
+                        <span style={{ 
+                          marginLeft: '8px', 
+                          fontSize: '14px', 
+                          color: '#9ca3af' 
+                        }}>
+                          (Carregando...)
+                        </span>
+                      )}
+                    </h3>
+
+                    {(categoriasReceita.length > 0 || categoriasDespesa.length > 0) && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        {/* Categorias de Receita */}
+                        {categoriasReceita.length > 0 && (
+                          <div>
+                            <h4 style={{ 
+                              fontSize: '16px', 
+                              fontWeight: '500', 
+                              color: '#10b981',
+                              marginBottom: '12px'
+                            }}>
+                              📈 Categorias de Receita
+                            </h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              {categoriasReceita.map((cat) => {
+                                const categoria: CategoriaSelecionada = {
+                                  receita_id: cat.id,
+                                  nome: cat.nome,
+                                  tipo: 'receita'
+                                }
+                                const selecionada = isCategoriaSelecionada(categoria)
+                                
+                                return (
+                                  <label
+                                    key={cat.id}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '8px',
+                                      cursor: 'pointer',
+                                      padding: '8px 12px',
+                                      backgroundColor: selecionada ? '#10b981' : '#4b5563',
+                                      borderRadius: '6px',
+                                      transition: 'background-color 0.2s',
+                                      fontSize: '14px',
+                                      color: '#ffffff'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = selecionada ? '#059669' : '#6b7280'}
+                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = selecionada ? '#10b981' : '#4b5563'}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selecionada}
+                                      onChange={() => toggleCategoria(categoria)}
+                                      style={{
+                                        width: '16px',
+                                        height: '16px',
+                                        cursor: 'pointer'
+                                      }}
+                                    />
+                                    {cat.nome}
+                                  </label>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Categorias de Despesa */}
+                        {categoriasDespesa.length > 0 && (
+                          <div>
+                            <h4 style={{ 
+                              fontSize: '16px', 
+                              fontWeight: '500', 
+                              color: '#ef4444',
+                              marginBottom: '12px'
+                            }}>
+                              📉 Categorias de Despesa
+                            </h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              {categoriasDespesa.map((cat) => {
+                                const categoria: CategoriaSelecionada = {
+                                  despesa_id: cat.id,
+                                  nome: cat.nome,
+                                  tipo: 'despesa'
+                                }
+                                const selecionada = isCategoriaSelecionada(categoria)
+                                
+                                return (
+                                  <label
+                                    key={cat.id}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '8px',
+                                      cursor: 'pointer',
+                                      padding: '8px 12px',
+                                      backgroundColor: selecionada ? '#ef4444' : '#4b5563',
+                                      borderRadius: '6px',
+                                      transition: 'background-color 0.2s',
+                                      fontSize: '14px',
+                                      color: '#ffffff'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = selecionada ? '#dc2626' : '#6b7280'}
+                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = selecionada ? '#ef4444' : '#4b5563'}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selecionada}
+                                      onChange={() => toggleCategoria(categoria)}
+                                      style={{
+                                        width: '16px',
+                                        height: '16px',
+                                        cursor: 'pointer'
+                                      }}
+                                    />
+                                    {cat.nome}
+                                  </label>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {categoriasSelecionadas.length > 0 && (
+                      <div style={{ 
+                        marginTop: '16px', 
+                        padding: '12px', 
+                        backgroundColor: '#1f2937', 
+                        borderRadius: '6px',
+                        border: '1px solid #4b5563'
+                      }}>
+                        <p style={{ 
+                          color: '#d1d5db', 
+                          fontSize: '14px', 
+                          margin: '0 0 8px 0' 
+                        }}>
+                          <strong>Categorias selecionadas:</strong> {categoriasSelecionadas.length}
+                        </p>
+                        <p style={{ 
+                          color: '#9ca3af', 
+                          fontSize: '12px', 
+                          margin: 0 
+                        }}>
+                          O cliente verá apenas estas categorias no dashboard
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div style={{ gridColumn: '1 / -1' }}>
                 <button

@@ -8,7 +8,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey!)
 
 export async function POST(request: NextRequest) {
   try {
-    const { nome, email, senha, nome_negocio, tipo_negocio_id, plano = 'mensal' } = await request.json()
+    const { nome, email, senha, nome_negocio, tipo_negocio_id, plano = 'mensal', categoriasSelecionadas = [] } = await request.json()
 
     // Verificar se todos os campos estão presentes
     if (!nome || !email || !senha || !nome_negocio || !tipo_negocio_id) {
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Salvar dados na tabela usuarios com informações de mensalidade
-    const { error: insertError } = await supabaseAdmin
+    const { data: usuario, error: insertError } = await supabaseAdmin
       .from('usuarios')
       .insert({
         user_id: authUser.user.id,
@@ -65,6 +65,8 @@ export async function POST(request: NextRequest) {
         status_pagamento: 'ativo',
         plano: plano
       })
+      .select()
+      .single()
 
     if (insertError) {
       console.error('Erro ao salvar na tabela usuarios:', insertError)
@@ -72,6 +74,26 @@ export async function POST(request: NextRequest) {
         { error: 'Erro ao salvar dados do cliente: ' + insertError.message },
         { status: 400 }
       )
+    }
+
+    // 3. Salvar categorias selecionadas na tabela usuario_categorias_ativas
+    if (categoriasSelecionadas.length > 0) {
+      const categoriasParaSalvar = categoriasSelecionadas.map((cat: any) => ({
+        usuario_id: usuario.id,
+        categoria_receita_id: cat.receita_id || null,
+        categoria_despesa_id: cat.despesa_id || null,
+        ativo: true
+      }))
+
+      const { error: categoriasError } = await supabaseAdmin
+        .from('usuario_categorias_ativas')
+        .insert(categoriasParaSalvar)
+
+      if (categoriasError) {
+        console.error('Erro ao salvar categorias:', categoriasError)
+        // Não retorna erro aqui, pois o usuário já foi criado
+        console.warn('Usuário criado, mas categorias não foram salvas')
+      }
     }
 
     return NextResponse.json({
