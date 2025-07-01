@@ -97,30 +97,59 @@ export default function EstacionamentoDashboard() {
   }, [usuarioId])
 
   useEffect(() => {
+    console.log('=== DEBUG: useEffect receitas/despesas ===')
+    console.log('Receitas length:', receitas.length)
+    console.log('Despesas length:', despesas.length)
+    console.log('Condição para loadChartData:', receitas.length > 0 || despesas.length > 0)
+    
     if (receitas.length > 0 || despesas.length > 0) {
+      console.log('Chamando loadChartData...')
       loadChartData()
+    } else {
+      console.log('Nenhum dado encontrado, limpando gráficos')
+      setMonthlyData([])
+      setDailyData([])
     }
   }, [receitas, despesas])
 
   useEffect(() => {
     // Aplicar filtro de período quando as receitas e despesas mudarem
+    console.log('=== DEBUG: Filtro de Período ===')
+    console.log('Receitas originais:', receitas.length, receitas)
+    console.log('Despesas originais:', despesas.length, despesas)
+    console.log('Período selecionado:', dateRange.startDate, 'até', dateRange.endDate)
+    
     const startDateStr = dateRange.startDate.toISOString().split('T')[0]
     const endDateStr = dateRange.endDate.toISOString().split('T')[0]
     
+    console.log('Filtrando por período:', startDateStr, 'até', endDateStr)
+    
     const filteredReceitasData = receitas.filter(receita => {
-      return receita.data_receita >= startDateStr && receita.data_receita <= endDateStr
+      const isInRange = receita.data_receita >= startDateStr && receita.data_receita <= endDateStr
+      console.log(`Receita ${receita.id}: ${receita.data_receita} - ${isInRange ? 'INCLUÍDA' : 'EXCLUÍDA'}`)
+      return isInRange
     })
+    console.log('Receitas filtradas:', filteredReceitasData.length, filteredReceitasData)
     setFilteredReceitas(filteredReceitasData)
 
     const filteredDespesasData = despesas.filter(despesa => {
-      return despesa.data_despesa >= startDateStr && despesa.data_despesa <= endDateStr
+      const isInRange = despesa.data_despesa >= startDateStr && despesa.data_despesa <= endDateStr
+      console.log(`Despesa ${despesa.id}: ${despesa.data_despesa} - ${isInRange ? 'INCLUÍDA' : 'EXCLUÍDA'}`)
+      return isInRange
     })
+    console.log('Despesas filtradas:', filteredDespesasData.length, filteredDespesasData)
     setFilteredDespesas(filteredDespesasData)
 
     // Atualizar stats
     const receitasMes = filteredReceitasData.reduce((sum, r) => sum + r.valor, 0)
     const despesasMes = filteredDespesasData.reduce((sum, d) => sum + d.valor, 0)
     const lucro = receitasMes - despesasMes
+
+    console.log('Stats calculados:', {
+      receitasMes,
+      despesasMes,
+      lucro
+    })
 
     const pagamentos = {
       dinheiro: 0,
@@ -133,6 +162,8 @@ export default function EstacionamentoDashboard() {
       pagamentos[receita.forma_pagamento as keyof typeof pagamentos] += receita.valor
     })
 
+    console.log('Pagamentos calculados:', pagamentos)
+
     setStats({
       receitasMes,
       despesasMes,
@@ -143,23 +174,39 @@ export default function EstacionamentoDashboard() {
 
   async function checkUserAndLoadData() {
     try {
+      console.log('=== DEBUG: checkUserAndLoadData ===')
       const { data: { user } } = await supabase.auth.getUser()
       
+      console.log('Usuário autenticado:', user?.id, user?.email)
+      
       if (!user) {
+        console.log('Nenhum usuário autenticado, redirecionando para login')
         router.push('/login')
         return
       }
 
-      const { data: usuario } = await supabase
+      const { data: usuario, error: usuarioError } = await supabase
         .from('usuarios')
         .select('*')
         .eq('user_id', user.id)
         .single()
 
+      console.log('Dados do usuário carregados:', usuario)
+      console.log('Erro ao carregar usuário:', usuarioError)
+
       if (!usuario) {
+        console.log('Usuário não encontrado na tabela usuarios, redirecionando para login')
         router.push('/login')
         return
       }
+
+      console.log('Usuário encontrado:', {
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email,
+        nome_negocio: usuario.nome_negocio,
+        tipo_negocio_id: usuario.tipo_negocio_id
+      })
 
       setUsuarioId(usuario.id)
       setUsuario(usuario)
@@ -172,8 +219,26 @@ export default function EstacionamentoDashboard() {
   async function loadDashboardData(usuarioId: string) {
     try {
       setLoading(true)
+      console.log('=== DEBUG: loadDashboardData ===')
+      console.log('Carregando dados para usuário ID:', usuarioId)
 
-      const { data: receitasData } = await supabase
+      // Verificar se o usuário existe antes de carregar dados
+      const { data: usuarioCheck, error: usuarioCheckError } = await supabase
+        .from('usuarios')
+        .select('id, nome, nome_negocio, tipo_negocio_id')
+        .eq('id', usuarioId)
+        .single()
+
+      console.log('Verificação do usuário:', usuarioCheck)
+      console.log('Erro na verificação:', usuarioCheckError)
+
+      if (!usuarioCheck) {
+        console.error('Usuário não encontrado para carregar dados')
+        return
+      }
+
+      // Consulta de receitas com mais detalhes
+      const receitasQuery = supabase
         .from('receitas')
         .select(`
           id,
@@ -181,22 +246,50 @@ export default function EstacionamentoDashboard() {
           data_receita,
           forma_pagamento,
           observacoes,
+          usuario_id,
           categoria_receita:categorias_receita(nome)
         `)
         .eq('usuario_id', usuarioId)
         .order('data_receita', { ascending: false })
 
-      const { data: despesasData } = await supabase
+      console.log('Executando query de receitas para usuário:', usuarioId)
+
+      const { data: receitasData, error: receitasError } = await receitasQuery
+
+      console.log('Receitas carregadas do Supabase:', receitasData)
+      console.log('Erro receitas:', receitasError)
+      console.log('Total de receitas:', receitasData?.length || 0)
+
+      // Consulta de despesas com mais detalhes
+      const despesasQuery = supabase
         .from('despesas')
         .select(`
           id,
           valor,
           data_despesa,
           observacoes,
+          usuario_id,
           categoria_despesa:categorias_despesa(nome)
         `)
         .eq('usuario_id', usuarioId)
         .order('data_despesa', { ascending: false })
+
+      console.log('Executando query de despesas para usuário:', usuarioId)
+
+      const { data: despesasData, error: despesasError } = await despesasQuery
+
+      console.log('Despesas carregadas do Supabase:', despesasData)
+      console.log('Erro despesas:', despesasError)
+      console.log('Total de despesas:', despesasData?.length || 0)
+
+      // Verificar se há dados de outros usuários (possível problema de RLS)
+      const { data: todasReceitas, error: todasReceitasError } = await supabase
+        .from('receitas')
+        .select('id, usuario_id, valor')
+        .limit(10)
+
+      console.log('Todas as receitas (primeiras 10):', todasReceitas)
+      console.log('Erro todas receitas:', todasReceitasError)
 
       setReceitas((receitasData as unknown as Receita[]) || [])
       setDespesas((despesasData as unknown as Despesa[]) || [])
@@ -209,7 +302,12 @@ export default function EstacionamentoDashboard() {
   }
 
   function loadChartData() {
+    console.log('=== DEBUG: loadChartData ===')
+    console.log('Receitas carregadas:', receitas.length, receitas)
+    console.log('Despesas carregadas:', despesas.length, despesas)
+    
     if (receitas.length === 0 && despesas.length === 0) {
+      console.log('Nenhuma receita ou despesa encontrada, limpando gráficos')
       setMonthlyData([])
       setDailyData([])
       return
@@ -230,6 +328,8 @@ export default function EstacionamentoDashboard() {
       const monthDespesas = despesas.filter(d => d.data_despesa.startsWith(monthKey))
         .reduce((sum, d) => sum + d.valor, 0)
       
+      console.log(`Mês ${monthKey}: Receitas=${monthReceitas}, Despesas=${monthDespesas}`)
+      
       monthlyDataArray.push({
         mes: months[date.getMonth()],
         receitas: monthReceitas,
@@ -238,6 +338,7 @@ export default function EstacionamentoDashboard() {
       })
     }
     
+    console.log('Dados mensais gerados:', monthlyDataArray)
     setMonthlyData(monthlyDataArray)
 
     // Dados diários dos últimos 7 dias
@@ -253,6 +354,8 @@ export default function EstacionamentoDashboard() {
       const dayDespesas = despesas.filter(d => d.data_despesa === dateKey)
         .reduce((sum, d) => sum + d.valor, 0)
       
+      console.log(`Dia ${dateKey}: Receitas=${dayReceitas}, Despesas=${dayDespesas}`)
+      
       dailyDataArray.push({
         dia: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
         receitas: dayReceitas,
@@ -261,6 +364,7 @@ export default function EstacionamentoDashboard() {
       })
     }
     
+    console.log('Dados diários gerados:', dailyDataArray)
     setDailyData(dailyDataArray)
   }
 
@@ -587,108 +691,143 @@ export default function EstacionamentoDashboard() {
             }}>
               Evolução Mensal (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="mes" stroke="#d1d5db" fontSize={12} />
-                <YAxis stroke="#d1d5db" fontSize={12} />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: '#1f2937',
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    color: '#ffffff',
-                    fontSize: '12px'
-                  }}
-                  formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
-                />
-                {chartFilters.receitas && <Bar dataKey="receitas" fill="#10b981" name="Receitas" />}
-                {chartFilters.despesas && <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />}
-                {chartFilters.lucro && <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />}
-              </BarChart>
-            </ResponsiveContainer>
-            
-            {/* Filtros do gráfico mensal - posicionados na parte de baixo */}
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              gap: '20px', 
-              marginTop: '16px',
-              flexWrap: 'wrap'
-            }}>
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                cursor: 'pointer',
-                fontSize: '14px',
-                color: '#d1d5db',
-                padding: '8px 12px',
-                backgroundColor: chartFilters.receitas ? '#10b981' : '#374151',
-                borderRadius: '6px',
-                transition: 'background-color 0.2s'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={chartFilters.receitas}
-                  onChange={() => handleChartFilterChange('receitas')}
-                  style={{ 
-                    width: '16px', 
-                    height: '16px',
-                    accentColor: '#10b981'
-                  }}
-                />
-                Receitas
-              </label>
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                cursor: 'pointer',
-                fontSize: '14px',
-                color: '#d1d5db',
-                padding: '8px 12px',
-                backgroundColor: chartFilters.despesas ? '#ef4444' : '#374151',
-                borderRadius: '6px',
-                transition: 'background-color 0.2s'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={chartFilters.despesas}
-                  onChange={() => handleChartFilterChange('despesas')}
-                  style={{ 
-                    width: '16px', 
-                    height: '16px',
-                    accentColor: '#ef4444'
-                  }}
-                />
-                Despesas
-              </label>
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                cursor: 'pointer',
-                fontSize: '14px',
-                color: '#d1d5db',
-                padding: '8px 12px',
-                backgroundColor: chartFilters.lucro ? '#3b82f6' : '#374151',
-                borderRadius: '6px',
-                transition: 'background-color 0.2s'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={chartFilters.lucro}
-                  onChange={() => handleChartFilterChange('lucro')}
-                  style={{ 
-                    width: '16px', 
-                    height: '16px',
-                    accentColor: '#3b82f6'
-                  }}
-                />
-                Lucro
-              </label>
-            </div>
+            {(() => {
+              console.log('=== DEBUG: Renderização Gráfico Mensal ===')
+              console.log('monthlyData:', monthlyData)
+              console.log('monthlyData.length:', monthlyData.length)
+              console.log('monthlyData.some(data => data.receitas > 0 || data.despesas > 0):', monthlyData.some(data => data.receitas > 0 || data.despesas > 0))
+              console.log('Condição total:', monthlyData.length > 0 && monthlyData.some(data => data.receitas > 0 || data.despesas > 0))
+              
+              return monthlyData.length > 0 && monthlyData.some(data => data.receitas > 0 || data.despesas > 0) ? (
+                <>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={monthlyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="mes" stroke="#d1d5db" fontSize={12} />
+                      <YAxis stroke="#d1d5db" fontSize={12} />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: '#1f2937',
+                          border: '1px solid #374151',
+                          borderRadius: '8px',
+                          color: '#ffffff',
+                          fontSize: '12px'
+                        }}
+                        formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
+                      />
+                      {chartFilters.receitas && <Bar dataKey="receitas" fill="#10b981" name="Receitas" />}
+                      {chartFilters.despesas && <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />}
+                      {chartFilters.lucro && <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />}
+                    </BarChart>
+                  </ResponsiveContainer>
+                  
+                  {/* Filtros do gráfico mensal - posicionados na parte de baixo */}
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    gap: '20px', 
+                    marginTop: '16px',
+                    flexWrap: 'wrap'
+                  }}>
+                    <label style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#d1d5db',
+                      padding: '8px 12px',
+                      backgroundColor: chartFilters.receitas ? '#10b981' : '#374151',
+                      borderRadius: '6px',
+                      transition: 'background-color 0.2s'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={chartFilters.receitas}
+                        onChange={() => handleChartFilterChange('receitas')}
+                        style={{ 
+                          width: '16px', 
+                          height: '16px',
+                          accentColor: '#10b981'
+                        }}
+                      />
+                      Receitas
+                    </label>
+                    <label style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#d1d5db',
+                      padding: '8px 12px',
+                      backgroundColor: chartFilters.despesas ? '#ef4444' : '#374151',
+                      borderRadius: '6px',
+                      transition: 'background-color 0.2s'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={chartFilters.despesas}
+                        onChange={() => handleChartFilterChange('despesas')}
+                        style={{ 
+                          width: '16px', 
+                          height: '16px',
+                          accentColor: '#ef4444'
+                        }}
+                      />
+                      Despesas
+                    </label>
+                    <label style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#d1d5db',
+                      padding: '8px 12px',
+                      backgroundColor: chartFilters.lucro ? '#3b82f6' : '#374151',
+                      borderRadius: '6px',
+                      transition: 'background-color 0.2s'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={chartFilters.lucro}
+                        onChange={() => handleChartFilterChange('lucro')}
+                        style={{ 
+                          width: '16px', 
+                          height: '16px',
+                          accentColor: '#3b82f6'
+                        }}
+                      />
+                      Lucro
+                    </label>
+                  </div>
+                </>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    backgroundColor: '#6b7280',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 12px auto'
+                  }}>
+                    <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <p style={{ color: '#d1d5db', fontSize: '14px', margin: 0 }}>
+                    Nenhum dado disponível
+                  </p>
+                  <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
+                    Adicione receitas e despesas para ver os gráficos
+                  </p>
+                </div>
+              )
+            })()}
           </div>
 
           {/* Daily Chart */}
@@ -706,108 +845,143 @@ export default function EstacionamentoDashboard() {
             }}>
               Evolução Diária (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={dailyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="dia" stroke="#d1d5db" fontSize={12} />
-                <YAxis stroke="#d1d5db" fontSize={12} />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: '#1f2937',
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    color: '#ffffff',
-                    fontSize: '12px'
-                  }}
-                  formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
-                />
-                {chartFilters.receitas && <Bar dataKey="receitas" fill="#10b981" name="Receitas" />}
-                {chartFilters.despesas && <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />}
-                {chartFilters.lucro && <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />}
-              </BarChart>
-            </ResponsiveContainer>
-            
-            {/* Filtros do gráfico diário - posicionados na parte de baixo */}
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              gap: '20px', 
-              marginTop: '16px',
-              flexWrap: 'wrap'
-            }}>
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                cursor: 'pointer',
-                fontSize: '14px',
-                color: '#d1d5db',
-                padding: '8px 12px',
-                backgroundColor: chartFilters.receitas ? '#10b981' : '#374151',
-                borderRadius: '6px',
-                transition: 'background-color 0.2s'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={chartFilters.receitas}
-                  onChange={() => handleChartFilterChange('receitas')}
-                  style={{ 
-                    width: '16px', 
-                    height: '16px',
-                    accentColor: '#10b981'
-                  }}
-                />
-                Receitas
-              </label>
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                cursor: 'pointer',
-                fontSize: '14px',
-                color: '#d1d5db',
-                padding: '8px 12px',
-                backgroundColor: chartFilters.despesas ? '#ef4444' : '#374151',
-                borderRadius: '6px',
-                transition: 'background-color 0.2s'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={chartFilters.despesas}
-                  onChange={() => handleChartFilterChange('despesas')}
-                  style={{ 
-                    width: '16px', 
-                    height: '16px',
-                    accentColor: '#ef4444'
-                  }}
-                />
-                Despesas
-              </label>
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                cursor: 'pointer',
-                fontSize: '14px',
-                color: '#d1d5db',
-                padding: '8px 12px',
-                backgroundColor: chartFilters.lucro ? '#3b82f6' : '#374151',
-                borderRadius: '6px',
-                transition: 'background-color 0.2s'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={chartFilters.lucro}
-                  onChange={() => handleChartFilterChange('lucro')}
-                  style={{ 
-                    width: '16px', 
-                    height: '16px',
-                    accentColor: '#3b82f6'
-                  }}
-                />
-                Lucro
-              </label>
-            </div>
+            {(() => {
+              console.log('=== DEBUG: Renderização Gráfico Diário ===')
+              console.log('dailyData:', dailyData)
+              console.log('dailyData.length:', dailyData.length)
+              console.log('dailyData.some(data => data.receitas > 0 || data.despesas > 0):', dailyData.some(data => data.receitas > 0 || data.despesas > 0))
+              console.log('Condição total:', dailyData.length > 0 && dailyData.some(data => data.receitas > 0 || data.despesas > 0))
+              
+              return dailyData.length > 0 && dailyData.some(data => data.receitas > 0 || data.despesas > 0) ? (
+                <>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={dailyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="dia" stroke="#d1d5db" fontSize={12} />
+                      <YAxis stroke="#d1d5db" fontSize={12} />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: '#1f2937',
+                          border: '1px solid #374151',
+                          borderRadius: '8px',
+                          color: '#ffffff',
+                          fontSize: '12px'
+                        }}
+                        formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
+                      />
+                      {chartFilters.receitas && <Bar dataKey="receitas" fill="#10b981" name="Receitas" />}
+                      {chartFilters.despesas && <Bar dataKey="despesas" fill="#ef4444" name="Despesas" />}
+                      {chartFilters.lucro && <Bar dataKey="lucro" fill="#3b82f6" name="Lucro" />}
+                    </BarChart>
+                  </ResponsiveContainer>
+                  
+                  {/* Filtros do gráfico diário - posicionados na parte de baixo */}
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    gap: '20px', 
+                    marginTop: '16px',
+                    flexWrap: 'wrap'
+                  }}>
+                    <label style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#d1d5db',
+                      padding: '8px 12px',
+                      backgroundColor: chartFilters.receitas ? '#10b981' : '#374151',
+                      borderRadius: '6px',
+                      transition: 'background-color 0.2s'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={chartFilters.receitas}
+                        onChange={() => handleChartFilterChange('receitas')}
+                        style={{ 
+                          width: '16px', 
+                          height: '16px',
+                          accentColor: '#10b981'
+                        }}
+                      />
+                      Receitas
+                    </label>
+                    <label style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#d1d5db',
+                      padding: '8px 12px',
+                      backgroundColor: chartFilters.despesas ? '#ef4444' : '#374151',
+                      borderRadius: '6px',
+                      transition: 'background-color 0.2s'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={chartFilters.despesas}
+                        onChange={() => handleChartFilterChange('despesas')}
+                        style={{ 
+                          width: '16px', 
+                          height: '16px',
+                          accentColor: '#ef4444'
+                        }}
+                      />
+                      Despesas
+                    </label>
+                    <label style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#d1d5db',
+                      padding: '8px 12px',
+                      backgroundColor: chartFilters.lucro ? '#3b82f6' : '#374151',
+                      borderRadius: '6px',
+                      transition: 'background-color 0.2s'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={chartFilters.lucro}
+                        onChange={() => handleChartFilterChange('lucro')}
+                        style={{ 
+                          width: '16px', 
+                          height: '16px',
+                          accentColor: '#3b82f6'
+                        }}
+                      />
+                      Lucro
+                    </label>
+                  </div>
+                </>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    backgroundColor: '#6b7280',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 12px auto'
+                  }}>
+                    <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <p style={{ color: '#d1d5db', fontSize: '14px', margin: 0 }}>
+                    Nenhum dado disponível
+                  </p>
+                  <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
+                    Adicione receitas e despesas para ver os gráficos
+                  </p>
+                </div>
+              )
+            })()}
           </div>
         </div>
 

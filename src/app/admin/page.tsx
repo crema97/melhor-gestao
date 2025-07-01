@@ -53,6 +53,13 @@ export default function AdminDashboard() {
   const [editingUser, setEditingUser] = useState<Usuario | null>(null)
   const [updatingPassword, setUpdatingPassword] = useState(false)
 
+  // Estados para renovação de planos
+  const [showRenovarPlanoModal, setShowRenovarPlanoModal] = useState(false)
+  const [renovandoUsuario, setRenovandoUsuario] = useState<Usuario | null>(null)
+  const [renovandoPlano, setRenovandoPlano] = useState(false)
+  const [novoPlano, setNovoPlano] = useState('mensal')
+  const [novaDataVencimento, setNovaDataVencimento] = useState('')
+
   const [tiposNegocio, setTiposNegocio] = useState<TipoNegocio[]>([])
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [carregando, setCarregando] = useState(false)
@@ -467,8 +474,8 @@ export default function AdminDashboard() {
 
   function handleCancelEditPassword() {
     setShowEditPasswordModal(false)
-    setEditPasswordForm({ email: '', novaSenha: '', confirmarSenha: '' })
     setEditingUser(null)
+    setEditPasswordForm({ email: '', novaSenha: '', confirmarSenha: '' })
   }
 
   async function handleLogout() {
@@ -507,6 +514,83 @@ export default function AdminDashboard() {
   function isVencido(dataVencimento: string | undefined) {
     if (!dataVencimento) return false
     return new Date(dataVencimento) < new Date()
+  }
+
+  // Funções para renovação de planos
+  function handleRenovarPlano(usuario: Usuario) {
+    setRenovandoUsuario(usuario)
+    setNovoPlano(usuario.plano || 'mensal')
+    
+    // Calcular nova data de vencimento baseada no plano atual
+    const dataAtual = new Date()
+    let novaData = new Date()
+    
+    switch (usuario.plano) {
+      case 'trimestral':
+        novaData.setMonth(novaData.getMonth() + 3)
+        break
+      case 'anual':
+        novaData.setFullYear(novaData.getFullYear() + 1)
+        break
+      default: // mensal
+        novaData.setMonth(novaData.getMonth() + 1)
+    }
+    
+    setNovaDataVencimento(novaData.toISOString().split('T')[0])
+    setShowRenovarPlanoModal(true)
+  }
+
+  async function handleConfirmarRenovacao(e: React.FormEvent) {
+    e.preventDefault()
+    if (!renovandoUsuario) return
+
+    setRenovandoPlano(true)
+
+    try {
+      // Calcular nova data baseada no plano selecionado
+      const dataAtual = new Date()
+      let novaData = new Date()
+      
+      switch (novoPlano) {
+        case 'trimestral':
+          novaData.setMonth(novaData.getMonth() + 3)
+          break
+        case 'anual':
+          novaData.setFullYear(novaData.getFullYear() + 1)
+          break
+        default: // mensal
+          novaData.setMonth(novaData.getMonth() + 1)
+      }
+
+      const { error } = await supabase
+        .from('usuarios')
+        .update({
+          data_vencimento: novaData.toISOString().split('T')[0],
+          plano: novoPlano,
+          status_pagamento: 'ativo'
+        })
+        .eq('id', renovandoUsuario.id)
+
+      if (error) {
+        alert('Erro ao renovar plano: ' + error.message)
+      } else {
+        alert(`Plano renovado com sucesso! Novo vencimento: ${novaData.toLocaleDateString('pt-BR')}`)
+        setShowRenovarPlanoModal(false)
+        setRenovandoUsuario(null)
+        await fetchUsuarios() // Recarregar lista
+      }
+    } catch (error) {
+      alert('Erro inesperado: ' + error)
+    } finally {
+      setRenovandoPlano(false)
+    }
+  }
+
+  function handleCancelarRenovacao() {
+    setShowRenovarPlanoModal(false)
+    setRenovandoUsuario(null)
+    setNovoPlano('mensal')
+    setNovaDataVencimento('')
   }
 
   if (loading) {
@@ -1330,6 +1414,73 @@ export default function AdminDashboard() {
                         </div>
                       )}
                     </div>
+
+                    {/* Botões de ação */}
+                    <div style={{ 
+                      display: 'flex', 
+                      gap: '8px', 
+                      marginTop: '16px',
+                      flexWrap: 'wrap'
+                    }}>
+                      <button
+                        onClick={() => handleEditPassword(u)}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: '#3b82f6',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+                      >
+                        Editar Senha
+                      </button>
+                      
+                      {isVencido(u.data_vencimento) && (
+                        <button
+                          onClick={() => handleRenovarPlano(u)}
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: '#10b981',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
+                        >
+                          Renovar Plano
+                        </button>
+                      )}
+                      
+                      <button
+                        onClick={() => handleDeleteUser(u.email, u.nome)}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+                      >
+                        Excluir
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1756,13 +1907,133 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        <style jsx>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
+        {/* Renovação de Plano Modal */}
+        {showRenovarPlanoModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: '#1f2937',
+              borderRadius: '12px',
+              padding: '32px',
+              border: '1px solid #374151',
+              maxWidth: '500px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: 'bold',
+                color: '#ffffff',
+                marginBottom: '24px',
+                margin: '0 0 24px 0'
+              }}>
+                Renovar Plano do Cliente
+              </h2>
+
+              <div style={{ marginBottom: '20px' }}>
+                <p style={{ color: '#d1d5db', fontSize: '16px', margin: '0 0 8px 0' }}>
+                  <strong>Cliente:</strong> {renovandoUsuario?.nome}
+                </p>
+                <p style={{ color: '#d1d5db', fontSize: '16px', margin: 0 }}>
+                  <strong>Plano Atual:</strong> {renovandoUsuario?.plano || 'Mensal'}
+                </p>
+              </div>
+
+              <form onSubmit={handleConfirmarRenovacao}>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    display: 'block',
+                    color: '#d1d5db',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '8px'
+                  }}>
+                    Novo Plano
+                  </label>
+                  <select
+                    value={novoPlano}
+                    onChange={e => setNovoPlano(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      backgroundColor: '#374151',
+                      border: '1px solid #4b5563',
+                      borderRadius: '8px',
+                      color: '#ffffff',
+                      fontSize: '16px'
+                    }}
+                    required
+                  >
+                    <option value="mensal">Mensal</option>
+                    <option value="trimestral">Trimestral</option>
+                    <option value="anual">Anual</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={handleCancelarRenovacao}
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={renovandoPlano}
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: renovandoPlano ? '#6b7280' : '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      fontWeight: '500',
+                      cursor: renovandoPlano ? 'not-allowed' : 'pointer',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseOver={(e) => !renovandoPlano && (e.currentTarget.style.backgroundColor = '#059669')}
+                    onMouseOut={(e) => !renovandoPlano && (e.currentTarget.style.backgroundColor = '#10b981')}
+                  >
+                    {renovandoPlano ? 'Renovando...' : 'Renovar Plano'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </AdminProtected>
   )
 } 
