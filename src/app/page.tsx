@@ -172,7 +172,7 @@ export default function LoginPage() {
             style={{
               width: '100%',
               padding: '16px',
-              backgroundColor: '#8b5cf6',
+              backgroundColor: '#5ce1e6',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -183,8 +183,8 @@ export default function LoginPage() {
               transition: 'background-color 0.2s',
               marginTop: '8px'
             }}
-            onMouseOver={(e) => !loading && (e.currentTarget.style.backgroundColor = '#7c3aed')}
-            onMouseOut={(e) => !loading && (e.currentTarget.style.backgroundColor = '#8b5cf6')}
+            onMouseOver={(e) => !loading && (e.currentTarget.style.backgroundColor = '#4dd1d6')}
+            onMouseOut={(e) => !loading && (e.currentTarget.style.backgroundColor = '#5ce1e6')}
           >
             {loading ? 'Entrando...' : 'Entrar'}
           </button>

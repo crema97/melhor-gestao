@@ -248,7 +248,7 @@ export default function LoginPage() {
               disabled={loading}
               style={{
                 width: '100%',
-                background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+                background: 'linear-gradient(135deg, #5ce1e6 0%, #4dd1d6 100%)',
                 color: 'white',
                 padding: '0.75rem 1rem',
                 borderRadius: '0.5rem',
@@ -263,14 +263,14 @@ export default function LoginPage() {
               }}
               onMouseEnter={(e) => {
                 if (!loading) {
-                  (e.target as HTMLButtonElement).style.background = 'linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)';
+                  (e.target as HTMLButtonElement).style.background = 'linear-gradient(135deg, #4dd1d6 0%, #3dc1c6 100%)';
                   (e.target as HTMLButtonElement).style.transform = 'translateY(-1px)';
                   (e.target as HTMLButtonElement).style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!loading) {
-                  (e.target as HTMLButtonElement).style.background = 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)';
+                  (e.target as HTMLButtonElement).style.background = 'linear-gradient(135deg, #5ce1e6 0%, #4dd1d6 100%)';
                   (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
                   (e.target as HTMLButtonElement).style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
                 }
