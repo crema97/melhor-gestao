@@ -10,6 +10,8 @@ interface Usuario {
   email: string
   nome_negocio: string
   tipo_negocio_id: string
+  plano: string
+  data_vencimento: string
 }
 
 export default function MinhaContaEstetica() {
@@ -40,17 +42,11 @@ export default function MinhaContaEstetica() {
       const { data: usuarioData, error: usuarioError } = await supabase
         .from('usuarios')
         .select('*')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .single()
 
       if (usuarioError || !usuarioData) {
         router.push('/login')
-        return
-      }
-
-      // Verificar se é um usuário de estética (tipo_negocio_id = 3)
-      if (usuarioData.tipo_negocio_id !== '3') {
-        router.push('/dashboard')
         return
       }
 
@@ -129,6 +125,24 @@ export default function MinhaContaEstetica() {
   async function handleLogout() {
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  function formatarData(data: string) {
+    return new Date(data).toLocaleDateString('pt-BR')
+  }
+
+  function getStatusPlano(dataVencimento: string) {
+    const hoje = new Date()
+    const vencimento = new Date(dataVencimento)
+    const diasRestantes = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
+    
+    if (diasRestantes < 0) {
+      return { status: 'Vencido', cor: '#ef4444', dias: Math.abs(diasRestantes) }
+    } else if (diasRestantes <= 7) {
+      return { status: 'Vence em breve', cor: '#f59e0b', dias: diasRestantes }
+    } else {
+      return { status: 'Ativo', cor: '#10b981', dias: diasRestantes }
+    }
   }
 
   if (loading) {
@@ -478,7 +492,7 @@ export default function MinhaContaEstetica() {
                 fontSize: '16px',
                 fontWeight: '500'
               }}>
-                Plano Básico - Estética
+                {usuario?.plano || 'Plano Básico - Estética'}
               </div>
             </div>
             
@@ -491,17 +505,35 @@ export default function MinhaContaEstetica() {
               }}>
                 Status
               </label>
-              <div style={{
-                padding: '12px',
-                backgroundColor: '#065f46',
-                border: '1px solid #10b981',
-                borderRadius: '6px',
-                color: '#d1fae5',
-                fontSize: '16px',
-                fontWeight: '500'
-              }}>
-                Ativo
-              </div>
+              {usuario?.data_vencimento ? (
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: getStatusPlano(usuario.data_vencimento).cor,
+                  border: `1px solid ${getStatusPlano(usuario.data_vencimento).cor}`,
+                  borderRadius: '6px',
+                  color: '#ffffff',
+                  fontSize: '16px',
+                  fontWeight: '500'
+                }}>
+                  {getStatusPlano(usuario.data_vencimento).status}
+                  {getStatusPlano(usuario.data_vencimento).status === 'Vence em breve' && 
+                    ` (${getStatusPlano(usuario.data_vencimento).dias} dias)`}
+                  {getStatusPlano(usuario.data_vencimento).status === 'Vencido' && 
+                    ` (${getStatusPlano(usuario.data_vencimento).dias} dias atrás)`}
+                </div>
+              ) : (
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: '#065f46',
+                  border: '1px solid #10b981',
+                  borderRadius: '6px',
+                  color: '#d1fae5',
+                  fontSize: '16px',
+                  fontWeight: '500'
+                }}>
+                  Ativo
+                </div>
+              )}
             </div>
             
             <div>
@@ -520,7 +552,7 @@ export default function MinhaContaEstetica() {
                 color: '#ffffff',
                 fontSize: '16px'
               }}>
-                Em breve - Sistema de pagamentos
+                {usuario?.data_vencimento ? formatarData(usuario.data_vencimento) : 'Em breve - Sistema de pagamentos'}
               </div>
             </div>
             
