@@ -59,11 +59,18 @@ export default function DespesasPage() {
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     endDate: new Date()
   })
+  const [usuarioId, setUsuarioId] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
     checkUserAndLoadData()
   }, [])
+
+  useEffect(() => {
+    if (usuarioId) {
+      loadDespesas(usuarioId)
+    }
+  }, [usuarioId])
 
   useEffect(() => {
     if (despesas.length > 0) {
@@ -73,30 +80,15 @@ export default function DespesasPage() {
   }, [despesas])
 
   useEffect(() => {
-    if (filteredDespesas.length > 0) {
-      loadChartData()
-      loadCategoryData()
-    }
-  }, [filteredDespesas])
-
-  useEffect(() => {
-    const loadDataForPeriod = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data: usuario } = await supabase
-          .from('usuarios')
-          .select('id')
-          .eq('user_id', user.id)
-          .single()
-        
-        if (usuario) {
-          await loadData(usuario.id)
-        }
-      }
-    }
-    
-    loadDataForPeriod()
-  }, [dateRange])
+    // Aplicar filtro de período quando as despesas mudarem
+    const filtered = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
+    })
+    setFilteredDespesas(filtered)
+  }, [despesas, dateRange])
 
   async function checkUserAndLoadData() {
     try {
@@ -118,54 +110,58 @@ export default function DespesasPage() {
         return
       }
 
-      await loadData(usuario.id)
+      setUsuarioId(usuario.id)
+      await loadCategoriasAtivas(usuario.id)
+      setLoading(false)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
+      setLoading(false)
       router.push('/login')
     }
   }
 
-  async function loadData(usuarioId: string) {
+  async function loadDespesas(usuarioId: string) {
     try {
       setLoading(true)
-
-      // Primeiro, buscar o tipo de negócio do usuário
-      const { data: usuario } = await supabase
-        .from('usuarios')
-        .select('tipo_negocio_id')
-        .eq('id', usuarioId)
-        .single()
-
-      // Carregar categorias de despesa específicas do tipo de negócio
-      const { data: categoriasData, error: categoriasError } = await supabase
-        .from('categorias_despesa')
-        .select('*')
-        .eq('ativo', true)
-        .eq('tipo_negocio_id', usuario?.tipo_negocio_id)
-        .order('nome')
-
-      // Carregar despesas com filtro de período
-      const { data: despesasData } = await supabase
+      
+      // Buscar TODAS as despesas do usuário (sem filtrar por categorias ativas)
+      const { data, error } = await supabase
         .from('despesas')
         .select(`
           id,
           valor,
           data_despesa,
           observacoes,
-          categoria_despesa:categorias_despesa(nome)
+          categoria_despesa:categorias_despesa(id, nome)
         `)
         .eq('usuario_id', usuarioId)
-        .gte('data_despesa', dateRange.startDate.toISOString().split('T')[0])
-        .lte('data_despesa', dateRange.endDate.toISOString().split('T')[0])
         .order('data_despesa', { ascending: false })
 
-      setCategorias(categoriasData || [])
-      setDespesas((despesasData as unknown as Despesa[]) || [])
-      setFilteredDespesas((despesasData as unknown as Despesa[]) || [])
+      if (error) throw error
+      
+      console.log('Despesas carregadas:', data?.length || 0)
+      console.log('Despesas:', data)
+      
+      setDespesas((data as unknown as Despesa[]) || [])
     } catch (error) {
-      console.error('Erro ao carregar dados:', error)
+      console.error('Erro ao carregar despesas:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function loadCategoriasAtivas(usuarioId: string) {
+    try {
+      const response = await fetch(`/api/usuario/categorias-ativas?usuario_id=${usuarioId}`)
+      const data = await response.json()
+      if (data.success) {
+        setCategorias(data.categorias.despesas || [])
+      } else {
+        setCategorias([])
+      }
+    } catch (error) {
+      console.error('Erro ao carregar categorias ativas:', error)
+      setCategorias([])
     }
   }
 
@@ -277,7 +273,6 @@ export default function DespesasPage() {
         if (error) throw error
       }
 
-      // Reset form
       setFormData({
         valor: '',
         data_despesa: new Date().toISOString().split('T')[0],
@@ -287,8 +282,7 @@ export default function DespesasPage() {
       setShowForm(false)
       setEditingId(null)
 
-      // Reload data
-      await loadData(usuario.id)
+      await loadDespesas(usuario.id)
     } catch (error) {
       console.error('Erro ao salvar despesa:', error)
       alert('Erro ao salvar despesa')
@@ -315,7 +309,7 @@ export default function DespesasPage() {
           .single()
 
         if (usuario) {
-          await loadData(usuario.id)
+          await loadDespesas(usuario.id)
         }
       }
     } catch (error) {

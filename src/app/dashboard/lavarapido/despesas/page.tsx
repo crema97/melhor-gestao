@@ -90,17 +90,21 @@ export default function DespesasPage() {
       }
 
       setUserId(usuario.id)
-      await loadDespesas(usuario.id)
-      await loadCategorias(usuario.id)
+      await loadCategoriasAtivas(usuario.id)
+      setLoading(false)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
+      setLoading(false)
       router.push('/login')
     }
   }
 
   async function loadDespesas(usuarioId: string) {
     try {
-      const { data: despesasData } = await supabase
+      setLoading(true)
+      
+      // Buscar TODAS as despesas do usuário (sem filtrar por categorias ativas)
+      const { data, error } = await supabase
         .from('despesas')
         .select(`
           id,
@@ -112,33 +116,32 @@ export default function DespesasPage() {
         .eq('usuario_id', usuarioId)
         .order('data_despesa', { ascending: false })
 
-      setDespesas((despesasData as unknown as Despesa[]) || [])
-      setFilteredDespesas((despesasData as unknown as Despesa[]) || [])
+      if (error) throw error
+      
+      console.log('Despesas carregadas:', data?.length || 0)
+      console.log('Despesas:', data)
+      
+      setDespesas((data as unknown as Despesa[]) || [])
+      setFilteredDespesas((data as unknown as Despesa[]) || [])
     } catch (error) {
       console.error('Erro ao carregar despesas:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  async function loadCategorias(usuarioId: string) {
+  async function loadCategoriasAtivas(usuarioId: string) {
     try {
-      const { data: usuario } = await supabase
-        .from('usuarios')
-        .select('tipo_negocio_id')
-        .eq('id', usuarioId)
-        .single()
-
-      const { data: categoriasData } = await supabase
-        .from('categorias_despesa')
-        .select('*')
-        .eq('ativo', true)
-        .eq('tipo_negocio_id', usuario?.tipo_negocio_id)
-        .order('nome')
-
-      setCategorias(categoriasData || [])
+      const response = await fetch(`/api/usuario/categorias-ativas?usuario_id=${usuarioId}`)
+      const data = await response.json()
+      if (data.success) {
+        setCategorias(data.categorias.despesas || [])
+      } else {
+        setCategorias([])
+      }
     } catch (error) {
-      console.error('Erro ao carregar categorias:', error)
-    } finally {
-      setLoading(false)
+      console.error('Erro ao carregar categorias ativas:', error)
+      setCategorias([])
     }
   }
 

@@ -124,7 +124,7 @@ export default function ReceitasPage() {
       console.log('Tipo de negócio ID:', usuario.tipo_negocio_id)
       
       setUsuarioId(usuario.id)
-      await loadCategorias(usuario.tipo_negocio_id)
+      await loadCategoriasAtivas(usuario.id)
       console.log('checkUserAndLoadData concluído com sucesso')
       console.log('Definindo loading como false')
       setLoading(false)
@@ -139,6 +139,9 @@ export default function ReceitasPage() {
   async function loadReceitas(usuarioId: string) {
     try {
       console.log('Iniciando loadReceitas para usuarioId:', usuarioId)
+      setLoading(true)
+      
+      // Buscar TODAS as receitas do usuário (sem filtrar por categorias ativas)
       const { data, error } = await supabase
         .from('receitas')
         .select(`
@@ -160,29 +163,26 @@ export default function ReceitasPage() {
       console.log('loadReceitas concluído com sucesso')
     } catch (error) {
       console.error('Erro ao carregar receitas:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  async function loadCategorias(tipoNegocioId: string) {
+  async function loadCategoriasAtivas(usuarioId: string) {
     try {
-      console.log('Carregando categorias para tipo_negocio_id:', tipoNegocioId)
-      const { data, error } = await supabase
-        .from('categorias_receita')
-        .select('*')
-        .eq('tipo_negocio_id', tipoNegocioId)
-        .eq('ativo', true)
-        .order('nome')
-
-      if (error) {
-        console.error('Erro ao carregar categorias:', error)
-        throw error
+      console.log('Carregando categorias ativas para usuarioId:', usuarioId)
+      const response = await fetch(`/api/usuario/categorias-ativas?usuario_id=${usuarioId}`)
+      const data = await response.json()
+      if (data.success) {
+        setCategorias(data.categorias.receitas || [])
+        console.log('Categorias ativas carregadas:', data.categorias.receitas?.length || 0, 'categorias')
+      } else {
+        setCategorias([])
+        console.log('Nenhuma categoria ativa encontrada')
       }
-      
-      console.log('Categorias carregadas:', data?.length || 0, 'categorias')
-      console.log('Categorias:', data)
-      setCategorias(data || [])
     } catch (error) {
-      console.error('Erro ao carregar categorias:', error)
+      console.error('Erro ao carregar categorias ativas:', error)
+      setCategorias([])
     }
   }
 

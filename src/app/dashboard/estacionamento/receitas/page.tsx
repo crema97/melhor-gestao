@@ -116,7 +116,7 @@ export default function ReceitasPage() {
       }
 
       setUsuarioId(usuario.id)
-      await loadCategorias(usuario.tipo_negocio_id)
+      await loadCategoriasAtivas(usuario.id)
       setLoading(false)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
@@ -128,6 +128,8 @@ export default function ReceitasPage() {
   async function loadReceitas(usuarioId: string) {
     try {
       setLoading(true)
+      
+      // Buscar TODAS as receitas do usuário (sem filtrar por categorias ativas)
       const { data, error } = await supabase
         .from('receitas')
         .select(`
@@ -139,6 +141,9 @@ export default function ReceitasPage() {
 
       if (error) throw error
 
+      console.log('Receitas carregadas:', data?.length || 0)
+      console.log('Receitas:', data)
+      
       setReceitas(data || [])
       setFilteredReceitas(data || [])
     } catch (error) {
@@ -148,19 +153,18 @@ export default function ReceitasPage() {
     }
   }
 
-  async function loadCategorias(tipoNegocioId: string) {
+  async function loadCategoriasAtivas(usuarioId: string) {
     try {
-      const { data, error } = await supabase
-        .from('categorias_receita')
-        .select('*')
-        .eq('tipo_negocio_id', tipoNegocioId)
-        .eq('ativo', true)
-        .order('nome')
-
-      if (error) throw error
-      setCategorias(data || [])
+      const response = await fetch(`/api/usuario/categorias-ativas?usuario_id=${usuarioId}`)
+      const data = await response.json()
+      if (data.success) {
+        setCategorias(data.categorias.receitas || [])
+      } else {
+        setCategorias([])
+      }
     } catch (error) {
-      console.error('Erro ao carregar categorias:', error)
+      console.error('Erro ao carregar categorias ativas:', error)
+      setCategorias([])
     }
   }
 

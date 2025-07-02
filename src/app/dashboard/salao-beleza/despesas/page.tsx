@@ -100,16 +100,13 @@ export default function DespesasPage() {
 
   async function checkUserAndLoadData() {
     try {
-      console.log('Iniciando checkUserAndLoadData (despesas salão)...')
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
-        console.log('Usuário não autenticado, redirecionando...')
         router.push('/login')
         return
       }
 
-      console.log('Usuário autenticado:', user.email)
       const { data: usuario } = await supabase
         .from('usuarios')
         .select('*')
@@ -117,23 +114,15 @@ export default function DespesasPage() {
         .single()
 
       if (!usuario) {
-        console.log('Usuário não encontrado na tabela usuarios, redirecionando...')
         router.push('/login')
         return
       }
 
-      console.log('Usuário encontrado:', usuario.nome)
-      console.log('Tipo de negócio ID:', usuario.tipo_negocio_id)
-      
       setUsuarioId(usuario.id)
-      await loadCategorias(usuario.tipo_negocio_id)
-      await loadDespesas(usuario.id)
-      console.log('checkUserAndLoadData (despesas salão) concluído com sucesso')
-      console.log('Definindo loading como false')
+      await loadCategoriasAtivas(usuario.id)
       setLoading(false)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
-      console.log('Erro - definindo loading como false')
       setLoading(false)
       router.push('/login')
     }
@@ -141,51 +130,46 @@ export default function DespesasPage() {
 
   async function loadDespesas(usuarioId: string) {
     try {
-      console.log('Iniciando loadDespesas para usuarioId:', usuarioId)
+      setLoading(true)
+      
+      // Buscar TODAS as despesas do usuário (sem filtrar por categorias ativas)
       const { data, error } = await supabase
         .from('despesas')
         .select(`
-          *,
+          id,
+          valor,
+          data_despesa,
+          observacoes,
           categoria_despesa:categorias_despesa(id, nome)
         `)
         .eq('usuario_id', usuarioId)
         .order('data_despesa', { ascending: false })
 
-      if (error) {
-        console.error('Erro ao carregar despesas:', error)
-        throw error
-      }
-
-      console.log('Despesas carregadas:', data?.length || 0, 'despesas')
+      if (error) throw error
+      
+      console.log('Despesas carregadas:', data?.length || 0)
       console.log('Despesas:', data)
-      setDespesas(data || [])
-      setFilteredDespesas(data || [])
-      console.log('loadDespesas concluído com sucesso')
+      
+      setDespesas((data as unknown as Despesa[]) || [])
     } catch (error) {
       console.error('Erro ao carregar despesas:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  async function loadCategorias(tipoNegocioId: string) {
+  async function loadCategoriasAtivas(usuarioId: string) {
     try {
-      console.log('Carregando categorias de despesa para tipo_negocio_id:', tipoNegocioId)
-      const { data, error } = await supabase
-        .from('categorias_despesa')
-        .select('*')
-        .eq('tipo_negocio_id', tipoNegocioId)
-        .eq('ativo', true)
-        .order('nome')
-
-      if (error) {
-        console.error('Erro ao carregar categorias de despesa:', error)
-        throw error
+      const response = await fetch(`/api/usuario/categorias-ativas?usuario_id=${usuarioId}`)
+      const data = await response.json()
+      if (data.success) {
+        setCategorias(data.categorias.despesas || [])
+      } else {
+        setCategorias([])
       }
-      
-      console.log('Categorias de despesa carregadas:', data?.length || 0, 'categorias')
-      console.log('Categorias de despesa:', data)
-      setCategorias(data || [])
     } catch (error) {
-      console.error('Erro ao carregar categorias de despesa:', error)
+      console.error('Erro ao carregar categorias ativas:', error)
+      setCategorias([])
     }
   }
 

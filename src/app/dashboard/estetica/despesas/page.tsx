@@ -115,7 +115,7 @@ export default function DespesasPage() {
       console.log('Tipo de negócio ID:', usuario.tipo_negocio_id)
       
       setUsuarioId(usuario.id)
-      await loadCategorias(usuario.tipo_negocio_id)
+      await loadCategoriasAtivas(usuario.id)
       console.log('checkUserAndLoadData (despesas) concluído com sucesso')
       console.log('Definindo loading como false')
       setLoading(false)
@@ -131,15 +131,18 @@ export default function DespesasPage() {
     try {
       console.log('Iniciando loadDespesas para usuarioId:', usuarioId)
       setLoading(true)
+      
+      // Buscar TODAS as despesas do usuário (sem filtrar por categorias ativas)
       const { data, error } = await supabase
         .from('despesas')
         .select(`
-          *,
+          id,
+          valor,
+          data_despesa,
+          observacoes,
           categoria_despesa:categorias_despesa(id, nome)
         `)
         .eq('usuario_id', usuarioId)
-        .gte('data_despesa', dateRange.startDate.toISOString().split('T')[0])
-        .lte('data_despesa', dateRange.endDate.toISOString().split('T')[0])
         .order('data_despesa', { ascending: false })
 
       if (error) {
@@ -159,26 +162,21 @@ export default function DespesasPage() {
     }
   }
 
-  async function loadCategorias(tipoNegocioId: string) {
+  async function loadCategoriasAtivas(usuarioId: string) {
     try {
-      console.log('Carregando categorias de despesa para tipo_negocio_id:', tipoNegocioId)
-      const { data, error } = await supabase
-        .from('categorias_despesa')
-        .select('*')
-        .eq('tipo_negocio_id', tipoNegocioId)
-        .eq('ativo', true)
-        .order('nome')
-
-      if (error) {
-        console.error('Erro ao carregar categorias de despesa:', error)
-        throw error
+      console.log('Carregando categorias ativas para usuarioId:', usuarioId)
+      const response = await fetch(`/api/usuario/categorias-ativas?usuario_id=${usuarioId}`)
+      const data = await response.json()
+      if (data.success) {
+        setCategorias(data.categorias.despesas || [])
+        console.log('Categorias ativas carregadas:', data.categorias.despesas?.length || 0, 'categorias')
+      } else {
+        setCategorias([])
+        console.log('Nenhuma categoria ativa encontrada')
       }
-      
-      console.log('Categorias de despesa carregadas:', data?.length || 0, 'categorias')
-      console.log('Categorias de despesa:', data)
-      setCategorias(data || [])
     } catch (error) {
-      console.error('Erro ao carregar categorias de despesa:', error)
+      console.error('Erro ao carregar categorias ativas:', error)
+      setCategorias([])
     }
   }
 

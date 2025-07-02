@@ -100,55 +100,55 @@ export default function ReceitasPage() {
       }
 
       setUsuarioId(usuario.id)
-      await loadReceitas(usuario.id)
-      await loadCategorias(usuario.id)
+      await loadCategoriasAtivas(usuario.id)
+      setLoading(false)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
+      setLoading(false)
       router.push('/login')
     }
   }
 
   async function loadReceitas(usuarioId: string) {
     try {
-      const { data: receitasData } = await supabase
+      setLoading(true)
+      
+      // Buscar TODAS as receitas do usuário (sem filtrar por categorias ativas)
+      const { data, error } = await supabase
         .from('receitas')
         .select(`
-          id,
-          valor,
-          data_receita,
-          forma_pagamento,
-          observacoes,
+          *,
           categoria_receita:categorias_receita(id, nome)
         `)
         .eq('usuario_id', usuarioId)
         .order('data_receita', { ascending: false })
 
-      setReceitas((receitasData as unknown as Receita[]) || [])
-      setFilteredReceitas((receitasData as unknown as Receita[]) || [])
+      if (error) throw error
+
+      console.log('Receitas carregadas:', data?.length || 0)
+      console.log('Receitas:', data)
+      
+      setReceitas((data as unknown as Receita[]) || [])
+      setFilteredReceitas((data as unknown as Receita[]) || [])
     } catch (error) {
       console.error('Erro ao carregar receitas:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  async function loadCategorias(usuarioId: string) {
+  async function loadCategoriasAtivas(usuarioId: string) {
     try {
-      const { data: usuario } = await supabase
-        .from('usuarios')
-        .select('tipo_negocio_id')
-        .eq('id', usuarioId)
-        .single()
-
-      const { data: categoriasData } = await supabase
-        .from('categorias_receita')
-        .select('*')
-        .eq('tipo_negocio_id', usuario?.tipo_negocio_id)
-        .order('nome')
-
-      setCategorias(categoriasData || [])
+      const response = await fetch(`/api/usuario/categorias-ativas?usuario_id=${usuarioId}`)
+      const data = await response.json()
+      if (data.success) {
+        setCategorias(data.categorias.receitas || [])
+      } else {
+        setCategorias([])
+      }
     } catch (error) {
-      console.error('Erro ao carregar categorias:', error)
-    } finally {
-      setLoading(false)
+      console.error('Erro ao carregar categorias ativas:', error)
+      setCategorias([])
     }
   }
 
