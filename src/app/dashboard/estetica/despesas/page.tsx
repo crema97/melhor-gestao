@@ -152,8 +152,20 @@ export default function DespesasPage() {
 
       console.log('Despesas carregadas:', data?.length || 0, 'despesas')
       console.log('Despesas:', data)
-      setDespesas(data || [])
-      setFilteredDespesas(data || [])
+      
+      // Transformar os dados para o formato correto
+      const despesasFormatadas = (data || []).map((item: any) => ({
+        id: item.id,
+        valor: item.valor,
+        data_despesa: item.data_despesa,
+        observacoes: item.observacoes,
+        categoria_despesa: Array.isArray(item.categoria_despesa) 
+          ? item.categoria_despesa[0] || null 
+          : item.categoria_despesa
+      })) as Despesa[]
+      
+      setDespesas(despesasFormatadas)
+      setFilteredDespesas(despesasFormatadas)
       console.log('loadDespesas concluído com sucesso')
     } catch (error) {
       console.error('Erro ao carregar despesas:', error)
