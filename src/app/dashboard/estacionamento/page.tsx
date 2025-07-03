@@ -418,7 +418,7 @@ export default function EstacionamentoDashboard() {
             animation: 'spin 1s linear infinite',
             margin: '0 auto'
           }}></div>
-          <p style={{ marginTop: '24px', color: '#e5e7eb', fontSize: '18px', fontWeight: '500' }}>
+          <p style={{ marginTop: '24px', color: '#e5e7eb', fontSize: '14px', fontWeight: '500' }}>
             Carregando dashboard...
           </p>
         </div>
@@ -577,7 +577,7 @@ export default function EstacionamentoDashboard() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <div style={{ 
-                padding: '12px', 
+                padding: '16px', 
                 backgroundColor: '#10b981', 
                 borderRadius: '8px',
                 marginRight: '16px'
@@ -680,11 +680,11 @@ export default function EstacionamentoDashboard() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '20px',
+            padding: '24px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '16px', 
+              fontSize: '20px', 
               fontWeight: 'bold', 
               color: '#ffffff',
               margin: '0 0 16px 0'
@@ -711,7 +711,7 @@ export default function EstacionamentoDashboard() {
                           border: '1px solid #374151',
                           borderRadius: '8px',
                           color: '#ffffff',
-                          fontSize: '12px'
+                          fontSize: '14px'
                         }}
                         formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                       />
@@ -738,7 +738,7 @@ export default function EstacionamentoDashboard() {
                       color: '#d1d5db',
                       padding: '8px 12px',
                       backgroundColor: chartFilters.receitas ? '#10b981' : '#374151',
-                      borderRadius: '6px',
+                      borderRadius: '8px',
                       transition: 'background-color 0.2s'
                     }}>
                       <input
@@ -994,7 +994,7 @@ export default function EstacionamentoDashboard() {
           marginBottom: '32px'
         }}>
           <h3 style={{ 
-            fontSize: '18px', 
+            fontSize: '20px', 
             fontWeight: 'bold', 
             color: '#ffffff',
             marginBottom: '16px',
@@ -1045,7 +1045,7 @@ export default function EstacionamentoDashboard() {
               </div>
 
               {/* Payment Methods List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {getPaymentMethodsData().map((item) => (
                   <div key={item.name} style={{ 
                     display: 'flex', 
@@ -1100,6 +1100,9 @@ export default function EstacionamentoDashboard() {
               </div>
               <p style={{ color: '#d1d5db', fontSize: '14px', margin: 0 }}>
                 Nenhuma receita registrada
+              </p>
+              <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
+                Adicione receitas para ver as formas de pagamento
               </p>
               <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
                 Adicione receitas para ver as formas de pagamento
@@ -1188,7 +1191,7 @@ export default function EstacionamentoDashboard() {
                   ))}
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                <div style={{ textAlign: 'center', padding: '32px 0' }}>
                   <div style={{
                     width: '64px',
                     height: '64px',
@@ -1197,14 +1200,17 @@ export default function EstacionamentoDashboard() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    margin: '0 auto 16px auto'
+                    margin: '0 auto 12px auto'
                   }}>
-                    <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
                   <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
-                    Nenhuma receita registrada no período
+                    Nenhuma receita registrada
+                  </p>
+                  <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
+                    Adicione receitas para ver o histórico
                   </p>
                 </div>
               )}
@@ -1301,7 +1307,10 @@ export default function EstacionamentoDashboard() {
                     </svg>
                   </div>
                   <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
-                    Nenhuma despesa registrada no período
+                    Nenhuma despesa registrada
+                  </p>
+                  <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
+                    Adicione despesas para ver o histórico
                   </p>
                 </div>
               )}
