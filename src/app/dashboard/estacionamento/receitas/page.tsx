@@ -760,8 +760,8 @@ export default function ReceitasPage() {
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '20px', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+          gap: '24px', 
           marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}
@@ -779,7 +779,7 @@ export default function ReceitasPage() {
             }}>
               Evolução Mensal (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={180}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="mes" stroke="#d1d5db" fontSize={12} />
@@ -815,7 +815,7 @@ export default function ReceitasPage() {
             }}>
               Evolução Diária (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={180}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="dia" stroke="#d1d5db" fontSize={12} />
@@ -871,7 +871,7 @@ export default function ReceitasPage() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                      outerRadius={60}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -1159,16 +1159,17 @@ export default function ReceitasPage() {
                         </p>
                       )}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', minWidth: '0' }}>
                       <p style={{ 
                         fontWeight: 'bold', 
                         color: '#10b981', 
-                        fontSize: '20px',
-                        margin: 0
+                        fontSize: '18px',
+                        margin: 0,
+                        whiteSpace: 'nowrap'
                       }}>
                         R$ {receita.valor.toFixed(2).replace('.', ',')}
                       </p>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         <button
                           onClick={() => handleEdit(receita)}
                           style={{

@@ -545,9 +545,9 @@ export default function ReceitasPage() {
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', 
-          gap: '30px', 
-          marginBottom: '30px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+          gap: '24px', 
+          marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}
           <div style={{
@@ -559,7 +559,7 @@ export default function ReceitasPage() {
             <h3 style={{ color: '#ffffff', fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>
               Receitas Mensais (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={180}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="mes" stroke="#9CA3AF" />
@@ -588,7 +588,7 @@ export default function ReceitasPage() {
             <h3 style={{ color: '#ffffff', fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>
               Receitas Diárias (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={180}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="dia" stroke="#9CA3AF" />
@@ -642,7 +642,7 @@ export default function ReceitasPage() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                      outerRadius={60}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -1092,8 +1092,8 @@ export default function ReceitasPage() {
               </p>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#374151' }}>
                     <th style={{ padding: '16px', textAlign: 'left', color: '#ffffff', fontSize: '14px', fontWeight: '500' }}>

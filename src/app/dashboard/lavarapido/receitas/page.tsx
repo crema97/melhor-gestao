@@ -716,27 +716,21 @@ export default function ReceitasPage() {
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', 
-          gap: '32px', 
-          marginBottom: '48px' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+          gap: '24px', 
+          marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}
-          <div style={{ 
-            backgroundColor: '#1f2937', 
-            borderRadius: '8px', 
-            padding: '32px',
+          <div style={{
+            backgroundColor: '#1F2937',
+            padding: '24px',
+            borderRadius: '12px',
             border: '1px solid #374151'
           }}>
-            <h3 style={{ 
-              fontSize: '20px', 
-              fontWeight: 'bold', 
-              color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
-            }}>
-              Evolução Mensal (Últimos 6 meses)
+            <h3 style={{ color: '#ffffff', fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>
+              Receitas Mensais (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={180}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="mes" stroke="#d1d5db" />
@@ -757,22 +751,16 @@ export default function ReceitasPage() {
           </div>
 
           {/* Daily Chart */}
-          <div style={{ 
-            backgroundColor: '#1f2937', 
-            borderRadius: '8px', 
-            padding: '32px',
+          <div style={{
+            backgroundColor: '#1F2937',
+            padding: '24px',
+            borderRadius: '12px',
             border: '1px solid #374151'
           }}>
-            <h3 style={{ 
-              fontSize: '20px', 
-              fontWeight: 'bold', 
-              color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
-            }}>
-              Evolução Diária (Últimos 7 dias)
+            <h3 style={{ color: '#ffffff', fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>
+              Receitas Diárias (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={180}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="dia" stroke="#d1d5db" />
@@ -791,7 +779,7 @@ export default function ReceitasPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          </div>
+        </div>
 
         {/* Categories Chart */}
         {getCategoriesData().length > 0 && (
@@ -1113,17 +1101,18 @@ export default function ReceitasPage() {
                         )}
                       </div>
                       
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', minWidth: '0' }}>
                         <p style={{ 
-                          fontSize: '20px', 
+                          fontSize: '18px', 
                           fontWeight: 'bold', 
                           color: '#10b981',
-                          margin: 0
+                          margin: 0,
+                          whiteSpace: 'nowrap'
                         }}>
                           R$ {receita.valor.toFixed(2).replace('.', ',')}
                         </p>
                         
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                           <button
                             onClick={() => handleEdit(receita)}
                             style={{
