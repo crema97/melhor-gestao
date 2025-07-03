@@ -52,6 +52,11 @@ export default function DespesasPage() {
   })
   const [editingDespesa, setEditingDespesa] = useState<Despesa | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [filtros, setFiltros] = useState({
+    categoria: '',
+    dataInicio: '',
+    dataFim: ''
+  })
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [dailyData, setDailyData] = useState<DailyData[]>([])
   const [categoryData, setCategoryData] = useState<CategoryData[]>([])
@@ -153,6 +158,38 @@ export default function DespesasPage() {
       return despesaDate >= start && despesaDate <= end
     })
     setFilteredDespesas(filtered)
+  }
+
+  function aplicarFiltros() {
+    const filtered = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      
+      if (filtros.categoria && despesa.categoria_despesa?.id !== filtros.categoria) {
+        return false
+      }
+      
+      if (filtros.dataInicio) {
+        const startDate = new Date(filtros.dataInicio + 'T00:00:00')
+        if (despesaDate < startDate) return false
+      }
+      
+      if (filtros.dataFim) {
+        const endDate = new Date(filtros.dataFim + 'T23:59:59')
+        if (despesaDate > endDate) return false
+      }
+      
+      return true
+    })
+    setFilteredDespesas(filtered)
+  }
+
+  function limparFiltros() {
+    setFiltros({
+      categoria: '',
+      dataInicio: '',
+      dataFim: ''
+    })
+    setFilteredDespesas(despesas)
   }
 
   function loadChartData() {
@@ -828,14 +865,135 @@ export default function DespesasPage() {
             borderBottom: '1px solid #374151', 
             backgroundColor: '#374151' 
           }}>
-            <h3 style={{ 
+            <h2 style={{ 
               fontSize: '20px', 
               fontWeight: 'bold', 
               color: '#ffffff',
               margin: 0
             }}>
-              Lista de Despesas ({filteredDespesas.length})
-            </h3>
+              Lista de Despesas
+            </h2>
+          </div>
+
+          {/* Filtros */}
+          <div style={{ 
+            padding: '24px', 
+            borderBottom: '1px solid #374151',
+            backgroundColor: '#1f2937'
+          }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '16px',
+              marginBottom: '16px'
+            }}>
+              {/* Filtro por Categoria */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  marginBottom: '8px' 
+                }}>
+                  Categoria
+                </label>
+                <select
+                  value={filtros.categoria}
+                  onChange={e => setFiltros({ ...filtros, categoria: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '16px'
+                  }}
+                >
+                  <option value="">Todas as categorias</option>
+                  {categorias.map((categoria) => (
+                    <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Filtro por Data de Início */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  marginBottom: '8px' 
+                }}>
+                  Data de Início
+                </label>
+                <input
+                  type="date"
+                  value={filtros.dataInicio}
+                  onChange={e => setFiltros({ ...filtros, dataInicio: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '16px'
+                  }}
+                />
+              </div>
+
+              {/* Filtro por Data de Fim */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  marginBottom: '8px' 
+                }}>
+                  Data de Fim
+                </label>
+                <input
+                  type="date"
+                  value={filtros.dataFim}
+                  onChange={e => setFiltros({ ...filtros, dataFim: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '16px'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Botão Limpar Filtros */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={limparFiltros}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
+              >
+                Limpar Filtros
+              </button>
+            </div>
           </div>
           
           <div style={{ padding: '24px' }}>

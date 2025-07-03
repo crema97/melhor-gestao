@@ -61,6 +61,7 @@ export default function DespesasPage() {
   })
   const [usuarioId, setUsuarioId] = useState<string>('')
   const [filtros, setFiltros] = useState({
+    categoria: '',
     dataInicio: '',
     dataFim: ''
   })
@@ -196,6 +197,10 @@ export default function DespesasPage() {
     const filtered = despesas.filter(despesa => {
       const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
       
+      if (filtros.categoria && despesa.categoria_despesa?.id !== filtros.categoria) {
+        return false
+      }
+      
       if (filtros.dataInicio) {
         const startDate = new Date(filtros.dataInicio + 'T00:00:00')
         if (despesaDate < startDate) return false
@@ -213,6 +218,7 @@ export default function DespesasPage() {
 
   function limparFiltros() {
     setFiltros({
+      categoria: '',
       dataInicio: '',
       dataFim: ''
     })
@@ -928,24 +934,46 @@ export default function DespesasPage() {
           {/* Filtros */}
           <div style={{ 
             padding: '24px', 
-            borderBottom: '1px solid #374151', 
+            borderBottom: '1px solid #374151',
             backgroundColor: '#1f2937'
           }}>
-            <h3 style={{ 
-              fontSize: '16px', 
-              fontWeight: '600', 
-              color: '#ffffff',
-              margin: '0 0 16px 0'
-            }}>
-              Filtros
-            </h3>
-            
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
               gap: '16px',
               marginBottom: '16px'
             }}>
+              {/* Filtro por Categoria */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  marginBottom: '8px' 
+                }}>
+                  Categoria
+                </label>
+                <select
+                  value={filtros.categoria}
+                  onChange={e => setFiltros({ ...filtros, categoria: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '16px'
+                  }}
+                >
+                  <option value="">Todas as categorias</option>
+                  {categorias.map((categoria) => (
+                    <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>
+                  ))}
+                </select>
+              </div>
+
               {/* Filtro por Data de Início */}
               <div>
                 <label style={{ 
@@ -1001,26 +1029,8 @@ export default function DespesasPage() {
               </div>
             </div>
 
-            {/* Botões de Filtro */}
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={aplicarFiltros}
-                style={{
-                  padding: '12px 24px',
-                  backgroundColor: '#ef4444',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
-              >
-                Aplicar Filtros
-              </button>
+            {/* Botão Limpar Filtros */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button
                 onClick={limparFiltros}
                 style={{

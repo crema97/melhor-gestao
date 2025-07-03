@@ -8,11 +8,13 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const router = useRouter()
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+    setError('')
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -20,7 +22,7 @@ export default function LoginPage() {
     })
 
     if (error) {
-      alert('Erro no login: ' + error.message)
+      setError(error.message)
       setLoading(false)
       return
     }
@@ -29,7 +31,7 @@ export default function LoginPage() {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
-      alert('Erro ao obter dados do usuário')
+      setError('Erro ao obter dados do usuário')
       setLoading(false)
       return
     }
@@ -49,13 +51,13 @@ export default function LoginPage() {
 
     if (usuarioError) {
       console.error('Erro ao buscar usuário:', usuarioError)
-      alert('Erro ao buscar dados do usuário: ' + usuarioError.message)
+      setError('Erro ao buscar dados do usuário: ' + usuarioError.message)
       setLoading(false)
       return
     }
 
     if (!usuario) {
-      alert('Usuário não encontrado na base de dados. Verifique se o user_id está correto.')
+      setError('Usuário não encontrado na base de dados. Verifique se o user_id está correto.')
       setLoading(false)
       return
     }
@@ -111,202 +113,143 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: '#111827',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #c7d2fe 100%)',
-      padding: '1rem'
+      padding: '16px'
     }}>
-      <div style={{
+      <div style={{ 
+        backgroundColor: '#1f2937', 
+        borderRadius: '12px',
+        padding: '32px 24px',
         width: '100%',
-        maxWidth: '400px'
+        maxWidth: '400px',
+        border: '1px solid #374151'
       }}>
-        {/* Título */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '2rem'
-        }}>
-          <h1 style={{
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            color: '#1f2937',
-            marginBottom: '0.5rem'
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h1 style={{ 
+            fontSize: '24px', 
+            fontWeight: 'bold', 
+            color: '#ffffff',
+            margin: '0 0 8px 0'
           }}>
             Melhor Gestão
           </h1>
-          <p style={{
-            color: '#6b7280',
-            fontSize: '0.875rem'
+          <p style={{ 
+            color: '#d1d5db', 
+            fontSize: '14px',
+            margin: 0
           }}>
             Faça login para continuar
           </p>
         </div>
 
-        {/* Caixa do formulário */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '1rem',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-          padding: '1.5rem',
-          width: '100%',
-          boxSizing: 'border-box'
-        }}>
-          {/* Formulário */}
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
-            <div style={{ position: 'relative', width: '100%' }}>
-              <div style={{
-                position: 'absolute',
-                top: '50%',
-                left: '12px',
-                transform: 'translateY(-50%)',
-                display: 'flex',
-                alignItems: 'center',
-                zIndex: 1
-              }}>
-                <svg style={{ width: '20px', height: '20px', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                </svg>
-              </div>
-              <input
-                type="email"
-                required
-                style={{
-                  width: '100%',
-                  paddingLeft: '2.5rem',
-                  paddingRight: '0.75rem',
-                  paddingTop: '0.75rem',
-                  paddingBottom: '0.75rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem',
-                  outline: 'none',
-                  transition: 'all 0.2s',
-                  boxSizing: 'border-box'
-                }}
-                onFocus={(e) => {
-                  (e.target as HTMLInputElement).style.borderColor = '#3b82f6';
-                  (e.target as HTMLInputElement).style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                }}
-                onBlur={(e) => {
-                  (e.target as HTMLInputElement).style.borderColor = '#d1d5db';
-                  (e.target as HTMLInputElement).style.boxShadow = 'none';
-                }}
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            
-            <div style={{ position: 'relative', width: '100%' }}>
-              <div style={{
-                position: 'absolute',
-                top: '50%',
-                left: '12px',
-                transform: 'translateY(-50%)',
-                display: 'flex',
-                alignItems: 'center',
-                zIndex: 1
-              }}>
-                <svg style={{ width: '20px', height: '20px', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <input
-                type="password"
-                required
-                style={{
-                  width: '100%',
-                  paddingLeft: '2.5rem',
-                  paddingRight: '0.75rem',
-                  paddingTop: '0.75rem',
-                  paddingBottom: '0.75rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem',
-                  outline: 'none',
-                  transition: 'all 0.2s',
-                  boxSizing: 'border-box'
-                }}
-                onFocus={(e) => {
-                  (e.target as HTMLInputElement).style.borderColor = '#3b82f6';
-                  (e.target as HTMLInputElement).style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-                }}
-                onBlur={(e) => {
-                  (e.target as HTMLInputElement).style.borderColor = '#d1d5db';
-                  (e.target as HTMLInputElement).style.boxShadow = 'none';
-                }}
-                placeholder="Senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div>
+            <label style={{ 
+              display: 'block', 
+              color: '#e5e7eb', 
+              fontSize: '14px', 
+              fontWeight: '500',
+              marginBottom: '8px'
+            }}>
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
               style={{
                 width: '100%',
-                background: 'linear-gradient(135deg, #5ce1e6 0%, #4dd1d6 100%)',
-                color: 'white',
-                padding: '0.75rem 1rem',
-                borderRadius: '0.5rem',
-                fontWeight: '600',
-                fontSize: '0.875rem',
-                border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.5 : 1,
-                transition: 'all 0.2s',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                padding: '14px 16px',
+                backgroundColor: '#374151',
+                border: '1px solid #4b5563',
+                borderRadius: '8px',
+                color: '#ffffff',
+                fontSize: '16px',
+                outline: 'none',
+                transition: 'border-color 0.2s',
                 boxSizing: 'border-box'
               }}
-              onMouseEnter={(e) => {
-                if (!loading) {
-                  (e.target as HTMLButtonElement).style.background = 'linear-gradient(135deg, #4dd1d6 0%, #3dc1c6 100%)';
-                  (e.target as HTMLButtonElement).style.transform = 'translateY(-1px)';
-                  (e.target as HTMLButtonElement).style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)';
-                }
+              onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
+              onBlur={(e) => e.target.style.borderColor = '#4b5563'}
+              placeholder="seu@email.com"
+            />
+          </div>
+
+          <div>
+            <label style={{ 
+              display: 'block', 
+              color: '#e5e7eb', 
+              fontSize: '14px', 
+              fontWeight: '500',
+              marginBottom: '8px'
+            }}>
+              Senha
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{
+                width: '100%',
+                padding: '14px 16px',
+                backgroundColor: '#374151',
+                border: '1px solid #4b5563',
+                borderRadius: '8px',
+                color: '#ffffff',
+                fontSize: '16px',
+                outline: 'none',
+                transition: 'border-color 0.2s',
+                boxSizing: 'border-box'
               }}
-              onMouseLeave={(e) => {
-                if (!loading) {
-                  (e.target as HTMLButtonElement).style.background = 'linear-gradient(135deg, #5ce1e6 0%, #4dd1d6 100%)';
-                  (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
-                  (e.target as HTMLButtonElement).style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
-                }
-              }}
-            >
-              {loading ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg style={{ 
-                    animation: 'spin 1s linear infinite',
-                    marginRight: '0.5rem',
-                    width: '16px',
-                    height: '16px'
-                  }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Entrando...
-                </div>
-              ) : (
-                'Entrar'
-              )}
-            </button>
-          </form>
-        </div>
+              onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
+              onBlur={(e) => e.target.style.borderColor = '#4b5563'}
+              placeholder="Sua senha"
+            />
+          </div>
+
+          {error && (
+            <div style={{ 
+              padding: '12px', 
+              backgroundColor: '#dc2626', 
+              color: 'white', 
+              borderRadius: '8px',
+              fontSize: '14px'
+            }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '16px',
+              backgroundColor: '#5ce1e6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '500',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.7 : 1,
+              transition: 'background-color 0.2s',
+              marginTop: '8px'
+            }}
+            onMouseOver={(e) => !loading && (e.currentTarget.style.backgroundColor = '#4dd1d6')}
+            onMouseOut={(e) => !loading && (e.currentTarget.style.backgroundColor = '#5ce1e6')}
+          >
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
       </div>
-      
-      <style jsx>{`
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
     </div>
   )
 } 
