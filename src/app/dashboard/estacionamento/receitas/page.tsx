@@ -862,7 +862,7 @@ export default function ReceitasPage() {
               alignItems: 'center'
             }}>
               {/* Pie Chart */}
-              <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
