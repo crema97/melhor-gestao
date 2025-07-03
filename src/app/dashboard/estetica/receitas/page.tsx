@@ -920,16 +920,25 @@ export default function ReceitasPage() {
         )}
 
         {/* Receitas List */}
-        <div style={{
-          backgroundColor: '#1F2937',
-          borderRadius: '12px',
+        <div style={{ 
+          backgroundColor: '#1f2937', 
+          borderRadius: '8px',
           border: '1px solid #374151',
           overflow: 'hidden'
         }}>
-          <div style={{ padding: '24px', borderBottom: '1px solid #374151' }}>
-            <h3 style={{ color: '#ffffff', fontSize: '18px', fontWeight: '600', margin: '0' }}>
+          <div style={{ 
+            padding: '24px', 
+            borderBottom: '1px solid #374151', 
+            backgroundColor: '#374151' 
+          }}>
+            <h2 style={{ 
+              fontSize: '20px', 
+              fontWeight: 'bold', 
+              color: '#ffffff',
+              margin: 0
+            }}>
               Lista de Receitas
-            </h3>
+            </h2>
           </div>
 
           {/* Filtros */}
@@ -1084,106 +1093,126 @@ export default function ReceitasPage() {
               </button>
             </div>
           </div>
-
-          {filteredReceitas.length === 0 ? (
-            <div style={{ padding: '40px', textAlign: 'center' }}>
-              <p style={{ color: '#9CA3AF', fontSize: '16px' }}>
-                Nenhuma receita encontrada para o período selecionado.
-              </p>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
-                <thead>
-                  <tr style={{ backgroundColor: '#374151' }}>
-                    <th style={{ padding: '16px', textAlign: 'left', color: '#ffffff', fontSize: '14px', fontWeight: '500' }}>
-                      Data
-                    </th>
-                    <th style={{ padding: '16px', textAlign: 'left', color: '#ffffff', fontSize: '14px', fontWeight: '500' }}>
-                      Valor
-                    </th>
-                    <th style={{ padding: '16px', textAlign: 'left', color: '#ffffff', fontSize: '14px', fontWeight: '500' }}>
-                      Categoria
-                    </th>
-                    <th style={{ padding: '16px', textAlign: 'left', color: '#ffffff', fontSize: '14px', fontWeight: '500' }}>
-                      Pagamento
-                    </th>
-                    <th style={{ padding: '16px', textAlign: 'left', color: '#ffffff', fontSize: '14px', fontWeight: '500' }}>
-                      Observações
-                    </th>
-                    <th style={{ padding: '16px', textAlign: 'center', color: '#ffffff', fontSize: '14px', fontWeight: '500' }}>
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredReceitas.map((receita) => (
-                    <tr key={receita.id} style={{ borderBottom: '1px solid #374151' }}>
-                      <td style={{ padding: '16px', color: '#ffffff', fontSize: '14px' }}>
-                        {new Date(receita.data_receita + 'T00:00:00').toLocaleDateString('pt-BR')}
-                      </td>
-                      <td style={{ padding: '16px', color: '#10B981', fontSize: '14px', fontWeight: '600' }}>
-                        R$ {receita.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td style={{ padding: '16px', color: '#ffffff', fontSize: '14px' }}>
-                        {receita.categoria_receita?.nome || '-'}
-                      </td>
-                      <td style={{ padding: '16px', color: '#ffffff', fontSize: '14px' }}>
-                        <span style={{
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: '500',
-                          backgroundColor: 
-                            receita.forma_pagamento === 'dinheiro' ? '#10B981' :
-                            receita.forma_pagamento === 'debito' ? '#3B82F6' :
-                            receita.forma_pagamento === 'credito' ? '#8B5CF6' : '#F59E0B',
-                          color: '#ffffff'
+          <div style={{ padding: '24px' }}>
+            {filteredReceitas.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {filteredReceitas.map((receita) => (
+                  <div key={receita.id} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    padding: '20px', 
+                    backgroundColor: '#374151', 
+                    borderRadius: '8px',
+                    border: '1px solid #4b5563',
+                    flexWrap: 'wrap',
+                    gap: '12px'
+                  }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                        <h3 style={{ 
+                          fontWeight: '600', 
+                          color: '#ffffff',
+                          margin: 0,
+                          fontSize: '18px'
                         }}>
-                          {receita.forma_pagamento.toUpperCase()}
-                        </span>
-                      </td>
-                      <td style={{ padding: '16px', color: '#9CA3AF', fontSize: '14px', maxWidth: '200px' }}>
-                        {receita.observacoes || '-'}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                          <button
-                            onClick={() => handleEdit(receita)}
-                            style={{
-                              backgroundColor: '#3B82F6',
-                              color: '#ffffff',
-                              border: 'none',
-                              padding: '6px 12px',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => handleDelete(receita.id)}
-                            style={{
-                              backgroundColor: '#EF4444',
-                              color: '#ffffff',
-                              border: 'none',
-                              padding: '6px 12px',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Excluir
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                          {receita.categoria_receita?.nome || 'Sem categoria'}
+                        </h3>
+                      </div>
+                      <p style={{ 
+                        color: '#d1d5db', 
+                        fontSize: '14px',
+                        margin: '0 0 8px 0'
+                      }}>
+                        {new Date(receita.data_receita + 'T00:00:00').toLocaleDateString('pt-BR')} • {receita.forma_pagamento}
+                      </p>
+                      {receita.observacoes && (
+                        <p style={{ 
+                          color: '#9ca3af', 
+                          fontSize: '14px',
+                          margin: 0,
+                          fontStyle: 'italic'
+                        }}>
+                          {receita.observacoes}
+                        </p>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', minWidth: '0' }}>
+                      <p style={{ 
+                        fontWeight: 'bold', 
+                        color: '#10b981', 
+                        fontSize: '18px',
+                        margin: 0,
+                        whiteSpace: 'nowrap'
+                      }}>
+                        R$ {receita.valor.toFixed(2).replace('.', ',')}
+                      </p>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => handleEdit(receita)}
+                          style={{
+                            padding: '8px 12px',
+                            backgroundColor: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(receita.id)}
+                          style={{
+                            padding: '8px 12px',
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  backgroundColor: '#10b981',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px auto'
+                }}>
+                  <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
+                <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
+                  Nenhuma receita registrada no período
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -92,6 +92,12 @@ export default function DespesasPage() {
     }
   }, [despesas])
 
+  useEffect(() => {
+    if (filteredDespesas.length > 0) {
+      loadCategoryData()
+    }
+  }, [filteredDespesas])
+
   async function checkUserAndLoadData() {
     try {
       console.log('Iniciando checkUserAndLoadData (despesas)...')
@@ -599,12 +605,12 @@ export default function DespesasPage() {
             
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: '1fr 1fr', 
-              gap: '32px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+              gap: '20px',
               alignItems: 'center'
             }}>
               {/* Pie Chart */}
-              <div style={{ height: '200px' }}>
+              <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -612,6 +618,7 @@ export default function DespesasPage() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
                       outerRadius={60}
                       fill="#8884d8"
                       dataKey="value"
@@ -625,9 +632,10 @@ export default function DespesasPage() {
                         backgroundColor: '#1f2937',
                         border: '1px solid #374151',
                         borderRadius: '8px',
-                        color: '#ffffff'
+                        color: '#ffffff',
+                        fontSize: '12px'
                       }}
-                      formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
+                      formatter={(value: number, name: string) => [`R$ ${value.toFixed(2).replace('.', ',')}`, name]}
                       labelStyle={{ color: '#ffffff' }}
                       itemStyle={{ color: '#ffffff' }}
                     />
@@ -636,27 +644,27 @@ export default function DespesasPage() {
               </div>
 
               {/* Categories List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {categoryData.map((item) => (
                   <div key={item.name} style={{ 
                     display: 'flex', 
-                    alignItems: 'center',
+                    alignItems: 'center', 
                     justifyContent: 'space-between',
-                    padding: '16px',
-                    backgroundColor: '#374151',
+                    padding: '12px', 
+                    backgroundColor: '#374151', 
                     borderRadius: '8px',
                     border: `2px solid ${item.color}`
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{
-                        width: '16px',
-                        height: '16px',
+                        width: '12px',
+                        height: '12px',
                         backgroundColor: item.color,
                         borderRadius: '50%'
                       }}></div>
                       <span style={{ 
                         color: '#ffffff', 
-                        fontSize: '16px', 
+                        fontSize: '14px', 
                         fontWeight: '600' 
                       }}>
                         {item.name}
@@ -664,7 +672,7 @@ export default function DespesasPage() {
                     </div>
                     <span style={{ 
                       color: item.color, 
-                      fontSize: '18px', 
+                      fontSize: '16px', 
                       fontWeight: 'bold' 
                     }}>
                       R$ {item.value.toFixed(2).replace('.', ',')}
@@ -858,9 +866,9 @@ export default function DespesasPage() {
         )}
 
         {/* Despesas List */}
-        <div style={{
-          backgroundColor: '#1F2937',
-          borderRadius: '12px',
+        <div style={{ 
+          backgroundColor: '#1f2937', 
+          borderRadius: '8px',
           border: '1px solid #374151',
           overflow: 'hidden'
         }}>
@@ -999,88 +1007,126 @@ export default function DespesasPage() {
               </button>
             </div>
           </div>
-
-          {filteredDespesas.length === 0 ? (
-            <div style={{ padding: '40px', textAlign: 'center' }}>
-              <p style={{ color: '#9CA3AF', fontSize: '16px' }}>
-                Nenhuma despesa encontrada para o período selecionado.
-              </p>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
-                <thead>
-                  <tr style={{ backgroundColor: '#374151' }}>
-                    <th style={{ padding: '16px', textAlign: 'left', color: '#ffffff', fontSize: '14px', fontWeight: '500' }}>
-                      Data
-                    </th>
-                    <th style={{ padding: '16px', textAlign: 'left', color: '#ffffff', fontSize: '14px', fontWeight: '500' }}>
-                      Valor
-                    </th>
-                    <th style={{ padding: '16px', textAlign: 'left', color: '#ffffff', fontSize: '14px', fontWeight: '500' }}>
-                      Categoria
-                    </th>
-                    <th style={{ padding: '16px', textAlign: 'left', color: '#ffffff', fontSize: '14px', fontWeight: '500' }}>
-                      Observações
-                    </th>
-                    <th style={{ padding: '16px', textAlign: 'center', color: '#ffffff', fontSize: '14px', fontWeight: '500' }}>
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredDespesas.map((despesa) => (
-                    <tr key={despesa.id} style={{ borderBottom: '1px solid #374151' }}>
-                      <td style={{ padding: '16px', color: '#ffffff', fontSize: '14px' }}>
+          <div style={{ padding: '24px' }}>
+            {filteredDespesas.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {filteredDespesas.map((despesa) => (
+                  <div key={despesa.id} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    padding: '20px', 
+                    backgroundColor: '#374151', 
+                    borderRadius: '8px',
+                    border: '1px solid #4b5563',
+                    flexWrap: 'wrap',
+                    gap: '12px'
+                  }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                        <h3 style={{ 
+                          fontWeight: '600', 
+                          color: '#ffffff',
+                          margin: 0,
+                          fontSize: '18px'
+                        }}>
+                          {despesa.categoria_despesa?.nome || 'Sem categoria'}
+                        </h3>
+                      </div>
+                      <p style={{ 
+                        color: '#d1d5db', 
+                        fontSize: '14px',
+                        margin: '0 0 8px 0'
+                      }}>
                         {new Date(despesa.data_despesa + 'T00:00:00').toLocaleDateString('pt-BR')}
-                      </td>
-                      <td style={{ padding: '16px', color: '#EF4444', fontSize: '14px', fontWeight: '600' }}>
-                        R$ {despesa.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td style={{ padding: '16px', color: '#ffffff', fontSize: '14px' }}>
-                        {despesa.categoria_despesa?.nome || '-'}
-                      </td>
-                      <td style={{ padding: '16px', color: '#9CA3AF', fontSize: '14px', maxWidth: '200px' }}>
-                        {despesa.observacoes || '-'}
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                          <button
-                            onClick={() => handleEdit(despesa)}
-                            style={{
-                              backgroundColor: '#3B82F6',
-                              color: '#ffffff',
-                              border: 'none',
-                              padding: '6px 12px',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => handleDelete(despesa.id)}
-                            style={{
-                              backgroundColor: '#EF4444',
-                              color: '#ffffff',
-                              border: 'none',
-                              padding: '6px 12px',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Excluir
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                      </p>
+                      {despesa.observacoes && (
+                        <p style={{ 
+                          color: '#9ca3af', 
+                          fontSize: '14px',
+                          margin: 0,
+                          fontStyle: 'italic'
+                        }}>
+                          {despesa.observacoes}
+                        </p>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', minWidth: '0' }}>
+                      <p style={{ 
+                        fontWeight: 'bold', 
+                        color: '#ef4444', 
+                        fontSize: '18px',
+                        margin: 0,
+                        whiteSpace: 'nowrap'
+                      }}>
+                        R$ {despesa.valor.toFixed(2).replace('.', ',')}
+                      </p>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => handleEdit(despesa)}
+                          style={{
+                            padding: '8px 12px',
+                            backgroundColor: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(despesa.id)}
+                          style={{
+                            padding: '8px 12px',
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  backgroundColor: '#ef4444',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px auto'
+                }}>
+                  <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
+                  Nenhuma despesa registrada no período
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

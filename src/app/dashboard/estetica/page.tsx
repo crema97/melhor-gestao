@@ -926,9 +926,6 @@ export default function EsteticaDashboard() {
               <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
                 Adicione receitas para ver as formas de pagamento
               </p>
-              <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
-                Adicione receitas para ver as formas de pagamento
-              </p>
             </div>
           )}
         </div>
@@ -1034,9 +1031,6 @@ export default function EsteticaDashboard() {
                   <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
                     Adicione receitas para ver o histórico
                   </p>
-                  <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
-                    Adicione receitas para ver o histórico
-                  </p>
                 </div>
               )}
             </div>
@@ -1133,9 +1127,6 @@ export default function EsteticaDashboard() {
                   </div>
                   <p style={{ color: '#d1d5db', fontSize: '14px', margin: 0 }}>
                     Nenhuma despesa registrada
-                  </p>
-                  <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
-                    Adicione despesas para ver o histórico
                   </p>
                   <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
                     Adicione despesas para ver o histórico
