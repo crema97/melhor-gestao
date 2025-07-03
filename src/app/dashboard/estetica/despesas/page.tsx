@@ -547,16 +547,15 @@ export default function DespesasPage() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '20px',
             border: '1px solid #374151',
             marginBottom: '32px'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 16px 0'
             }}>
               Despesas por Categoria
             </h3>

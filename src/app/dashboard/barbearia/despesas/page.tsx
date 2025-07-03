@@ -60,6 +60,10 @@ export default function DespesasPage() {
     endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
   })
   const [usuarioId, setUsuarioId] = useState<string>('')
+  const [filtros, setFiltros] = useState({
+    dataInicio: '',
+    dataFim: ''
+  })
   const router = useRouter()
 
   useEffect(() => {
@@ -186,6 +190,40 @@ export default function DespesasPage() {
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
     setDateRange({ startDate, endDate })
+  }
+
+  function aplicarFiltros() {
+    const filtered = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      
+      if (filtros.dataInicio) {
+        const startDate = new Date(filtros.dataInicio + 'T00:00:00')
+        if (despesaDate < startDate) return false
+      }
+      
+      if (filtros.dataFim) {
+        const endDate = new Date(filtros.dataFim + 'T23:59:59')
+        if (despesaDate > endDate) return false
+      }
+      
+      return true
+    })
+    setFilteredDespesas(filtered)
+  }
+
+  function limparFiltros() {
+    setFiltros({
+      dataInicio: '',
+      dataFim: ''
+    })
+    // Reaplicar filtro de período padrão
+    const filtered = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
+    })
+    setFilteredDespesas(filtered)
   }
 
   function loadChartData() {
@@ -771,16 +809,15 @@ export default function DespesasPage() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '20px',
             border: '1px solid #374151',
             marginBottom: '32px'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 16px 0'
             }}>
               Despesas por Categoria
             </h3>
@@ -886,6 +923,123 @@ export default function DespesasPage() {
             }}>
               Lista de Despesas
             </h2>
+          </div>
+
+          {/* Filtros */}
+          <div style={{ 
+            padding: '24px', 
+            borderBottom: '1px solid #374151', 
+            backgroundColor: '#1f2937'
+          }}>
+            <h3 style={{ 
+              fontSize: '16px', 
+              fontWeight: '600', 
+              color: '#ffffff',
+              margin: '0 0 16px 0'
+            }}>
+              Filtros
+            </h3>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '16px',
+              marginBottom: '16px'
+            }}>
+              {/* Filtro por Data de Início */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  marginBottom: '8px' 
+                }}>
+                  Data de Início
+                </label>
+                <input
+                  type="date"
+                  value={filtros.dataInicio}
+                  onChange={e => setFiltros({ ...filtros, dataInicio: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '16px'
+                  }}
+                />
+              </div>
+
+              {/* Filtro por Data de Fim */}
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500', 
+                  marginBottom: '8px' 
+                }}>
+                  Data de Fim
+                </label>
+                <input
+                  type="date"
+                  value={filtros.dataFim}
+                  onChange={e => setFiltros({ ...filtros, dataFim: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '16px'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Botões de Filtro */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={aplicarFiltros}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+              >
+                Aplicar Filtros
+              </button>
+              <button
+                onClick={limparFiltros}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
+              >
+                Limpar Filtros
+              </button>
+            </div>
           </div>
           <div style={{ padding: '24px' }}>
             {filteredDespesas.length > 0 ? (

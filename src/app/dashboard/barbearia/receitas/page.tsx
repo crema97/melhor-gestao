@@ -1130,7 +1130,7 @@ export default function ReceitasPage() {
                     flexWrap: 'wrap',
                     gap: '12px'
                   }}>
-                    <div style={{ flex: 1, minWidth: '200px' }}>
+                    <div style={{ flex: 1, minWidth: '250px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
                         <h3 style={{ 
                           fontWeight: '600', 
@@ -1147,7 +1147,8 @@ export default function ReceitasPage() {
                           borderRadius: '4px',
                           fontSize: '12px',
                           fontWeight: '500',
-                          textTransform: 'capitalize'
+                          textTransform: 'capitalize',
+                          whiteSpace: 'nowrap'
                         }}>
                           {receita.forma_pagamento}
                         </span>

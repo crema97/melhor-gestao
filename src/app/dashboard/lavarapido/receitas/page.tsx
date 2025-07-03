@@ -697,7 +697,7 @@ export default function ReceitasPage() {
         }}>
           <div>
             <h2 style={{ color: '#ffffff', fontSize: '22px', fontWeight: 'bold', margin: 0 }}>
-              Estatísticas do Período
+              Resumo do Período
             </h2>
             <p style={{ color: '#d1d5db', fontSize: '16px', margin: 0 }}>
               {filteredReceitas.length} receita{filteredReceitas.length !== 1 ? 's' : ''} registrada{filteredReceitas.length !== 1 ? 's' : ''}
@@ -798,16 +798,15 @@ export default function ReceitasPage() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '32px',
+            padding: '20px',
             border: '1px solid #374151',
             marginBottom: '32px'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              marginBottom: '24px',
-              margin: '0 0 24px 0'
+              margin: '0 0 16px 0'
             }}>
               Receitas por Categoria
             </h3>

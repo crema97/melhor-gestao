@@ -12,8 +12,7 @@ interface Anotacao {
   categoria?: string
   importante: boolean
   data_anotacao: string
-  data_criacao: string
-  data_atualizacao?: string
+  created_at: string
 }
 
 export default function AnotacoesPage() {
@@ -69,7 +68,7 @@ export default function AnotacoesPage() {
         .from('anotacoes')
         .select('*')
         .eq('usuario_id', usuarioId)
-        .order('data_criacao', { ascending: false })
+        .order('data_anotacao', { ascending: false })
 
       if (error) throw error
 
@@ -99,17 +98,14 @@ export default function AnotacoesPage() {
       if (editingAnotacao) {
         const { error } = await supabase
           .from('anotacoes')
-          .update({
-            ...anotacaoData,
-            data_atualizacao: new Date().toISOString()
-          })
+          .update(anotacaoData)
           .eq('id', editingAnotacao.id)
 
         if (error) throw error
       } else {
         const { error } = await supabase
           .from('anotacoes')
-          .insert(anotacaoData)
+          .insert([anotacaoData])
 
         if (error) throw error
       }
