@@ -532,8 +532,8 @@ export default function ReceitasPage() {
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
-          gap: '24px', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '20px', 
           marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}

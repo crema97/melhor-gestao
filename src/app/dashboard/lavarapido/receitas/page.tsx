@@ -493,7 +493,7 @@ export default function ReceitasPage() {
             <form onSubmit={handleSubmit} style={{ 
               display: 'grid !important', 
               gridTemplateColumns: '1fr !important', 
-              gap: '24px',
+              gap: '20px',
               width: '100%'
             }}>
               <div style={{ minWidth: '0', width: '100%' }}>
@@ -716,7 +716,7 @@ export default function ReceitasPage() {
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
           gap: '24px', 
           marginBottom: '32px' 
         }}>
