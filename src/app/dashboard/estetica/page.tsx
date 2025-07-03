@@ -1002,7 +1002,8 @@ export default function EsteticaDashboard() {
                         fontWeight: 'bold', 
                         color: '#4ade80', 
                         fontSize: '20px',
-                        margin: 0
+                        margin: 0,
+                        whiteSpace: 'nowrap'
                       }}>
                         R$ {receita.valor.toFixed(2).replace('.', ',')}
                       </p>
@@ -1102,7 +1103,8 @@ export default function EsteticaDashboard() {
                         fontWeight: 'bold', 
                         color: '#f87171', 
                         fontSize: '20px',
-                        margin: 0
+                        margin: 0,
+                        whiteSpace: 'nowrap'
                       }}>
                         R$ {despesa.valor.toFixed(2).replace('.', ',')}
                       </p>
