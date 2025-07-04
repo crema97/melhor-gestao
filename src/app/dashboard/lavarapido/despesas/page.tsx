@@ -829,8 +829,9 @@ export default function DespesasPage() {
                     </div>
                     <span style={{ 
                       color: item.color, 
-                      fontSize: '18px', 
-                      fontWeight: 'bold' 
+                      fontSize: '16px', 
+                      fontWeight: 'bold',
+                      whiteSpace: 'nowrap'
                     }}>
                       R$ {item.value.toFixed(2).replace('.', ',')}
                     </span>

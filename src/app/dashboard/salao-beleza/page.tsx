@@ -890,7 +890,8 @@ export default function SalaoBelezaDashboard() {
                     <span style={{ 
                       color: item.color, 
                       fontSize: '16px', 
-                      fontWeight: 'bold' 
+                      fontWeight: 'bold',
+                      whiteSpace: 'nowrap'
                     }}>
                       R$ {item.value.toFixed(2).replace('.', ',')}
                     </span>
