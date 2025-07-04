@@ -264,9 +264,9 @@ export default function DespesasPage() {
     for (let i = 6; i >= 0; i--) {
       const date = new Date()
       date.setDate(date.getDate() - i)
-      const dateKey = date.toISOString().split('T')[0]
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       
-      const dayDespesas = filteredDespesas.filter(d => d.data_despesa === dateKey)
+      const dayDespesas = despesas.filter(d => d.data_despesa === dateKey)
         .reduce((sum, d) => sum + d.valor, 0)
       
       dailyDataArray.push({

@@ -113,6 +113,19 @@ export default function EstacionamentoDashboard() {
   }, [receitas, despesas])
 
   useEffect(() => {
+    if (receitas.length > 0 || despesas.length > 0) {
+      const startDateStr = `${dateRange.startDate.getFullYear()}-${String(dateRange.startDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.startDate.getDate()).padStart(2, '0')}`
+      const endDateStr = `${dateRange.endDate.getFullYear()}-${String(dateRange.endDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.endDate.getDate()).padStart(2, '0')}`
+      
+      const filteredReceitas = receitas.filter(r => r.data_receita >= startDateStr && r.data_receita <= endDateStr)
+      const filteredDespesas = despesas.filter(d => d.data_despesa >= startDateStr && d.data_despesa <= endDateStr)
+      
+      setFilteredReceitas(filteredReceitas)
+      setFilteredDespesas(filteredDespesas)
+    }
+  }, [receitas, despesas, dateRange])
+
+  useEffect(() => {
     // Aplicar filtro de período quando as receitas e despesas mudarem
     console.log('=== DEBUG: Filtro de Período ===')
     console.log('Receitas originais:', receitas.length, receitas)
@@ -346,7 +359,7 @@ export default function EstacionamentoDashboard() {
     for (let i = 6; i >= 0; i--) {
       const date = new Date()
       date.setDate(date.getDate() - i)
-      const dateKey = date.toISOString().split('T')[0]
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       
       const dayReceitas = receitas.filter(r => r.data_receita === dateKey)
         .reduce((sum, r) => sum + r.valor, 0)
@@ -1100,9 +1113,6 @@ export default function EstacionamentoDashboard() {
               </div>
               <p style={{ color: '#d1d5db', fontSize: '14px', margin: 0 }}>
                 Nenhuma receita registrada
-              </p>
-              <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
-                Adicione receitas para ver as formas de pagamento
               </p>
               <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
                 Adicione receitas para ver as formas de pagamento

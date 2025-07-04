@@ -213,23 +213,21 @@ export default function DespesasPage() {
     setMonthlyData(monthlyData)
 
     // Dados diários dos últimos 7 dias
-    const dailyData = []
+    const dailyDataArray: DailyData[] = []
     for (let i = 6; i >= 0; i--) {
-      const dia = new Date()
-      dia.setDate(dia.getDate() - i)
-      const diaStr = dia.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+      const date = new Date()
+      date.setDate(date.getDate() - i)
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       
-      const despesasDia = despesas.filter(d => {
-        const dataDespesa = new Date(d.data_despesa + 'T00:00:00')
-        return dataDespesa.toDateString() === dia.toDateString()
-      }).reduce((sum, d) => sum + d.valor, 0)
+      const dayDespesas = despesas.filter(d => d.data_despesa === dateKey)
+        .reduce((sum, d) => sum + d.valor, 0)
       
-      dailyData.push({
-        dia: diaStr,
-        despesas: despesasDia
+      dailyDataArray.push({
+        dia: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+        despesas: dayDespesas
       })
     }
-    setDailyData(dailyData)
+    setDailyData(dailyDataArray)
   }
 
   function loadCategoryData() {

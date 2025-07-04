@@ -359,19 +359,19 @@ export default function DespesasPage() {
     setMonthlyData(monthlyDataArray)
 
     // Dados diários dos últimos 7 dias
-    const dailyDataArray = [...dailyData]
+    const dailyDataArray: DailyData[] = []
     for (let i = 6; i >= 0; i--) {
       const date = new Date()
       date.setDate(date.getDate() - i)
-      const dateKey = date.toISOString().split('T')[0]
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       
       const dayDespesas = despesas.filter(d => d.data_despesa === dateKey)
         .reduce((sum, d) => sum + d.valor, 0)
       
-      dailyDataArray[i] = {
-        dia: date.toLocaleDateString('pt-BR', { weekday: 'short' }),
+      dailyDataArray.push({
+        dia: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
         despesas: dayDespesas
-      }
+      })
     }
     
     setDailyData(dailyDataArray)

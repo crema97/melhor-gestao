@@ -95,28 +95,27 @@ export default function EsteticaDashboard() {
 
   useEffect(() => {
     if (receitas.length > 0 || despesas.length > 0) {
+      const startDateStr = `${dateRange.startDate.getFullYear()}-${String(dateRange.startDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.startDate.getDate()).padStart(2, '0')}`
+      const endDateStr = `${dateRange.endDate.getFullYear()}-${String(dateRange.endDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.endDate.getDate()).padStart(2, '0')}`
+      
+      const filteredReceitas = receitas.filter(r => r.data_receita >= startDateStr && r.data_receita <= endDateStr)
+      const filteredDespesas = despesas.filter(d => d.data_despesa >= startDateStr && d.data_despesa <= endDateStr)
+      
+      setFilteredReceitas(filteredReceitas)
+      setFilteredDespesas(filteredDespesas)
+    }
+  }, [receitas, despesas, dateRange])
+
+  useEffect(() => {
+    if (receitas.length > 0 || despesas.length > 0) {
       loadChartData()
     }
   }, [receitas, despesas])
 
   useEffect(() => {
-    // Aplicar filtro de período quando as receitas e despesas mudarem
-    const startDateStr = dateRange.startDate.toISOString().split('T')[0]
-    const endDateStr = dateRange.endDate.toISOString().split('T')[0]
-    
-    const filteredReceitasData = receitas.filter(receita => {
-      return receita.data_receita >= startDateStr && receita.data_receita <= endDateStr
-    })
-    setFilteredReceitas(filteredReceitasData)
-
-    const filteredDespesasData = despesas.filter(despesa => {
-      return despesa.data_despesa >= startDateStr && despesa.data_despesa <= endDateStr
-    })
-    setFilteredDespesas(filteredDespesasData)
-
     // Atualizar stats
-    const receitasMes = filteredReceitasData.reduce((sum, r) => sum + r.valor, 0)
-    const despesasMes = filteredDespesasData.reduce((sum, d) => sum + d.valor, 0)
+    const receitasMes = filteredReceitas.reduce((sum, r) => sum + r.valor, 0)
+    const despesasMes = filteredDespesas.reduce((sum, d) => sum + d.valor, 0)
     const lucro = receitasMes - despesasMes
 
     const pagamentos = {
@@ -126,7 +125,7 @@ export default function EsteticaDashboard() {
       pix: 0
     }
 
-    filteredReceitasData.forEach(receita => {
+    filteredReceitas.forEach(receita => {
       pagamentos[receita.forma_pagamento as keyof typeof pagamentos] += receita.valor
     })
 
@@ -136,7 +135,7 @@ export default function EsteticaDashboard() {
       lucro,
       pagamentos
     })
-  }, [receitas, despesas, dateRange])
+  }, [receitas, despesas, filteredReceitas, filteredDespesas])
 
   async function checkUserAndLoadData() {
     try {
@@ -242,7 +241,7 @@ export default function EsteticaDashboard() {
     for (let i = 6; i >= 0; i--) {
       const date = new Date()
       date.setDate(date.getDate() - i)
-      const dateKey = date.toISOString().split('T')[0]
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       
       const dayReceitas = receitas.filter(r => r.data_receita === dateKey)
         .reduce((sum, r) => sum + r.valor, 0)

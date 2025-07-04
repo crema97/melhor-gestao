@@ -182,23 +182,21 @@ export default function ReceitasPage() {
     setMonthlyData(monthlyData)
 
     // Dados diários dos últimos 7 dias
-    const dailyData = []
+    const dailyDataArray: DailyData[] = []
     for (let i = 6; i >= 0; i--) {
-      const dia = new Date()
-      dia.setDate(dia.getDate() - i)
-      const diaStr = dia.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+      const date = new Date()
+      date.setDate(date.getDate() - i)
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       
-      const receitasDia = receitas.filter(r => {
-        const dataReceita = new Date(r.data_receita + 'T00:00:00')
-        return dataReceita.toDateString() === dia.toDateString()
-      }).reduce((sum, r) => sum + r.valor, 0)
+      const dayReceitas = receitas.filter(r => r.data_receita === dateKey)
+        .reduce((sum, r) => sum + r.valor, 0)
       
-      dailyData.push({
-        dia: diaStr,
-        receitas: receitasDia
+      dailyDataArray.push({
+        dia: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+        receitas: dayReceitas
       })
     }
-    setDailyData(dailyData)
+    setDailyData(dailyDataArray)
   }
 
   function getCategoriesData() {

@@ -209,7 +209,7 @@ export default function ReceitasPage() {
     for (let i = 6; i >= 0; i--) {
       const date = new Date()
       date.setDate(date.getDate() - i)
-      const dateKey = date.toISOString().split('T')[0]
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       
       const dayReceitas = receitas.filter(r => r.data_receita === dateKey)
         .reduce((sum, r) => sum + r.valor, 0)
