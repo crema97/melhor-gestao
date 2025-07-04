@@ -350,10 +350,10 @@ export default function DespesasPage() {
       const monthDespesas = despesas.filter(d => d.data_despesa.startsWith(monthKey))
         .reduce((sum, d) => sum + d.valor, 0)
       
-      monthlyDataArray[i] = {
+      monthlyDataArray.push({
         mes: months[date.getMonth()],
         despesas: monthDespesas
-      }
+      })
     }
     
     setMonthlyData(monthlyDataArray)
