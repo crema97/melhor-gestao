@@ -212,26 +212,25 @@ export default function DespesasPage() {
   }
 
   function loadChartData() {
-    // Dados mensais (últimos 6 meses)
-    const monthlyData = []
-    const hoje = new Date()
+    // Gerar dados dos últimos 6 meses na ordem correta (do mais antigo para o mais recente)
+    const monthlyDataArray: MonthlyData[] = []
+    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
     
-    for (let i = 5; i >= 0; i--) {
-      const mes = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1)
-      const mesStr = mes.toLocaleDateString('pt-BR', { month: 'short' })
+    for (let i = 0; i <= 5; i++) {
+      const date = new Date()
+      date.setMonth(date.getMonth() - (5 - i))
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
       
-      const despesasMes = filteredDespesas.filter(d => {
-        const dataDespesa = new Date(d.data_despesa + 'T00:00:00')
-        return dataDespesa.getMonth() === mes.getMonth() && dataDespesa.getFullYear() === mes.getFullYear()
-      }).reduce((sum, d) => sum + d.valor, 0)
+      const monthDespesas = despesas.filter(d => d.data_despesa.startsWith(monthKey))
+        .reduce((sum, d) => sum + d.valor, 0)
       
-      monthlyData.push({
-        mes: mesStr,
-        despesas: despesasMes
+      monthlyDataArray.push({
+        mes: months[date.getMonth()],
+        despesas: monthDespesas
       })
     }
     
-    setMonthlyData(monthlyData)
+    setMonthlyData(monthlyDataArray)
 
     // Dados diários dos últimos 7 dias
     const dailyDataArray: DailyData[] = []

@@ -239,16 +239,16 @@ export default function DespesasPage() {
       return
     }
 
-    // Dados mensais dos últimos 6 meses
+    // Gerar dados dos últimos 6 meses na ordem correta (do mais antigo para o mais recente)
     const monthlyDataArray: MonthlyData[] = []
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
     
-    for (let i = 5; i >= 0; i--) {
+    for (let i = 0; i <= 5; i++) {
       const date = new Date()
-      date.setMonth(date.getMonth() - i)
+      date.setMonth(date.getMonth() - (5 - i))
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
       
-      const monthDespesas = filteredDespesas.filter(d => d.data_despesa.startsWith(monthKey))
+      const monthDespesas = despesas.filter(d => d.data_despesa.startsWith(monthKey))
         .reduce((sum, d) => sum + d.valor, 0)
       
       monthlyDataArray.push({
