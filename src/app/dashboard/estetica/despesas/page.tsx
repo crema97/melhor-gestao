@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import PeriodSelector from '@/components/PeriodSelector'
-import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 interface CategoriaDespesa {
   id: string
@@ -47,15 +47,7 @@ export default function DespesasPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingDespesa, setEditingDespesa] = useState<Despesa | null>(null)
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
-  const [dailyData, setDailyData] = useState<DailyData[]>([
-    { dia: 'Seg', despesas: 0 },
-    { dia: 'Ter', despesas: 0 },
-    { dia: 'Qua', despesas: 0 },
-    { dia: 'Qui', despesas: 0 },
-    { dia: 'Sex', despesas: 0 },
-    { dia: 'Sab', despesas: 0 },
-    { dia: 'Dom', despesas: 0 }
-  ])
+  const [dailyData, setDailyData] = useState<DailyData[]>([])
   const [categoryData, setCategoryData] = useState<CategoryData[]>([])
   const [formData, setFormData] = useState({
     valor: '',
@@ -67,7 +59,7 @@ export default function DespesasPage() {
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
   })
-  const [usuarioId, setUsuarioId] = useState<string | null>(null)
+  const [usuarioId, setUsuarioId] = useState<string>('')
   const [filtros, setFiltros] = useState({
     categoria: '',
     dataInicio: '',
@@ -83,33 +75,54 @@ export default function DespesasPage() {
     if (usuarioId) {
       loadDespesas(usuarioId)
     }
-  }, [dateRange, usuarioId])
+  }, [usuarioId])
+
+  function loadCategoryData() {
+    const categorias: { [key: string]: number } = {}
+    
+    filteredDespesas.forEach(despesa => {
+      const categoriaNome = despesa.categoria_despesa?.nome || 'Sem categoria'
+      categorias[categoriaNome] = (categorias[categoriaNome] || 0) + despesa.valor
+    })
+
+    const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#ec4899']
+
+    const categoryData = Object.entries(categorias).map(([name, value], index) => ({
+      name,
+      value: value as number,
+      color: colors[index % colors.length]
+    })).filter(item => item.value > 0)
+
+    setCategoryData(categoryData)
+  }
 
   useEffect(() => {
     if (despesas.length > 0) {
       loadChartData()
       loadCategoryData()
     }
-  }, [despesas])
+  }, [filteredDespesas])
 
   useEffect(() => {
-    if (filteredDespesas.length > 0) {
-      loadCategoryData()
-    }
-  }, [filteredDespesas])
+    // Aplicar filtro de período quando as despesas mudarem
+    const filtered = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
+    })
+    setFilteredDespesas(filtered)
+  }, [despesas, dateRange])
 
   async function checkUserAndLoadData() {
     try {
-      console.log('Iniciando checkUserAndLoadData (despesas)...')
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
-        console.log('Usuário não autenticado, redirecionando...')
         router.push('/login')
         return
       }
 
-      console.log('Usuário autenticado:', user.email)
       const { data: usuario } = await supabase
         .from('usuarios')
         .select('*')
@@ -117,22 +130,15 @@ export default function DespesasPage() {
         .single()
 
       if (!usuario) {
-        console.log('Usuário não encontrado na tabela usuarios, redirecionando...')
         router.push('/login')
         return
       }
 
-      console.log('Usuário encontrado:', usuario.nome)
-      console.log('Tipo de negócio ID:', usuario.tipo_negocio_id)
-      
       setUsuarioId(usuario.id)
       await loadCategoriasAtivas(usuario.id)
-      console.log('checkUserAndLoadData (despesas) concluído com sucesso')
-      console.log('Definindo loading como false')
       setLoading(false)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
-      console.log('Erro - definindo loading como false')
       setLoading(false)
       router.push('/login')
     }
@@ -140,7 +146,6 @@ export default function DespesasPage() {
 
   async function loadDespesas(usuarioId: string) {
     try {
-      console.log('Iniciando loadDespesas para usuarioId:', usuarioId)
       setLoading(true)
       
       // Buscar TODAS as despesas do usuário (sem filtrar por categorias ativas)
@@ -156,28 +161,12 @@ export default function DespesasPage() {
         .eq('usuario_id', usuarioId)
         .order('data_despesa', { ascending: false })
 
-      if (error) {
-        console.error('Erro ao carregar despesas:', error)
-        throw error
-      }
-
-      console.log('Despesas carregadas:', data?.length || 0, 'despesas')
+      if (error) throw error
+      
+      console.log('Despesas carregadas:', data?.length || 0)
       console.log('Despesas:', data)
       
-      // Transformar os dados para o formato correto
-      const despesasFormatadas = (data || []).map((item: any) => ({
-        id: item.id,
-        valor: item.valor,
-        data_despesa: item.data_despesa,
-        observacoes: item.observacoes,
-        categoria_despesa: Array.isArray(item.categoria_despesa) 
-          ? item.categoria_despesa[0] || null 
-          : item.categoria_despesa
-      })) as Despesa[]
-      
-      setDespesas(despesasFormatadas)
-      setFilteredDespesas(despesasFormatadas)
-      console.log('loadDespesas concluído com sucesso')
+      setDespesas((data as unknown as Despesa[]) || [])
     } catch (error) {
       console.error('Erro ao carregar despesas:', error)
     } finally {
@@ -187,15 +176,12 @@ export default function DespesasPage() {
 
   async function loadCategoriasAtivas(usuarioId: string) {
     try {
-      console.log('Carregando categorias ativas para usuarioId:', usuarioId)
       const response = await fetch(`/api/usuario/categorias-ativas?usuario_id=${usuarioId}`)
       const data = await response.json()
       if (data.success) {
         setCategorias(data.categorias.despesas || [])
-        console.log('Categorias ativas carregadas:', data.categorias.despesas?.length || 0, 'categorias')
       } else {
         setCategorias([])
-        console.log('Nenhuma categoria ativa encontrada')
       }
     } catch (error) {
       console.error('Erro ao carregar categorias ativas:', error)
@@ -204,13 +190,7 @@ export default function DespesasPage() {
   }
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
-    const filtered = despesas.filter(despesa => {
-      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
-      const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
-      const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59)
-      return despesaDate >= start && despesaDate <= end
-    })
-    setFilteredDespesas(filtered)
+    setDateRange({ startDate, endDate })
   }
 
   function aplicarFiltros() {
@@ -242,107 +222,27 @@ export default function DespesasPage() {
       dataInicio: '',
       dataFim: ''
     })
-    setFilteredDespesas(despesas)
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    
-    if (!usuarioId) return
-
-    try {
-      // Garantir que a data seja tratada corretamente
-      const dataDespesa = new Date(formData.data_despesa + 'T00:00:00')
-      const dataFormatada = dataDespesa.toISOString().split('T')[0]
-
-      const despesaData = {
-        usuario_id: usuarioId,
-        valor: parseFloat(formData.valor),
-        data_despesa: dataFormatada,
-        categoria_despesa_id: formData.categoria_despesa_id || null,
-        observacoes: formData.observacoes || null
-      }
-
-      if (editingDespesa) {
-        const { error } = await supabase
-          .from('despesas')
-          .update(despesaData)
-          .eq('id', editingDespesa.id)
-
-        if (error) throw error
-      } else {
-        const { error } = await supabase
-          .from('despesas')
-          .insert([despesaData])
-
-        if (error) throw error
-      }
-
-      setFormData({
-        valor: '',
-        data_despesa: '',
-        categoria_despesa_id: '',
-        observacoes: ''
-      })
-      setShowForm(false)
-      setEditingDespesa(null)
-      await loadDespesas(usuarioId)
-    } catch (error) {
-      console.error('Erro ao salvar despesa:', error)
-      alert('Erro ao salvar despesa')
-    }
-  }
-
-  async function handleDelete(id: string) {
-    if (!confirm('Tem certeza que deseja excluir esta despesa?')) return
-
-    try {
-      const { error } = await supabase
-        .from('despesas')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
-
-      await loadDespesas(usuarioId!)
-    } catch (error) {
-      console.error('Erro ao excluir despesa:', error)
-      alert('Erro ao excluir despesa')
-    }
-  }
-
-  function handleEdit(despesa: Despesa) {
-    setEditingDespesa(despesa)
-    setFormData({
-      valor: despesa.valor.toString(),
-      data_despesa: despesa.data_despesa,
-      categoria_despesa_id: despesa.categoria_despesa?.id || '',
-      observacoes: despesa.observacoes || ''
+    // Reaplicar filtro de período padrão
+    const filtered = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
     })
-    setShowForm(true)
-  }
-
-  function handleCancel() {
-    setShowForm(false)
-    setEditingDespesa(null)
-    setFormData({
-      valor: '',
-      data_despesa: '',
-      categoria_despesa_id: '',
-      observacoes: ''
-    })
+    setFilteredDespesas(filtered)
   }
 
   function loadChartData() {
-    if (despesas.length === 0) {
+    if (filteredDespesas.length === 0) {
+      setMonthlyData([])
+      setDailyData([])
       return
     }
 
-    // Dados mensais dos últimos 6 meses
-    const monthlyDataArray = [...monthlyData]
+    // Gerar dados dos últimos 6 meses na ordem correta (do mais antigo para o mais recente)
+    const monthlyDataArray: MonthlyData[] = []
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
     
-    // Gerar dados dos últimos 6 meses na ordem correta (do mais antigo para o mais recente)
     for (let i = 0; i <= 5; i++) {
       const date = new Date()
       date.setMonth(date.getMonth() - (5 - i))
@@ -378,23 +278,101 @@ export default function DespesasPage() {
     setDailyData(dailyDataArray)
   }
 
-  function loadCategoryData() {
-    const categorias: { [key: string]: number } = {}
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
     
-    filteredDespesas.forEach(despesa => {
-      const categoriaNome = despesa.categoria_despesa?.nome || 'Sem categoria'
-      categorias[categoriaNome] = (categorias[categoriaNome] || 0) + despesa.valor
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!usuario) return
+
+      // Garantir que a data seja tratada corretamente
+      const dataDespesa = new Date(formData.data_despesa + 'T00:00:00')
+      const dataFormatada = dataDespesa.toISOString().split('T')[0]
+
+      const despesaData = {
+        usuario_id: usuario.id,
+        valor: parseFloat(formData.valor),
+        data_despesa: dataFormatada,
+        categoria_despesa_id: formData.categoria_despesa_id || null,
+        observacoes: formData.observacoes || null
+      }
+
+      if (editingDespesa) {
+        const { error } = await supabase
+          .from('despesas')
+          .update(despesaData)
+          .eq('id', editingDespesa.id)
+
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('despesas')
+          .insert([despesaData])
+
+        if (error) throw error
+      }
+
+      setFormData({
+        valor: '',
+        data_despesa: '',
+        categoria_despesa_id: '',
+        observacoes: ''
+      })
+      setShowForm(false)
+      setEditingDespesa(null)
+      await loadDespesas(usuario.id)
+    } catch (error) {
+      console.error('Erro ao salvar despesa:', error)
+      alert('Erro ao salvar despesa')
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Tem certeza que deseja excluir esta despesa?')) return
+
+    try {
+      const { error } = await supabase
+        .from('despesas')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+
+      await loadDespesas(usuarioId)
+    } catch (error) {
+      console.error('Erro ao excluir despesa:', error)
+      alert('Erro ao excluir despesa')
+    }
+  }
+
+  function handleEdit(despesa: Despesa) {
+    setEditingDespesa(despesa)
+    setFormData({
+      valor: despesa.valor.toString(),
+      data_despesa: despesa.data_despesa,
+      categoria_despesa_id: despesa.categoria_despesa?.id || '',
+      observacoes: despesa.observacoes || ''
     })
+    setShowForm(true)
+  }
 
-    const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#ec4899']
-
-    const categoryData = Object.entries(categorias).map(([name, value], index) => ({
-      name,
-      value: value as number,
-      color: colors[index % colors.length]
-    })).filter(item => item.value > 0)
-
-    setCategoryData(categoryData)
+  function handleCancel() {
+    setShowForm(false)
+    setEditingDespesa(null)
+    setFormData({
+      valor: '',
+      data_despesa: '',
+      categoria_despesa_id: '',
+      observacoes: ''
+    })
   }
 
   if (loading) {
