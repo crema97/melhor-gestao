@@ -31,40 +31,45 @@ export default function AnotacoesPage() {
 
   useEffect(() => {
     checkUserAndLoadData()
-  }, [])
+  }, [checkUserAndLoadData])
 
   async function checkUserAndLoadData() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
+      
       if (!user) {
         router.push('/login')
         return
       }
+
       const { data: usuario } = await supabase
         .from('usuarios')
-        .select('id')
+        .select('*')
         .eq('user_id', user.id)
         .single()
+
       if (!usuario) {
         router.push('/login')
         return
       }
-      await loadData(usuario.id)
+
+      await loadAnotacoes(usuario.id)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
       router.push('/login')
     }
   }
 
-  async function loadData(usuarioId: string) {
+  async function loadAnotacoes(usuarioId: string) {
     try {
-      setLoading(true)
-      const { data: anotacoesData } = await supabase
+      const { data, error } = await supabase
         .from('anotacoes')
         .select('*')
         .eq('usuario_id', usuarioId)
         .order('data_anotacao', { ascending: false })
-      setAnotacoes((anotacoesData as unknown as Anotacao[]) || [])
+
+      if (error) throw error
+      setAnotacoes(data || [])
     } catch (error) {
       console.error('Erro ao carregar anotações:', error)
     } finally {
@@ -74,36 +79,43 @@ export default function AnotacoesPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+
       const { data: usuario } = await supabase
         .from('usuarios')
-        .select('id')
+        .select('*')
         .eq('user_id', user.id)
         .single()
+
       if (!usuario) return
+
       const anotacaoData = {
         usuario_id: usuario.id,
         titulo: formData.titulo,
         conteudo: formData.conteudo,
         categoria: formData.categoria || null,
         importante: formData.importante,
-        data_anotacao: formData.data_anotacao
+        data_anotacao: formData.data_anotacao || new Date().toISOString().split('T')[0]
       }
+
       if (editingAnotacao) {
         const { error } = await supabase
           .from('anotacoes')
           .update(anotacaoData)
           .eq('id', editingAnotacao.id)
+
         if (error) throw error
       } else {
         const { error } = await supabase
           .from('anotacoes')
           .insert([anotacaoData])
+
         if (error) throw error
       }
-      await loadData(usuario.id)
+
       setFormData({
         titulo: '',
         conteudo: '',
@@ -113,6 +125,7 @@ export default function AnotacoesPage() {
       })
       setShowForm(false)
       setEditingAnotacao(null)
+      await loadAnotacoes(usuario.id)
     } catch (error) {
       console.error('Erro ao salvar anotação:', error)
       alert('Erro ao salvar anotação')
@@ -121,23 +134,25 @@ export default function AnotacoesPage() {
 
   async function handleDelete(id: string) {
     if (!confirm('Tem certeza que deseja excluir esta anotação?')) return
+
     try {
       const { error } = await supabase
         .from('anotacoes')
         .delete()
         .eq('id', id)
+
       if (error) throw error
-      
+
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { data: usuario } = await supabase
           .from('usuarios')
-          .select('id')
+          .select('*')
           .eq('user_id', user.id)
           .single()
-        
+
         if (usuario) {
-          await loadData(usuario.id)
+          await loadAnotacoes(usuario.id)
         }
       }
     } catch (error) {
@@ -147,6 +162,7 @@ export default function AnotacoesPage() {
   }
 
   function handleEdit(anotacao: Anotacao) {
+    setEditingAnotacao(anotacao)
     setFormData({
       titulo: anotacao.titulo,
       conteudo: anotacao.conteudo,
@@ -154,11 +170,12 @@ export default function AnotacoesPage() {
       importante: anotacao.importante,
       data_anotacao: anotacao.data_anotacao
     })
-    setEditingAnotacao(anotacao)
     setShowForm(true)
   }
 
   function handleCancel() {
+    setShowForm(false)
+    setEditingAnotacao(null)
     setFormData({
       titulo: '',
       conteudo: '',
@@ -166,8 +183,6 @@ export default function AnotacoesPage() {
       importante: false,
       data_anotacao: ''
     })
-    setShowForm(false)
-    setEditingAnotacao(null)
   }
 
   const anotacoesImportantes = anotacoes.filter(a => a.importante)

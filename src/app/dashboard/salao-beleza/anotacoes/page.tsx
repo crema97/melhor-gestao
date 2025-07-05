@@ -25,14 +25,13 @@ export default function AnotacoesPage() {
     conteudo: '',
     categoria: '',
     importante: false,
-    data_anotacao: new Date().toISOString().split('T')[0]
+    data_anotacao: ''
   })
-  const [usuarioId, setUsuarioId] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
     checkUserAndLoadData()
-  }, [])
+  }, [checkUserAndLoadData])
 
   async function checkUserAndLoadData() {
     try {
@@ -54,7 +53,6 @@ export default function AnotacoesPage() {
         return
       }
 
-      setUsuarioId(usuario.id)
       await loadAnotacoes(usuario.id)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
@@ -71,7 +69,6 @@ export default function AnotacoesPage() {
         .order('data_anotacao', { ascending: false })
 
       if (error) throw error
-
       setAnotacoes(data || [])
     } catch (error) {
       console.error('Erro ao carregar anotações:', error)
@@ -83,16 +80,25 @@ export default function AnotacoesPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     
-    if (!usuarioId) return
-
     try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!usuario) return
+
       const anotacaoData = {
-        usuario_id: usuarioId,
+        usuario_id: usuario.id,
         titulo: formData.titulo,
         conteudo: formData.conteudo,
-        categoria: formData.categoria,
+        categoria: formData.categoria || null,
         importante: formData.importante,
-        data_anotacao: formData.data_anotacao
+        data_anotacao: formData.data_anotacao || new Date().toISOString().split('T')[0]
       }
 
       if (editingAnotacao) {
@@ -115,11 +121,11 @@ export default function AnotacoesPage() {
         conteudo: '',
         categoria: '',
         importante: false,
-        data_anotacao: new Date().toISOString().split('T')[0]
+        data_anotacao: ''
       })
       setShowForm(false)
       setEditingAnotacao(null)
-      await loadAnotacoes(usuarioId)
+      await loadAnotacoes(usuario.id)
     } catch (error) {
       console.error('Erro ao salvar anotação:', error)
       alert('Erro ao salvar anotação')
@@ -137,7 +143,18 @@ export default function AnotacoesPage() {
 
       if (error) throw error
 
-      await loadAnotacoes(usuarioId!)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: usuario } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+
+        if (usuario) {
+          await loadAnotacoes(usuario.id)
+        }
+      }
     } catch (error) {
       console.error('Erro ao excluir anotação:', error)
       alert('Erro ao excluir anotação')
@@ -164,7 +181,7 @@ export default function AnotacoesPage() {
       conteudo: '',
       categoria: '',
       importante: false,
-      data_anotacao: new Date().toISOString().split('T')[0]
+      data_anotacao: ''
     })
   }
 

@@ -27,30 +27,32 @@ export default function AnotacoesPage() {
     importante: false,
     data_anotacao: ''
   })
-  const [userId, setUserId] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
     checkUserAndLoadData()
-  }, [])
+  }, [checkUserAndLoadData])
 
   async function checkUserAndLoadData() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
+      
       if (!user) {
         router.push('/login')
         return
       }
+
       const { data: usuario } = await supabase
         .from('usuarios')
-        .select('id')
+        .select('*')
         .eq('user_id', user.id)
         .single()
+
       if (!usuario) {
         router.push('/login')
         return
       }
-      setUserId(usuario.id)
+
       await loadAnotacoes(usuario.id)
     } catch (error) {
       console.error('Erro ao verificar usuário:', error)
@@ -60,13 +62,14 @@ export default function AnotacoesPage() {
 
   async function loadAnotacoes(usuarioId: string) {
     try {
-      setLoading(true)
-      const { data: anotacoesData } = await supabase
+      const { data, error } = await supabase
         .from('anotacoes')
         .select('*')
         .eq('usuario_id', usuarioId)
         .order('data_anotacao', { ascending: false })
-      setAnotacoes((anotacoesData as unknown as Anotacao[]) || [])
+
+      if (error) throw error
+      setAnotacoes(data || [])
     } catch (error) {
       console.error('Erro ao carregar anotações:', error)
     } finally {
@@ -159,6 +162,7 @@ export default function AnotacoesPage() {
   }
 
   function handleEdit(anotacao: Anotacao) {
+    setEditingAnotacao(anotacao)
     setFormData({
       titulo: anotacao.titulo,
       conteudo: anotacao.conteudo,
@@ -166,11 +170,12 @@ export default function AnotacoesPage() {
       importante: anotacao.importante,
       data_anotacao: anotacao.data_anotacao
     })
-    setEditingAnotacao(anotacao)
     setShowForm(true)
   }
 
   function handleCancel() {
+    setShowForm(false)
+    setEditingAnotacao(null)
     setFormData({
       titulo: '',
       conteudo: '',
@@ -178,8 +183,6 @@ export default function AnotacoesPage() {
       importante: false,
       data_anotacao: ''
     })
-    setShowForm(false)
-    setEditingAnotacao(null)
   }
 
   if (loading) {
