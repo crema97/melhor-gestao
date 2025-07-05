@@ -31,7 +31,7 @@ export default function AnotacoesPage() {
 
   useEffect(() => {
     checkUserAndLoadData()
-  }, [checkUserAndLoadData])
+  }, [])
 
   async function checkUserAndLoadData() {
     try {
@@ -185,9 +185,6 @@ export default function AnotacoesPage() {
     })
   }
 
-  const anotacoesImportantes = anotacoes.filter(a => a.importante)
-  const anotacoesNormais = anotacoes.filter(a => !a.importante)
-
   if (loading) {
     return (
       <div style={{ 
@@ -208,7 +205,7 @@ export default function AnotacoesPage() {
             margin: '0 auto'
           }}></div>
           <p style={{ marginTop: '24px', color: '#e5e7eb', fontSize: '18px', fontWeight: '500' }}>
-            Carregando...
+            Carregando anotações...
           </p>
         </div>
       </div>
@@ -240,7 +237,7 @@ export default function AnotacoesPage() {
                 fontSize: '18px',
                 margin: 0
               }}>
-                Gerencie suas anotações importantes
+                Gerencie suas anotações
               </p>
             </div>
             <div style={{ display: 'flex', gap: '16px' }}>
@@ -266,48 +263,7 @@ export default function AnotacoesPage() {
       </div>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '48px 32px' }}>
-        {/* Quick Action Button */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'flex-start', 
-          marginBottom: '32px' 
-        }}>
-          <button
-            onClick={() => setShowForm(true)}
-            style={{
-              padding: '16px 32px',
-              backgroundColor: '#ca8a04',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '18px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#a16207'
-              e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 6px 12px -1px rgba(0, 0, 0, 0.2)'
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = '#ca8a04'
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            <svg style={{ width: '24px', height: '24px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Nova Anotação
-          </button>
-        </div>
-
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
         {/* Form */}
         {showForm && (
           <div style={{ 
@@ -326,7 +282,7 @@ export default function AnotacoesPage() {
             }}>
               {editingAnotacao ? 'Editar Anotação' : 'Nova Anotação'}
             </h2>
-
+            
             <form onSubmit={handleSubmit} style={{ 
               display: 'grid !important', 
               gridTemplateColumns: '1fr !important', 
@@ -338,43 +294,16 @@ export default function AnotacoesPage() {
                   display: 'block', 
                   color: '#d1d5db', 
                   fontSize: '14px', 
-                  fontWeight: '500', 
-                  marginBottom: '8px' 
-                }}>
-                  Título
-                </label>
-                <input
-                  type="text"
-                  placeholder="Título da anotação"
-                  value={formData.titulo}
-                  onChange={e => setFormData({ ...formData, titulo: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    backgroundColor: '#374151',
-                    border: '1px solid #4b5563',
-                    borderRadius: '8px',
-                    color: '#ffffff',
-                    fontSize: '16px'
-                  }}
-                  required
-                />
-              </div>
-
-              <div style={{ minWidth: '0', width: '100%' }}>
-                <label style={{ 
-                  display: 'block', 
-                  color: '#d1d5db', 
-                  fontSize: '14px', 
-                  fontWeight: '500', 
-                  marginBottom: '8px' 
+                  fontWeight: '500',
+                  marginBottom: '8px'
                 }}>
                   Data
                 </label>
                 <input
                   type="date"
+                  required
                   value={formData.data_anotacao}
-                  onChange={e => setFormData({ ...formData, data_anotacao: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, data_anotacao: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -384,7 +313,6 @@ export default function AnotacoesPage() {
                     color: '#ffffff',
                     fontSize: '16px'
                   }}
-                  required
                 />
               </div>
 
@@ -393,16 +321,16 @@ export default function AnotacoesPage() {
                   display: 'block', 
                   color: '#d1d5db', 
                   fontSize: '14px', 
-                  fontWeight: '500', 
-                  marginBottom: '8px' 
+                  fontWeight: '500',
+                  marginBottom: '8px'
                 }}>
-                  Categoria (opcional)
+                  Título
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: Manutenção, Cliente, etc."
-                  value={formData.categoria}
-                  onChange={e => setFormData({ ...formData, categoria: e.target.value })}
+                  required
+                  value={formData.titulo}
+                  onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -412,6 +340,7 @@ export default function AnotacoesPage() {
                     color: '#ffffff',
                     fontSize: '16px'
                   }}
+                  placeholder="Título da anotação"
                 />
               </div>
 
@@ -420,15 +349,67 @@ export default function AnotacoesPage() {
                   display: 'block', 
                   color: '#d1d5db', 
                   fontSize: '14px', 
-                  fontWeight: '500', 
-                  marginBottom: '8px' 
+                  fontWeight: '500',
+                  marginBottom: '8px'
                 }}>
-                  Conteúdo
+                  Categoria
+                </label>
+                <input
+                  type="text"
+                  value={formData.categoria}
+                  onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '16px'
+                  }}
+                  placeholder="Categoria (opcional)"
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <input
+                  type="checkbox"
+                  id="importante"
+                  checked={formData.importante}
+                  onChange={(e) => setFormData({ ...formData, importante: e.target.checked })}
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    accentColor: '#ca8a04'
+                  }}
+                />
+                <label 
+                  htmlFor="importante"
+                  style={{ 
+                    color: '#d1d5db', 
+                    fontSize: '16px', 
+                    fontWeight: '500',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Marcar como importante
+                </label>
+              </div>
+
+              <div style={{ minWidth: '0', width: '100%' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500',
+                  marginBottom: '8px'
+                }}>
+                  Conteúdo *
                 </label>
                 <textarea
-                  placeholder="Conteúdo da anotação..."
+                  required
                   value={formData.conteudo}
-                  onChange={e => setFormData({ ...formData, conteudo: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, conteudo: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -440,33 +421,11 @@ export default function AnotacoesPage() {
                     minHeight: '120px',
                     resize: 'vertical'
                   }}
-                  required
+                  placeholder="Conteúdo da anotação..."
                 />
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <input
-                  type="checkbox"
-                  id="importante"
-                  checked={formData.importante}
-                  onChange={e => setFormData({ ...formData, importante: e.target.checked })}
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    accentColor: '#ca8a04'
-                  }}
-                />
-                <label htmlFor="importante" style={{ 
-                  color: '#d1d5db', 
-                  fontSize: '16px', 
-                  fontWeight: '500',
-                  cursor: 'pointer'
-                }}>
-                  Marcar como importante
-                </label>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
                 <button
                   type="button"
                   onClick={handleCancel}
@@ -476,7 +435,6 @@ export default function AnotacoesPage() {
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
-                    fontSize: '16px',
                     fontWeight: '500',
                     cursor: 'pointer',
                     transition: 'background-color 0.2s'
@@ -494,7 +452,6 @@ export default function AnotacoesPage() {
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
-                    fontSize: '16px',
                     fontWeight: '500',
                     cursor: 'pointer',
                     transition: 'background-color 0.2s'
@@ -509,189 +466,32 @@ export default function AnotacoesPage() {
           </div>
         )}
 
-        {/* Summary Card */}
-        <div style={{ 
-          backgroundColor: '#1f2937', 
-          borderRadius: '8px', 
-          padding: '24px',
-          border: '1px solid #374151',
-          marginBottom: '32px'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h2 style={{ 
-                fontSize: '20px', 
-                fontWeight: 'bold', 
-                color: '#ffffff',
-                margin: '0 0 8px 0'
-              }}>
-                Resumo das Anotações
-              </h2>
-              <p style={{ 
-                color: '#d1d5db', 
-                fontSize: '16px',
-                margin: 0
-              }}>
-                {anotacoes.length} anotação{anotacoes.length !== 1 ? 'ões' : ''} no total
-              </p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ 
-                color: '#d1d5db', 
-                fontSize: '16px',
-                margin: '0 0 4px 0'
-              }}>
-                Anotações Importantes
-              </p>
-              <p style={{ 
-                fontSize: '20px', 
-                fontWeight: 'bold', 
-                color: '#ca8a04',
-                margin: 0,
+        {/* Botão Nova Anotação */}
+        {!showForm && (
+          <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'flex-start' }}>
+            <button
+              onClick={() => setShowForm(true)}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#ca8a04',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                fontSize: '14px',
                 whiteSpace: 'nowrap'
-              }}>
-                {anotacoesImportantes.length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Anotações Importantes */}
-        {anotacoesImportantes.length > 0 && (
-          <div style={{ 
-            backgroundColor: '#1f2937', 
-            borderRadius: '8px',
-            border: '1px solid #374151',
-            overflow: 'hidden',
-            marginBottom: '32px'
-          }}>
-            <div style={{ 
-              padding: '24px', 
-              borderBottom: '1px solid #374151', 
-              backgroundColor: '#ca8a04' 
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                </svg>
-                <h2 style={{ 
-                  fontSize: '20px', 
-                  fontWeight: 'bold', 
-                  color: '#ffffff',
-                  margin: 0
-                }}>
-                  Anotações Importantes
-                </h2>
-              </div>
-            </div>
-
-            <div style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {anotacoesImportantes.map((anotacao) => (
-                  <div key={anotacao.id} style={{ 
-                    backgroundColor: '#374151', 
-                    borderRadius: '8px',
-                    border: '2px solid #ca8a04',
-                    padding: '20px',
-                    position: 'relative'
-                  }}>
-                    <div style={{ 
-                      position: 'absolute', 
-                      top: '12px', 
-                      right: '12px',
-                      display: 'flex',
-                      gap: '8px'
-                    }}>
-                      <button
-                        onClick={() => handleEdit(anotacao)}
-                        style={{
-                          padding: '6px 10px',
-                          backgroundColor: '#3b82f6',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                          fontWeight: '500',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.2s',
-                          whiteSpace: 'nowrap'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(anotacao.id)}
-                        style={{
-                          padding: '6px 10px',
-                          backgroundColor: '#ef4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                          fontWeight: '500',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.2s',
-                          whiteSpace: 'nowrap'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
-                      >
-                        Excluir
-                      </button>
-                    </div>
-
-                    <div style={{ marginRight: '120px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                        <h3 style={{ 
-                          fontSize: '18px', 
-                          fontWeight: 'bold', 
-                          color: '#ffffff',
-                          margin: 0
-                        }}>
-                          {anotacao.titulo}
-                        </h3>
-                        {anotacao.categoria && (
-                          <span style={{
-                            padding: '4px 8px',
-                            backgroundColor: '#ca8a04',
-                            color: 'white',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            fontWeight: '500'
-                          }}>
-                            {anotacao.categoria}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <p style={{ 
-                        color: '#d1d5db', 
-                        fontSize: '14px',
-                        margin: '0 0 12px 0'
-                      }}>
-                        {new Date(anotacao.data_anotacao + 'T00:00:00').toLocaleDateString('pt-BR')}
-                      </p>
-                      
-                      <p style={{ 
-                        color: '#ffffff', 
-                        fontSize: '16px',
-                        lineHeight: '1.6',
-                        margin: 0,
-                        whiteSpace: 'pre-wrap'
-                      }}>
-                        {anotacao.conteudo}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#a16207'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ca8a04'}
+            >
+              + Nova Anotação
+            </button>
           </div>
         )}
 
-        {/* Anotações Normais */}
+        {/* Anotações List */}
         <div style={{ 
           backgroundColor: '#1f2937', 
           borderRadius: '8px',
@@ -703,120 +503,121 @@ export default function AnotacoesPage() {
             borderBottom: '1px solid #374151', 
             backgroundColor: '#374151' 
           }}>
-            <h2 style={{ 
+            <h3 style={{ 
               fontSize: '20px', 
               fontWeight: 'bold', 
               color: '#ffffff',
               margin: 0
             }}>
-              Todas as Anotações
-            </h2>
+              Lista de Anotações ({anotacoes.length})
+            </h3>
           </div>
-
+          
           <div style={{ padding: '24px' }}>
             {anotacoes.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {anotacoes.map((anotacao) => (
                   <div key={anotacao.id} style={{ 
+                    padding: '24px', 
                     backgroundColor: '#374151', 
                     borderRadius: '8px',
-                    border: anotacao.importante ? '2px solid #ca8a04' : '1px solid #4b5563',
-                    padding: '20px',
-                    position: 'relative'
+                    border: '1px solid #4b5563',
+                    borderLeft: anotacao.importante ? '4px solid #ca8a04' : '1px solid #4b5563'
                   }}>
-                    <div style={{ 
-                      position: 'absolute', 
-                      top: '12px', 
-                      right: '12px',
-                      display: 'flex',
-                      gap: '8px'
-                    }}>
-                      <button
-                        onClick={() => handleEdit(anotacao)}
-                        style={{
-                          padding: '6px 10px',
-                          backgroundColor: '#3b82f6',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                          fontWeight: '500',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.2s',
-                          whiteSpace: 'nowrap'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(anotacao.id)}
-                        style={{
-                          padding: '6px 10px',
-                          backgroundColor: '#ef4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                          fontWeight: '500',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.2s',
-                          whiteSpace: 'nowrap'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
-                      >
-                        Excluir
-                      </button>
-                    </div>
-
-                    <div style={{ marginRight: '120px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                        <h3 style={{ 
-                          fontSize: '18px', 
-                          fontWeight: 'bold', 
-                          color: '#ffffff',
-                          margin: 0
-                        }}>
-                          {anotacao.titulo}
-                        </h3>
-                        {anotacao.importante && (
-                          <span style={{
-                            padding: '4px 8px',
-                            backgroundColor: '#ca8a04',
-                            color: 'white',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            fontWeight: '500'
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                      <div style={{ flex: 1, minWidth: '200px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                          <h4 style={{ 
+                            fontSize: '20px', 
+                            fontWeight: 'bold', 
+                            color: '#ffffff',
+                            margin: 0
                           }}>
-                            Importante
-                          </span>
-                        )}
+                            {anotacao.titulo}
+                          </h4>
+                          {anotacao.importante && (
+                            <span style={{ 
+                              padding: '4px 12px', 
+                              backgroundColor: '#ca8a04', 
+                              color: 'white', 
+                              borderRadius: '16px',
+                              fontSize: '12px',
+                              fontWeight: '500'
+                            }}>
+                              Importante
+                            </span>
+                          )}
+                        </div>
                         {anotacao.categoria && (
-                          <span style={{
-                            padding: '4px 8px',
-                            backgroundColor: '#6b7280',
-                            color: 'white',
-                            borderRadius: '4px',
+                          <span style={{ 
+                            padding: '4px 12px', 
+                            backgroundColor: '#3b82f6', 
+                            color: 'white', 
+                            borderRadius: '16px',
                             fontSize: '12px',
-                            fontWeight: '500'
+                            fontWeight: '500',
+                            marginRight: '12px'
                           }}>
                             {anotacao.categoria}
                           </span>
                         )}
+                        <p style={{ 
+                          color: '#d1d5db', 
+                          fontSize: '14px',
+                          margin: '8px 0 0 0'
+                        }}>
+                          {new Date(anotacao.data_anotacao).toLocaleDateString('pt-BR')}
+                        </p>
                       </div>
                       
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => handleEdit(anotacao)}
+                          style={{
+                            padding: '8px 12px',
+                            backgroundColor: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(anotacao.id)}
+                          style={{
+                            padding: '8px 12px',
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div style={{ 
+                      backgroundColor: '#1f2937', 
+                      padding: '16px', 
+                      borderRadius: '6px',
+                      border: '1px solid #374151'
+                    }}>
                       <p style={{ 
-                        color: '#d1d5db', 
-                        fontSize: '14px',
-                        margin: '0 0 12px 0'
-                      }}>
-                        {new Date(anotacao.data_anotacao + 'T00:00:00').toLocaleDateString('pt-BR')}
-                      </p>
-                      
-                      <p style={{ 
-                        color: '#ffffff', 
+                        color: '#e5e7eb', 
                         fontSize: '16px',
                         lineHeight: '1.6',
                         margin: 0,
