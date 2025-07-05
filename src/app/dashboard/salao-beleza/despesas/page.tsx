@@ -56,7 +56,7 @@ export default function DespesasPage() {
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
   })
-  const [usuarioId, setUsuarioId] = useState<string | null>(null)
+  const [usuarioId, setUsuarioId] = useState<string>('')
   const [filtros, setFiltros] = useState({
     categoria: '',
     dataInicio: '',
@@ -65,25 +65,8 @@ export default function DespesasPage() {
   const router = useRouter()
 
   // Dados para os gráficos
-  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([
-    { mes: 'Jan', despesas: 0 },
-    { mes: 'Fev', despesas: 0 },
-    { mes: 'Mar', despesas: 0 },
-    { mes: 'Abr', despesas: 0 },
-    { mes: 'Mai', despesas: 0 },
-    { mes: 'Jun', despesas: 0 }
-  ])
-
-  const [dailyData, setDailyData] = useState<DailyData[]>([
-    { dia: 'Seg', despesas: 0 },
-    { dia: 'Ter', despesas: 0 },
-    { dia: 'Qua', despesas: 0 },
-    { dia: 'Qui', despesas: 0 },
-    { dia: 'Sex', despesas: 0 },
-    { dia: 'Sab', despesas: 0 },
-    { dia: 'Dom', despesas: 0 }
-  ])
-
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
+  const [dailyData, setDailyData] = useState<DailyData[]>([])
   const [categoryData, setCategoryData] = useState<CategoryData[]>([])
 
   useEffect(() => {
@@ -94,7 +77,7 @@ export default function DespesasPage() {
     if (usuarioId) {
       loadDespesas(usuarioId)
     }
-  }, [dateRange, usuarioId])
+  }, [usuarioId])
 
   useEffect(() => {
     if (despesas.length > 0) {
@@ -102,6 +85,17 @@ export default function DespesasPage() {
       loadCategoryData()
     }
   }, [despesas])
+
+  useEffect(() => {
+    // Aplicar filtro de período quando as despesas mudarem
+    const filtered = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
+    })
+    setFilteredDespesas(filtered)
+  }, [despesas, dateRange])
 
   async function checkUserAndLoadData() {
     try {
@@ -179,13 +173,7 @@ export default function DespesasPage() {
   }
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
-    const filtered = despesas.filter(despesa => {
-      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
-      const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
-      const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59)
-      return despesaDate >= start && despesaDate <= end
-    })
-    setFilteredDespesas(filtered)
+    setDateRange({ startDate, endDate })
   }
 
   function aplicarFiltros() {
@@ -217,19 +205,39 @@ export default function DespesasPage() {
       dataInicio: '',
       dataFim: ''
     })
-    setFilteredDespesas(despesas)
+    // Reaplicar filtro de período padrão
+    const filtered = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
+    })
+    setFilteredDespesas(filtered)
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     
-    if (!usuarioId) return
-
     try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!usuario) return
+
+      // Garantir que a data seja tratada corretamente
+      const dataDespesa = new Date(formData.data_despesa + 'T00:00:00')
+      const dataFormatada = dataDespesa.toISOString().split('T')[0]
+
       const despesaData = {
-        usuario_id: usuarioId,
+        usuario_id: usuario.id,
         valor: parseFloat(formData.valor),
-        data_despesa: formData.data_despesa,
+        data_despesa: dataFormatada,
         categoria_despesa_id: formData.categoria_despesa_id || null,
         observacoes: formData.observacoes || null
       }
@@ -244,7 +252,7 @@ export default function DespesasPage() {
       } else {
         const { error } = await supabase
           .from('despesas')
-          .insert(despesaData)
+          .insert([despesaData])
 
         if (error) throw error
       }
@@ -257,7 +265,7 @@ export default function DespesasPage() {
       })
       setShowForm(false)
       setEditingDespesa(null)
-      await loadDespesas(usuarioId)
+      await loadDespesas(usuario.id)
     } catch (error) {
       console.error('Erro ao salvar despesa:', error)
       alert('Erro ao salvar despesa')
@@ -275,7 +283,7 @@ export default function DespesasPage() {
 
       if (error) throw error
 
-      await loadDespesas(usuarioId!)
+      await loadDespesas(usuarioId)
     } catch (error) {
       console.error('Erro ao excluir despesa:', error)
       alert('Erro ao excluir despesa')
@@ -305,15 +313,16 @@ export default function DespesasPage() {
   }
 
   function loadChartData() {
-    if (despesas.length === 0) {
+    if (filteredDespesas.length === 0) {
+      setMonthlyData([])
+      setDailyData([])
       return
     }
 
-    // Dados mensais dos últimos 6 meses
-    const monthlyDataArray = [...monthlyData]
+    // Gerar dados dos últimos 6 meses na ordem correta (do mais antigo para o mais recente)
+    const monthlyDataArray: MonthlyData[] = []
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
     
-    // Gerar dados dos últimos 6 meses na ordem correta (do mais antigo para o mais recente)
     for (let i = 0; i <= 5; i++) {
       const date = new Date()
       date.setMonth(date.getMonth() - (5 - i))

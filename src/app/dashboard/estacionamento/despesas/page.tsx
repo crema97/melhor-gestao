@@ -45,21 +45,21 @@ export default function DespesasPage() {
   const [categorias, setCategorias] = useState<CategoriaDespesa[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({
-    valor: '',
-    data_despesa: new Date().toISOString().split('T')[0],
-    categoria_id: '',
-    observacoes: ''
-  })
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingDespesa, setEditingDespesa] = useState<Despesa | null>(null)
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [dailyData, setDailyData] = useState<DailyData[]>([])
   const [categoryData, setCategoryData] = useState<CategoryData[]>([])
+  const [formData, setFormData] = useState({
+    valor: '',
+    data_despesa: '',
+    categoria_despesa_id: '',
+    observacoes: ''
+  })
   const [dateRange, setDateRange] = useState({
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    endDate: new Date()
+    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
   })
-  const [usuarioId, setUsuarioId] = useState<string | null>(null)
+  const [usuarioId, setUsuarioId] = useState<string>('')
   const [filtros, setFiltros] = useState({
     categoria: '',
     dataInicio: '',
@@ -77,12 +77,31 @@ export default function DespesasPage() {
     }
   }, [usuarioId])
 
+  function loadCategoryData() {
+    const categorias: { [key: string]: number } = {}
+    
+    filteredDespesas.forEach(despesa => {
+      const categoriaNome = despesa.categoria_despesa?.nome || 'Sem categoria'
+      categorias[categoriaNome] = (categorias[categoriaNome] || 0) + despesa.valor
+    })
+
+    const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#ec4899']
+
+    const categoryData = Object.entries(categorias).map(([name, value], index) => ({
+      name,
+      value: value as number,
+      color: colors[index % colors.length]
+    })).filter(item => item.value > 0)
+
+    setCategoryData(categoryData)
+  }
+
   useEffect(() => {
     if (despesas.length > 0) {
       loadChartData()
       loadCategoryData()
     }
-  }, [despesas])
+  }, [filteredDespesas])
 
   useEffect(() => {
     // Aplicar filtro de período quando as despesas mudarem
@@ -171,12 +190,7 @@ export default function DespesasPage() {
   }
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
-    const startStr = startDate.toISOString().split('T')[0]
-    const endStr = endDate.toISOString().split('T')[0]
-    const filtered = despesas.filter(despesa => {
-      return despesa.data_despesa >= startStr && despesa.data_despesa <= endStr
-    })
-    setFilteredDespesas(filtered)
+    setDateRange({ startDate, endDate })
   }
 
   function aplicarFiltros() {
@@ -208,10 +222,23 @@ export default function DespesasPage() {
       dataInicio: '',
       dataFim: ''
     })
-    setFilteredDespesas(despesas)
+    // Reaplicar filtro de período padrão
+    const filtered = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
+    })
+    setFilteredDespesas(filtered)
   }
 
   function loadChartData() {
+    if (filteredDespesas.length === 0) {
+      setMonthlyData([])
+      setDailyData([])
+      return
+    }
+
     // Gerar dados dos últimos 6 meses na ordem correta (do mais antigo para o mais recente)
     const monthlyDataArray: MonthlyData[] = []
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
@@ -251,25 +278,6 @@ export default function DespesasPage() {
     setDailyData(dailyDataArray)
   }
 
-  function loadCategoryData() {
-    const categoryMap = new Map<string, number>()
-    
-    filteredDespesas.forEach(despesa => {
-      const categoryName = despesa.categoria_despesa?.nome || 'Sem categoria'
-      categoryMap.set(categoryName, (categoryMap.get(categoryName) || 0) + despesa.valor)
-    })
-    
-    const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6']
-    
-    const data = Array.from(categoryMap.entries()).map(([name, value], index) => ({
-      name,
-      value,
-      color: colors[index % colors.length]
-    }))
-    
-    setCategoryData(data)
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     
@@ -285,19 +293,23 @@ export default function DespesasPage() {
 
       if (!usuario) return
 
+      // Garantir que a data seja tratada corretamente
+      const dataDespesa = new Date(formData.data_despesa + 'T00:00:00')
+      const dataFormatada = dataDespesa.toISOString().split('T')[0]
+
       const despesaData = {
+        usuario_id: usuario.id,
         valor: parseFloat(formData.valor),
-        data_despesa: formData.data_despesa,
-        categoria_despesa_id: formData.categoria_id || null,
-        observacoes: formData.observacoes || null,
-        usuario_id: usuario.id
+        data_despesa: dataFormatada,
+        categoria_despesa_id: formData.categoria_despesa_id || null,
+        observacoes: formData.observacoes || null
       }
 
-      if (editingId) {
+      if (editingDespesa) {
         const { error } = await supabase
           .from('despesas')
           .update(despesaData)
-          .eq('id', editingId)
+          .eq('id', editingDespesa.id)
 
         if (error) throw error
       } else {
@@ -310,12 +322,12 @@ export default function DespesasPage() {
 
       setFormData({
         valor: '',
-        data_despesa: new Date().toISOString().split('T')[0],
-        categoria_id: '',
+        data_despesa: '',
+        categoria_despesa_id: '',
         observacoes: ''
       })
       setShowForm(false)
-      setEditingId(null)
+      setEditingDespesa(null)
 
       await loadDespesas(usuario.id)
     } catch (error) {
@@ -335,18 +347,7 @@ export default function DespesasPage() {
 
       if (error) throw error
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data: usuario } = await supabase
-          .from('usuarios')
-          .select('id')
-          .eq('user_id', user.id)
-          .single()
-
-        if (usuario) {
-          await loadDespesas(usuario.id)
-        }
-      }
+      await loadDespesas(usuarioId)
     } catch (error) {
       console.error('Erro ao excluir despesa:', error)
       alert('Erro ao excluir despesa')
@@ -354,11 +355,11 @@ export default function DespesasPage() {
   }
 
   function handleEdit(despesa: Despesa) {
-    setEditingId(despesa.id)
+    setEditingDespesa(despesa)
     setFormData({
       valor: despesa.valor.toString(),
       data_despesa: despesa.data_despesa,
-      categoria_id: despesa.categoria_despesa?.id || '',
+      categoria_despesa_id: despesa.categoria_despesa?.id || '',
       observacoes: despesa.observacoes || ''
     })
     setShowForm(true)
@@ -366,11 +367,11 @@ export default function DespesasPage() {
 
   function handleCancel() {
     setShowForm(false)
-    setEditingId(null)
+    setEditingDespesa(null)
     setFormData({
       valor: '',
-      data_despesa: new Date().toISOString().split('T')[0],
-      categoria_id: '',
+      data_despesa: '',
+      categoria_despesa_id: '',
       observacoes: ''
     })
   }
@@ -516,7 +517,7 @@ export default function DespesasPage() {
               marginBottom: '24px',
               margin: '0 0 24px 0'
             }}>
-              {editingId ? 'Editar Despesa' : 'Nova Despesa'}
+              {editingDespesa ? 'Editar Despesa' : 'Nova Despesa'}
             </h2>
 
             <form onSubmit={handleSubmit} style={{ 
@@ -592,8 +593,8 @@ export default function DespesasPage() {
                   Categoria
                 </label>
                 <select
-                  value={formData.categoria_id}
-                  onChange={e => setFormData({ ...formData, categoria_id: e.target.value })}
+                  value={formData.categoria_despesa_id}
+                  onChange={e => setFormData({ ...formData, categoria_despesa_id: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -677,7 +678,7 @@ export default function DespesasPage() {
                   onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
                   onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
                 >
-                  {editingId ? 'Atualizar' : 'Salvar'}
+                  {editingDespesa ? 'Atualizar' : 'Salvar'}
                 </button>
               </div>
             </form>

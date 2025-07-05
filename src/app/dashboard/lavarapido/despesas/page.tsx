@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import PeriodSelector from '@/components/PeriodSelector'
 
 interface CategoriaDespesa {
@@ -41,26 +41,30 @@ interface CategoryData {
 
 export default function DespesasPage() {
   const [despesas, setDespesas] = useState<Despesa[]>([])
+  const [filteredDespesas, setFilteredDespesas] = useState<Despesa[]>([])
   const [categorias, setCategorias] = useState<CategoriaDespesa[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [editingDespesa, setEditingDespesa] = useState<Despesa | null>(null)
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
+  const [dailyData, setDailyData] = useState<DailyData[]>([])
+  const [categoryData, setCategoryData] = useState<CategoryData[]>([])
   const [formData, setFormData] = useState({
     valor: '',
-    data_despesa: new Date().toISOString().split('T')[0],
-    categoria_id: '',
+    data_despesa: '',
+    categoria_despesa_id: '',
     observacoes: ''
   })
-  const [editingDespesa, setEditingDespesa] = useState<Despesa | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
+  })
+  const [usuarioId, setUsuarioId] = useState<string>('')
   const [filtros, setFiltros] = useState({
     categoria: '',
     dataInicio: '',
     dataFim: ''
   })
-  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
-  const [dailyData, setDailyData] = useState<DailyData[]>([])
-  const [categoryData, setCategoryData] = useState<CategoryData[]>([])
-  const [filteredDespesas, setFilteredDespesas] = useState<Despesa[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -68,11 +72,47 @@ export default function DespesasPage() {
   }, [])
 
   useEffect(() => {
+    if (usuarioId) {
+      loadDespesas(usuarioId)
+    }
+  }, [usuarioId])
+
+  function loadCategoryData() {
+    const categorias: { [key: string]: number } = {}
+    
+    filteredDespesas.forEach(despesa => {
+      const categoriaNome = despesa.categoria_despesa?.nome || 'Sem categoria'
+      categorias[categoriaNome] = (categorias[categoriaNome] || 0) + despesa.valor
+    })
+
+    const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#ec4899']
+
+    const categoryData = Object.entries(categorias).map(([name, value], index) => ({
+      name,
+      value: value as number,
+      color: colors[index % colors.length]
+    })).filter(item => item.value > 0)
+
+    setCategoryData(categoryData)
+  }
+
+  useEffect(() => {
     if (despesas.length > 0) {
       loadChartData()
       loadCategoryData()
     }
-  }, [despesas])
+  }, [filteredDespesas])
+
+  useEffect(() => {
+    // Aplicar filtro de período quando as despesas mudarem
+    const filtered = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
+    })
+    setFilteredDespesas(filtered)
+  }, [despesas, dateRange])
 
   async function checkUserAndLoadData() {
     try {
@@ -94,7 +134,7 @@ export default function DespesasPage() {
         return
       }
 
-      setUserId(usuario.id)
+      setUsuarioId(usuario.id)
       await loadCategoriasAtivas(usuario.id)
       setLoading(false)
     } catch (error) {
@@ -127,7 +167,6 @@ export default function DespesasPage() {
       console.log('Despesas:', data)
       
       setDespesas((data as unknown as Despesa[]) || [])
-      setFilteredDespesas((data as unknown as Despesa[]) || [])
     } catch (error) {
       console.error('Erro ao carregar despesas:', error)
     } finally {
@@ -151,13 +190,7 @@ export default function DespesasPage() {
   }
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
-    const filtered = despesas.filter(despesa => {
-      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
-      const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
-      const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59)
-      return despesaDate >= start && despesaDate <= end
-    })
-    setFilteredDespesas(filtered)
+    setDateRange({ startDate, endDate })
   }
 
   function aplicarFiltros() {
@@ -189,13 +222,27 @@ export default function DespesasPage() {
       dataInicio: '',
       dataFim: ''
     })
-    setFilteredDespesas(despesas)
+    // Reaplicar filtro de período padrão
+    const filtered = despesas.filter(despesa => {
+      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
+    })
+    setFilteredDespesas(filtered)
   }
 
   function loadChartData() {
+    if (filteredDespesas.length === 0) {
+      setMonthlyData([])
+      setDailyData([])
+      return
+    }
+
     // Gerar dados dos últimos 6 meses na ordem correta (do mais antigo para o mais recente)
     const monthlyDataArray: MonthlyData[] = []
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+    
     for (let i = 0; i <= 5; i++) {
       const date = new Date()
       date.setMonth(date.getMonth() - (5 - i))
@@ -209,6 +256,7 @@ export default function DespesasPage() {
         despesas: monthDespesas
       })
     }
+    
     setMonthlyData(monthlyDataArray)
 
     // Dados diários dos últimos 7 dias
@@ -226,39 +274,34 @@ export default function DespesasPage() {
         despesas: dayDespesas
       })
     }
-    setDailyData(dailyDataArray)
-  }
-
-  function loadCategoryData() {
-    const categorias: { [key: string]: number } = {}
     
-    filteredDespesas.forEach(despesa => {
-      const categoriaNome = despesa.categoria_despesa?.nome || 'Sem categoria'
-      categorias[categoriaNome] = (categorias[categoriaNome] || 0) + despesa.valor
-    })
-
-    const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#ec4899']
-
-    const categoryData = Object.entries(categorias).map(([name, value], index) => ({
-      name,
-      value: value as number,
-      color: colors[index % colors.length]
-    })).filter(item => item.value > 0)
-
-    setCategoryData(categoryData)
+    setDailyData(dailyDataArray)
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     
     try {
-      if (!userId) return
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!usuario) return
+
+      // Garantir que a data seja tratada corretamente
+      const dataDespesa = new Date(formData.data_despesa + 'T00:00:00')
+      const dataFormatada = dataDespesa.toISOString().split('T')[0]
 
       const despesaData = {
-        usuario_id: userId,
+        usuario_id: usuario.id,
         valor: parseFloat(formData.valor),
-        data_despesa: formData.data_despesa,
-        categoria_despesa_id: formData.categoria_id || null,
+        data_despesa: dataFormatada,
+        categoria_despesa_id: formData.categoria_despesa_id || null,
         observacoes: formData.observacoes || null
       }
 
@@ -277,19 +320,18 @@ export default function DespesasPage() {
         if (error) throw error
       }
 
-      await loadDespesas(userId)
-      
       setFormData({
         valor: '',
-        data_despesa: new Date().toISOString().split('T')[0],
-        categoria_id: '',
+        data_despesa: '',
+        categoria_despesa_id: '',
         observacoes: ''
       })
       setShowForm(false)
       setEditingDespesa(null)
+      await loadDespesas(usuario.id)
     } catch (error) {
       console.error('Erro ao salvar despesa:', error)
-      alert('Erro ao salvar despesa. Tente novamente.')
+      alert('Erro ao salvar despesa')
     }
   }
 
@@ -304,13 +346,10 @@ export default function DespesasPage() {
 
       if (error) throw error
 
-      // Recarregar dados para atualizar gráficos
-      if (userId) {
-        await loadDespesas(userId)
-      }
+      await loadDespesas(usuarioId)
     } catch (error) {
       console.error('Erro ao excluir despesa:', error)
-      alert('Erro ao excluir despesa. Tente novamente.')
+      alert('Erro ao excluir despesa')
     }
   }
 
@@ -318,7 +357,7 @@ export default function DespesasPage() {
     setFormData({
       valor: despesa.valor.toString(),
       data_despesa: despesa.data_despesa,
-      categoria_id: despesa.categoria_despesa?.id || '',
+      categoria_despesa_id: despesa.categoria_despesa?.id || '',
       observacoes: despesa.observacoes || ''
     })
     setEditingDespesa(despesa)
@@ -328,8 +367,8 @@ export default function DespesasPage() {
   function handleCancel() {
     setFormData({
       valor: '',
-      data_despesa: new Date().toISOString().split('T')[0],
-      categoria_id: '',
+      data_despesa: '',
+      categoria_despesa_id: '',
       observacoes: ''
     })
     setShowForm(false)
@@ -540,8 +579,8 @@ export default function DespesasPage() {
                   Categoria
                 </label>
                 <select
-                  value={formData.categoria_id}
-                  onChange={e => setFormData({ ...formData, categoria_id: e.target.value })}
+                  value={formData.categoria_despesa_id}
+                  onChange={e => setFormData({ ...formData, categoria_despesa_id: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
