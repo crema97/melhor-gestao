@@ -566,7 +566,7 @@ export default function LavaRapidoDashboard() {
         {/* Charts Section */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
           gap: '24px', 
           marginBottom: '32px' 
         }}>
@@ -574,28 +574,29 @@ export default function LavaRapidoDashboard() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '24px',
+            padding: '20px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '20px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              margin: '0 0 20px 0'
+              margin: '0 0 16px 0'
             }}>
               Evolução Mensal (Últimos 6 meses)
             </h3>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="mes" stroke="#d1d5db" />
-                <YAxis stroke="#d1d5db" />
+                <XAxis dataKey="mes" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
@@ -622,9 +623,8 @@ export default function LavaRapidoDashboard() {
                 color: '#d1d5db',
                 padding: '8px 12px',
                 backgroundColor: chartFilters.receitas ? '#10b981' : '#374151',
-                borderRadius: '6px',
-                transition: 'background-color 0.2s',
-                userSelect: 'none'
+                borderRadius: '8px',
+                transition: 'background-color 0.2s'
               }}>
                 <input
                   type="checkbox"
@@ -633,9 +633,7 @@ export default function LavaRapidoDashboard() {
                   style={{ 
                     width: '16px', 
                     height: '16px',
-                    accentColor: '#10b981',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto'
+                    accentColor: '#10b981'
                   }}
                 />
                 Receitas
@@ -650,8 +648,7 @@ export default function LavaRapidoDashboard() {
                 padding: '8px 12px',
                 backgroundColor: chartFilters.despesas ? '#ef4444' : '#374151',
                 borderRadius: '6px',
-                transition: 'background-color 0.2s',
-                userSelect: 'none'
+                transition: 'background-color 0.2s'
               }}>
                 <input
                   type="checkbox"
@@ -660,9 +657,7 @@ export default function LavaRapidoDashboard() {
                   style={{ 
                     width: '16px', 
                     height: '16px',
-                    accentColor: '#ef4444',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto'
+                    accentColor: '#ef4444'
                   }}
                 />
                 Despesas
@@ -677,8 +672,7 @@ export default function LavaRapidoDashboard() {
                 padding: '8px 12px',
                 backgroundColor: chartFilters.lucro ? '#3b82f6' : '#374151',
                 borderRadius: '6px',
-                transition: 'background-color 0.2s',
-                userSelect: 'none'
+                transition: 'background-color 0.2s'
               }}>
                 <input
                   type="checkbox"
@@ -687,9 +681,7 @@ export default function LavaRapidoDashboard() {
                   style={{ 
                     width: '16px', 
                     height: '16px',
-                    accentColor: '#3b82f6',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto'
+                    accentColor: '#3b82f6'
                   }}
                 />
                 Lucro
@@ -701,28 +693,29 @@ export default function LavaRapidoDashboard() {
           <div style={{ 
             backgroundColor: '#1f2937', 
             borderRadius: '8px', 
-            padding: '24px',
+            padding: '20px',
             border: '1px solid #374151'
           }}>
             <h3 style={{ 
-              fontSize: '18px', 
+              fontSize: '16px', 
               fontWeight: 'bold', 
               color: '#ffffff',
-              margin: '0 0 20px 0'
+              margin: '0 0 16px 0'
             }}>
               Evolução Diária (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="dia" stroke="#d1d5db" />
-                <YAxis stroke="#d1d5db" />
+                <XAxis dataKey="dia" stroke="#d1d5db" fontSize={12} />
+                <YAxis stroke="#d1d5db" fontSize={12} />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: '#1f2937',
                     border: '1px solid #374151',
                     borderRadius: '8px',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    fontSize: '12px'
                   }}
                   formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                 />
@@ -750,8 +743,7 @@ export default function LavaRapidoDashboard() {
                 padding: '8px 12px',
                 backgroundColor: chartFilters.receitas ? '#10b981' : '#374151',
                 borderRadius: '6px',
-                transition: 'background-color 0.2s',
-                userSelect: 'none'
+                transition: 'background-color 0.2s'
               }}>
                 <input
                   type="checkbox"
@@ -760,9 +752,7 @@ export default function LavaRapidoDashboard() {
                   style={{ 
                     width: '16px', 
                     height: '16px',
-                    accentColor: '#10b981',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto'
+                    accentColor: '#10b981'
                   }}
                 />
                 Receitas
@@ -777,8 +767,7 @@ export default function LavaRapidoDashboard() {
                 padding: '8px 12px',
                 backgroundColor: chartFilters.despesas ? '#ef4444' : '#374151',
                 borderRadius: '6px',
-                transition: 'background-color 0.2s',
-                userSelect: 'none'
+                transition: 'background-color 0.2s'
               }}>
                 <input
                   type="checkbox"
@@ -787,9 +776,7 @@ export default function LavaRapidoDashboard() {
                   style={{ 
                     width: '16px', 
                     height: '16px',
-                    accentColor: '#ef4444',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto'
+                    accentColor: '#ef4444'
                   }}
                 />
                 Despesas
@@ -804,8 +791,7 @@ export default function LavaRapidoDashboard() {
                 padding: '8px 12px',
                 backgroundColor: chartFilters.lucro ? '#3b82f6' : '#374151',
                 borderRadius: '6px',
-                transition: 'background-color 0.2s',
-                userSelect: 'none'
+                transition: 'background-color 0.2s'
               }}>
                 <input
                   type="checkbox"
@@ -814,9 +800,7 @@ export default function LavaRapidoDashboard() {
                   style={{ 
                     width: '16px', 
                     height: '16px',
-                    accentColor: '#3b82f6',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto'
+                    accentColor: '#3b82f6'
                   }}
                 />
                 Lucro
@@ -837,7 +821,8 @@ export default function LavaRapidoDashboard() {
             fontSize: '20px', 
             fontWeight: 'bold', 
             color: '#ffffff',
-            margin: '0 0 20px 0'
+            marginBottom: '16px',
+            margin: '0 0 16px 0'
           }}>
             Formas de Pagamento
           </h3>
@@ -845,12 +830,12 @@ export default function LavaRapidoDashboard() {
           {getPaymentMethodsData().length > 0 ? (
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: '1fr 1fr', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
               gap: '24px',
-              alignItems: 'center'
+              alignItems: 'start'
             }}>
               {/* Pie Chart */}
-              <div style={{ height: '250px' }}>
+              <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -858,8 +843,8 @@ export default function LavaRapidoDashboard() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={70}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      outerRadius={60}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -872,17 +857,19 @@ export default function LavaRapidoDashboard() {
                         backgroundColor: '#1f2937',
                         border: '1px solid #374151',
                         borderRadius: '8px',
-                        color: '#ffffff'
+                        color: '#ffffff',
+                        fontSize: '12px'
                       }}
+                      formatter={(value: number, name: string) => [`R$ ${value.toFixed(2).replace('.', ',')}`, name]}
+                      labelStyle={{ color: '#ffffff' }}
                       itemStyle={{ color: '#ffffff' }}
-                      formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
 
               {/* Payment Methods List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {getPaymentMethodsData().map((item) => (
                   <div key={item.name} style={{ 
                     display: 'flex', 
@@ -890,10 +877,10 @@ export default function LavaRapidoDashboard() {
                     justifyContent: 'space-between',
                     padding: '12px', 
                     backgroundColor: '#374151', 
-                    borderRadius: '6px',
-                    border: `1px solid ${item.color}`
+                    borderRadius: '8px',
+                    border: `2px solid ${item.color}`
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{
                         width: '12px',
                         height: '12px',
@@ -936,10 +923,10 @@ export default function LavaRapidoDashboard() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
-              <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
+              <p style={{ color: '#d1d5db', fontSize: '14px', margin: 0 }}>
                 Nenhuma receita registrada
               </p>
-              <p style={{ color: '#9ca3af', fontSize: '14px', margin: '4px 0 0 0' }}>
+              <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
                 Adicione receitas para ver as formas de pagamento
               </p>
             </div>
@@ -966,7 +953,7 @@ export default function LavaRapidoDashboard() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ 
-                  fontSize: '18px', 
+                  fontSize: '20px', 
                   fontWeight: 'bold', 
                   color: '#ffffff',
                   margin: 0
@@ -986,31 +973,29 @@ export default function LavaRapidoDashboard() {
                 </Link>
               </div>
             </div>
-            <div style={{ padding: '20px' }}>
+            <div style={{ padding: '24px' }}>
               {filteredReceitas.slice(0, 5).length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   {filteredReceitas.slice(0, 5).map((receita) => (
                     <div key={receita.id} style={{ 
                       display: 'flex', 
                       justifyContent: 'space-between', 
                       alignItems: 'center', 
-                      padding: '12px', 
+                      padding: '16px', 
                       backgroundColor: '#374151', 
-                      borderRadius: '6px',
-                      
+                      borderRadius: '8px' 
                     }}>
                       <div>
                         <p style={{ 
                           fontWeight: '600', 
                           color: '#ffffff',
-                          margin: '0 0 4px 0',
-                          fontSize: '14px'
+                          margin: '0 0 4px 0'
                         }}>
                           {receita.categoria_receita?.nome}
                         </p>
                         <p style={{ 
                           color: '#d1d5db', 
-                          fontSize: '12px',
+                          fontSize: '14px',
                           margin: 0
                         }}>
                           {formatarData(receita.data_receita)} • {receita.forma_pagamento}
@@ -1019,8 +1004,9 @@ export default function LavaRapidoDashboard() {
                       <p style={{ 
                         fontWeight: 'bold', 
                         color: '#4ade80', 
-                        fontSize: '16px',
-                        margin: 0
+                        fontSize: '20px',
+                        margin: 0,
+                        whiteSpace: 'nowrap'
                       }}>
                         R$ {receita.valor.toFixed(2).replace('.', ',')}
                       </p>
@@ -1028,7 +1014,7 @@ export default function LavaRapidoDashboard() {
                   ))}
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                <div style={{ textAlign: 'center', padding: '32px 0' }}>
                   <div style={{
                     width: '64px',
                     height: '64px',
@@ -1037,13 +1023,13 @@ export default function LavaRapidoDashboard() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    margin: '0 auto 16px auto'
+                    margin: '0 auto 12px auto'
                   }}>
-                    <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg style={{ width: '24px', height: '24px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
-                  <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
+                  <p style={{ color: '#d1d5db', fontSize: '14px', margin: 0 }}>
                     Nenhuma receita registrada
                   </p>
                   <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
@@ -1062,13 +1048,13 @@ export default function LavaRapidoDashboard() {
             overflow: 'hidden'
           }}>
             <div style={{ 
-              padding: '20px', 
+              padding: '24px', 
               borderBottom: '1px solid #374151', 
               backgroundColor: '#374151' 
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ 
-                  fontSize: '18px', 
+                  fontSize: '20px', 
                   fontWeight: 'bold', 
                   color: '#ffffff',
                   margin: 0
@@ -1079,7 +1065,7 @@ export default function LavaRapidoDashboard() {
                   href="/dashboard/lavarapido/despesas" 
                   style={{ 
                     color: '#f87171', 
-                    fontSize: '13px', 
+                    fontSize: '14px', 
                     fontWeight: '500',
                     textDecoration: 'none'
                   }}
@@ -1088,31 +1074,29 @@ export default function LavaRapidoDashboard() {
                 </Link>
               </div>
             </div>
-            <div style={{ padding: '20px' }}>
+            <div style={{ padding: '24px' }}>
               {filteredDespesas.slice(0, 5).length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   {filteredDespesas.slice(0, 5).map((despesa) => (
                     <div key={despesa.id} style={{ 
                       display: 'flex', 
                       justifyContent: 'space-between', 
                       alignItems: 'center', 
-                      padding: '12px', 
+                      padding: '16px', 
                       backgroundColor: '#374151', 
-                      borderRadius: '6px',
-                      border: '1px solid #4b5563'
+                      borderRadius: '8px' 
                     }}>
                       <div>
                         <p style={{ 
                           fontWeight: '600', 
                           color: '#ffffff',
-                          margin: '0 0 3px 0',
-                          fontSize: '14px'
+                          margin: '0 0 4px 0'
                         }}>
                           {despesa.categoria_despesa?.nome}
                         </p>
                         <p style={{ 
                           color: '#d1d5db', 
-                          fontSize: '12px',
+                          fontSize: '14px',
                           margin: 0
                         }}>
                           {formatarData(despesa.data_despesa)}
@@ -1121,8 +1105,9 @@ export default function LavaRapidoDashboard() {
                       <p style={{ 
                         fontWeight: 'bold', 
                         color: '#f87171', 
-                        fontSize: '16px',
-                        margin: 0
+                        fontSize: '20px',
+                        margin: 0,
+                        whiteSpace: 'nowrap'
                       }}>
                         R$ {despesa.valor.toFixed(2).replace('.', ',')}
                       </p>
@@ -1145,7 +1130,7 @@ export default function LavaRapidoDashboard() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
-                  <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
+                  <p style={{ color: '#d1d5db', fontSize: '14px', margin: 0 }}>
                     Nenhuma despesa registrada
                   </p>
                   <p style={{ color: '#9ca3af', fontSize: '12px', margin: '4px 0 0 0' }}>
