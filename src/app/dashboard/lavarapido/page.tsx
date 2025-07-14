@@ -264,13 +264,14 @@ export default function LavaRapidoDashboard() {
   }
 
   function getPaymentMethodsData() {
-    const { pagamentos } = stats
-    return [
-      { name: 'Dinheiro', value: pagamentos.dinheiro, color: '#10B981' },
-      { name: 'Débito', value: pagamentos.debito, color: '#3B82F6' },
-      { name: 'Crédito', value: pagamentos.credito, color: '#8B5CF6' },
-      { name: 'PIX', value: pagamentos.pix, color: '#F59E0B' }
-    ].filter(item => item.value > 0)
+    const paymentData = [
+      { name: 'Dinheiro', value: stats.pagamentos.dinheiro, color: '#10b981' },
+      { name: 'Débito', value: stats.pagamentos.debito, color: '#3b82f6' },
+      { name: 'Crédito', value: stats.pagamentos.credito, color: '#8b5cf6' },
+      { name: 'PIX', value: stats.pagamentos.pix, color: '#f59e0b' }
+    ]
+    
+    return paymentData.filter(item => item.value > 0)
   }
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
@@ -342,17 +343,17 @@ export default function LavaRapidoDashboard() {
               <p style={{ 
                 color: '#d1d5db', 
                 marginTop: '4px', 
-                fontSize: '20px',
+                fontSize: '14px',
                 margin: 0
               }}>
                 Resumo geral do seu negócio
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <Link 
                 href="/dashboard/lavarapido/receitas"
                 style={{
-                  padding: '10px 20px',
+                  padding: '10px 16px',
                   backgroundColor: '#2563eb',
                   color: 'white',
                   borderRadius: '8px',
@@ -365,15 +366,15 @@ export default function LavaRapidoDashboard() {
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
               >
-                + Nova Receita
+                + Receita
               </Link>
               <Link 
                 href="/dashboard/lavarapido/despesas"
                 style={{
-                  padding: '10px 20px',
+                  padding: '10px 16px',
                   backgroundColor: '#dc2626',
                   color: 'white',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   textDecoration: 'none',
                   fontWeight: '500',
                   transition: 'background-color 0.2s',
@@ -383,15 +384,15 @@ export default function LavaRapidoDashboard() {
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
               >
-                + Nova Despesa
+                + Despesa
               </Link>
               <Link
                 href="/dashboard/lavarapido/anotacoes"
                 style={{
-                  padding: '10px 20px',
+                  padding: '10px 16px',
                   backgroundColor: '#ca8a04',
                   color: 'white',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   textDecoration: 'none',
                   fontWeight: '500',
                   transition: 'background-color 0.2s',
@@ -406,10 +407,10 @@ export default function LavaRapidoDashboard() {
               <Link
                 href="/dashboard/lavarapido/minha-conta"
                 style={{
-                  padding: '10px 20px',
+                  padding: '10px 16px',
                   backgroundColor: '#7c3aed',
                   color: 'white',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   textDecoration: 'none',
                   fontWeight: '500',
                   transition: 'background-color 0.2s',
@@ -424,10 +425,10 @@ export default function LavaRapidoDashboard() {
               <button
                 onClick={handleLogout}
                 style={{
-                  padding: '10px 20px',
+                  padding: '10px 16px',
                   backgroundColor: '#6b7280',
                   color: 'white',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   border: 'none',
                   fontWeight: '500',
                   cursor: 'pointer',

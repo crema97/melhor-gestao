@@ -491,7 +491,7 @@ export default function ReceitasPage() {
             <form onSubmit={handleSubmit} style={{ 
               display: 'grid !important', 
               gridTemplateColumns: '1fr !important', 
-              gap: '20px',
+              gap: '24px',
               width: '100%'
             }}>
               <div style={{ minWidth: '0', width: '100%' }}>
@@ -715,18 +715,23 @@ export default function ReceitasPage() {
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '24px', 
+          gap: '20px', 
           marginBottom: '32px' 
         }}>
           {/* Monthly Chart */}
-          <div style={{
-            backgroundColor: '#1F2937',
-            padding: '24px',
-            borderRadius: '12px',
+          <div style={{ 
+            backgroundColor: '#1f2937', 
+            borderRadius: '8px', 
+            padding: '20px',
             border: '1px solid #374151'
           }}>
-            <h3 style={{ color: '#ffffff', fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>
-              Receitas Mensais (Últimos 6 meses)
+            <h3 style={{ 
+              fontSize: '16px', 
+              fontWeight: 'bold', 
+              color: '#ffffff',
+              margin: '0 0 16px 0'
+            }}>
+              Evolução Mensal (Últimos 6 meses)
             </h3>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={monthlyData}>
@@ -749,16 +754,21 @@ export default function ReceitasPage() {
           </div>
 
           {/* Daily Chart */}
-          <div style={{
-            backgroundColor: '#1F2937',
-            padding: '24px',
-            borderRadius: '12px',
+          <div style={{ 
+            backgroundColor: '#1f2937', 
+            borderRadius: '8px', 
+            padding: '20px',
             border: '1px solid #374151'
           }}>
-            <h3 style={{ color: '#ffffff', fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>
-              Receitas Diárias (Últimos 7 dias)
+            <h3 style={{ 
+              fontSize: '16px', 
+              fontWeight: 'bold', 
+              color: '#ffffff',
+              margin: '0 0 16px 0'
+            }}>
+              Evolução Diária (Últimos 7 dias)
             </h3>
-            <ResponsiveContainer width="100%" height={180}>
+                          <ResponsiveContainer width="100%" height={200}>
               <BarChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="dia" stroke="#d1d5db" />
@@ -799,67 +809,71 @@ export default function ReceitasPage() {
             
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: '1fr 1fr', 
-              gap: '32px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+              gap: '20px',
               alignItems: 'center'
             }}>
               {/* Pie Chart */}
-              <div style={{ height: '200px' }}>
+              <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
+                  <PieChart>
+                    <Pie
                       data={getCategoriesData()}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={60}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      outerRadius={60}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
                       {getCategoriesData().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1f2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    color: '#ffffff'
-                  }}
-                      formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, '']}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#1f2937',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#ffffff',
+                        fontSize: '12px'
+                      }}
+                      formatter={(value: number, name: string) => [`R$ ${value.toFixed(2).replace('.', ',')}`, name]}
+                      labelStyle={{ color: '#ffffff' }}
+                      itemStyle={{ color: '#ffffff' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
               {/* Categories List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {getCategoriesData().map((item) => (
                   <div key={item.name} style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between',
-                    padding: '16px', 
+                    padding: '12px', 
                     backgroundColor: '#374151', 
                     borderRadius: '8px',
                     border: `2px solid ${item.color}`
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{
-                        width: '16px',
-                        height: '16px',
+                        width: '12px',
+                        height: '12px',
                         backgroundColor: item.color,
                         borderRadius: '50%'
                       }}></div>
                       <span style={{ 
                         color: '#ffffff', 
-                        fontSize: '16px', 
+                        fontSize: '14px', 
                         fontWeight: '600' 
                       }}>
                         {item.name}
                       </span>
-        </div>
+                    </div>
                     <span style={{ 
                       color: item.color, 
                       fontSize: '16px', 
@@ -1055,130 +1069,130 @@ export default function ReceitasPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {filteredReceitas.map((receita) => (
                   <div key={receita.id} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
                     padding: '20px', 
                     backgroundColor: '#374151', 
                     borderRadius: '8px',
-                    border: '1px solid #4b5563'
+                    border: '1px solid #4b5563',
+                    flexWrap: 'wrap',
+                    gap: '12px'
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
-                          <h4 style={{ 
-                            fontSize: '18px', 
-                            fontWeight: '600', 
-                            color: '#ffffff',
-                            margin: 0
-                          }}>
-                            {receita.categoria_receita?.nome || 'Sem categoria'}
-                          </h4>
-                          <span style={{ 
-                            padding: '4px 12px', 
-                            backgroundColor: '#3b82f6', 
-                            color: 'white', 
-                            borderRadius: '16px',
-                            fontSize: '12px',
-                            fontWeight: '500'
-                          }}>
-                            {receita.forma_pagamento}
-                          </span>
-                        </div>
-                        <p style={{ 
-                          color: '#d1d5db', 
-                          fontSize: '14px',
-                          margin: '8px 0 0 0'
-                        }}>
-                          {new Date(receita.data_receita + 'T00:00:00').toLocaleDateString('pt-BR')}
-                        </p>
-                        {receita.observacoes && (
-                          <p style={{ 
-                            color: '#9ca3af', 
-                            fontSize: '14px',
-                            margin: '8px 0 0 0'
-                          }}>
-                            {receita.observacoes}
-                          </p>
-                        )}
-                      </div>
-                      
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', minWidth: '0' }}>
-                        <p style={{ 
-                          fontSize: '18px', 
-                          fontWeight: 'bold', 
-                          color: '#10b981',
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                        <h3 style={{ 
+                          fontWeight: '600', 
+                          color: '#ffffff',
                           margin: 0,
+                          fontSize: '16px'
+                        }}>
+                          {receita.categoria_receita?.nome || 'Sem categoria'}
+                        </h3>
+                        <span style={{
+                          padding: '4px 8px',
+                          backgroundColor: '#10b981',
+                          color: 'white',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          textTransform: 'capitalize',
                           whiteSpace: 'nowrap'
                         }}>
-                          R$ {receita.valor.toFixed(2).replace('.', ',')}
+                          {receita.forma_pagamento}
+                        </span>
+                      </div>
+                      <p style={{ 
+                        color: '#d1d5db', 
+                        fontSize: '14px',
+                        margin: '0 0 8px 0'
+                      }}>
+                        {new Date(receita.data_receita + 'T00:00:00').toLocaleDateString('pt-BR')}
+                      </p>
+                      {receita.observacoes && (
+                        <p style={{ 
+                          color: '#9ca3af', 
+                          fontSize: '14px',
+                          margin: 0,
+                          fontStyle: 'italic'
+                        }}>
+                          {receita.observacoes}
                         </p>
-                        
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                          <button
-                            onClick={() => handleEdit(receita)}
-                            style={{
-                              padding: '8px 12px',
-                              backgroundColor: '#3b82f6',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              transition: 'background-color 0.2s'
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => handleDelete(receita.id)}
-                            style={{
-                              padding: '8px 12px',
-                              backgroundColor: '#ef4444',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              transition: 'background-color 0.2s'
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
-                          >
-                            Excluir
-                          </button>
-                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', minWidth: '0' }}>
+                      <p style={{ 
+                        fontWeight: 'bold', 
+                        color: '#10b981', 
+                        fontSize: '18px',
+                        margin: 0,
+                        whiteSpace: 'nowrap'
+                      }}>
+                        R$ {receita.valor.toFixed(2).replace('.', ',')}
+                      </p>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => handleEdit(receita)}
+                          style={{
+                            padding: '8px 12px',
+                            backgroundColor: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(receita.id)}
+                          style={{
+                            padding: '8px 12px',
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+                        >
+                          Excluir
+                        </button>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-                <p style={{ 
-                  color: '#9ca3af', 
-                  fontSize: '16px',
-                  margin: '0 0 24px 0'
+              <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  backgroundColor: '#10b981',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px auto'
                 }}>
-                  Nenhuma receita encontrada no período selecionado
+                  <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
+                <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
+                  Nenhuma receita registrada no período
                 </p>
-                <button
-                  onClick={() => setShowForm(true)}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#10b981',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#059669'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
-                >
-                  Registrar Primeira Receita
-                </button>
               </div>
             )}
           </div>

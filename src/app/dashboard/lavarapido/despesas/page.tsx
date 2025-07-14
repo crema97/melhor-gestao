@@ -451,23 +451,28 @@ export default function DespesasPage() {
         {/* Period Selector */}
         <PeriodSelector onPeriodChange={handlePeriodChange} />
 
-        {/* Create Button */}
-        <div style={{ marginBottom: '32px' }}>
+        {/* Quick Action Button */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'flex-start', 
+          marginBottom: '32px' 
+        }}>
           <button
             onClick={() => setShowForm(true)}
             style={{
-              padding: '12px 24px',
+              padding: '16px 32px',
               backgroundColor: '#ef4444',
               color: 'white',
               border: 'none',
-              borderRadius: '8px',
-              fontSize: '16px',
+              borderRadius: '12px',
+              fontSize: '18px',
               fontWeight: '600',
               cursor: 'pointer',
               transition: 'all 0.2s',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px'
+              gap: '12px'
             }}
             onMouseOver={(e) => {
               e.currentTarget.style.backgroundColor = '#dc2626'
@@ -480,10 +485,10 @@ export default function DespesasPage() {
               e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
             }}
           >
-            <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg style={{ width: '24px', height: '24px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            Criar Despesa
+            Nova Despesa
           </button>
         </div>
 
@@ -509,7 +514,7 @@ export default function DespesasPage() {
             <form onSubmit={handleSubmit} style={{ 
               display: 'grid !important', 
               gridTemplateColumns: '1fr !important', 
-              gap: '20px',
+              gap: '24px',
               width: '100%'
             }}>
               <div style={{ minWidth: '0', width: '100%' }}>
@@ -1028,120 +1033,118 @@ export default function DespesasPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {filteredDespesas.map((despesa) => (
                   <div key={despesa.id} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
                     padding: '20px', 
                     backgroundColor: '#374151', 
                     borderRadius: '8px',
-                    border: '1px solid #4b5563'
+                    border: '1px solid #4b5563',
+                    flexWrap: 'wrap',
+                    gap: '12px'
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
-                          <h4 style={{ 
-                            fontSize: '18px', 
-                            fontWeight: '600', 
-                            color: '#ffffff',
-                            margin: 0
-                          }}>
-                            {despesa.categoria_despesa?.nome || 'Sem categoria'}
-                          </h4>
-                        </div>
-                        <p style={{ 
-                          color: '#d1d5db', 
-                          fontSize: '14px',
-                          margin: '8px 0 0 0'
-                        }}>
-                          {new Date(despesa.data_despesa).toLocaleDateString('pt-BR')}
-                        </p>
-                        {despesa.observacoes && (
-                          <p style={{ 
-                            color: '#9ca3af', 
-                            fontSize: '14px',
-                            margin: '8px 0 0 0'
-                          }}>
-                            {despesa.observacoes}
-                          </p>
-                        )}
-                      </div>
-                      
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', minWidth: '0' }}>
-                        <p style={{ 
-                          fontSize: '18px', 
-                          fontWeight: 'bold', 
-                          color: '#ef4444',
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                        <h3 style={{ 
+                          fontWeight: '600', 
+                          color: '#ffffff',
                           margin: 0,
-                          whiteSpace: 'nowrap'
+                          fontSize: '18px'
                         }}>
-                          R$ {despesa.valor.toFixed(2).replace('.', ',')}
+                          {despesa.categoria_despesa?.nome || 'Sem categoria'}
+                        </h3>
+                      </div>
+                      <p style={{ 
+                        color: '#d1d5db', 
+                        fontSize: '14px',
+                        margin: '0 0 8px 0'
+                      }}>
+                        {new Date(despesa.data_despesa + 'T00:00:00').toLocaleDateString('pt-BR')}
+                      </p>
+                      {despesa.observacoes && (
+                        <p style={{ 
+                          color: '#9ca3af', 
+                          fontSize: '14px',
+                          margin: 0,
+                          fontStyle: 'italic'
+                        }}>
+                          {despesa.observacoes}
                         </p>
-                        
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                          <button
-                            onClick={() => handleEdit(despesa)}
-                            style={{
-                              padding: '8px 12px',
-                              backgroundColor: '#3b82f6',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              transition: 'background-color 0.2s'
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => handleDelete(despesa.id)}
-                            style={{
-                              padding: '8px 12px',
-                              backgroundColor: '#ef4444',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              transition: 'background-color 0.2s'
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
-                          >
-                            Excluir
-                          </button>
-                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', minWidth: '0' }}>
+                      <p style={{ 
+                        fontWeight: 'bold', 
+                        color: '#ef4444', 
+                        fontSize: '18px',
+                        margin: 0,
+                        whiteSpace: 'nowrap'
+                      }}>
+                        R$ {despesa.valor.toFixed(2).replace('.', ',')}
+                      </p>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => handleEdit(despesa)}
+                          style={{
+                            padding: '8px 12px',
+                            backgroundColor: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(despesa.id)}
+                          style={{
+                            padding: '8px 12px',
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+                        >
+                          Excluir
+                        </button>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-                <p style={{ 
-                  color: '#9ca3af', 
-                  fontSize: '16px',
-                  margin: '0 0 24px 0'
+              <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  backgroundColor: '#ef4444',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px auto'
                 }}>
-                  Nenhuma despesa encontrada no período selecionado
+                  <svg style={{ width: '32px', height: '32px', color: 'white' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <p style={{ color: '#d1d5db', fontSize: '18px', margin: 0 }}>
+                  Nenhuma despesa registrada no período
                 </p>
-                <button
-                  onClick={() => setShowForm(true)}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#ef4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
-                >
-                  Registrar Primeira Despesa
-                </button>
               </div>
             )}
           </div>

@@ -1,74 +1,61 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface Usuario {
   id: string
   nome: string
   email: string
-  nome_negocio: string
-  tipo_negocio_id: string
+  plano: string
+  data_vencimento: string
 }
 
 export default function MinhaContaLavaRapido() {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [loading, setLoading] = useState(true)
+  const [editandoSenha, setEditandoSenha] = useState(false)
   const [senhaAtual, setSenhaAtual] = useState('')
   const [novaSenha, setNovaSenha] = useState('')
   const [confirmarSenha, setConfirmarSenha] = useState('')
-  const [alterandoSenha, setAlterandoSenha] = useState(false)
   const [mensagem, setMensagem] = useState('')
   const [tipoMensagem, setTipoMensagem] = useState<'sucesso' | 'erro'>('sucesso')
   const router = useRouter()
 
   useEffect(() => {
-    checkUserAndLoadData()
+    carregarDadosUsuario()
   }, [])
 
-  async function checkUserAndLoadData() {
+  async function carregarDadosUsuario() {
     try {
-      const { data: { user }, error } = await supabase.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser()
       
-      if (error || !user) {
+      if (!user) {
         router.push('/login')
         return
       }
 
-      // Verificar se o usuário tem acesso ao dashboard de lava rápido
-      const { data: usuarioData, error: usuarioError } = await supabase
+      const { data: usuarioData } = await supabase
         .from('usuarios')
         .select('*')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .single()
 
-      if (usuarioError || !usuarioData) {
-        router.push('/login')
-        return
+      if (usuarioData) {
+        setUsuario(usuarioData)
       }
-
-      // Verificar se é um usuário de lava rápido (tipo_negocio_id = 4)
-      if (usuarioData.tipo_negocio_id !== '4') {
-        router.push('/dashboard')
-        return
-      }
-
-      setUsuario(usuarioData)
     } catch (error) {
-      console.error('Erro ao verificar usuário:', error)
-      router.push('/login')
+      console.error('Erro ao carregar dados do usuário:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  async function handleAlterarSenha() {
-    if (!usuario) return
-
-    // Validações
-    if (!senhaAtual || !novaSenha || !confirmarSenha) {
-      setMensagem('Todos os campos são obrigatórios')
+  async function alterarSenha() {
+    if (novaSenha !== confirmarSenha) {
+      setMensagem('As senhas não coincidem')
       setTipoMensagem('erro')
       return
     }
@@ -79,465 +66,484 @@ export default function MinhaContaLavaRapido() {
       return
     }
 
-    if (novaSenha !== confirmarSenha) {
-      setMensagem('A nova senha e a confirmação não coincidem')
-      setTipoMensagem('erro')
-      return
-    }
-
-    setAlterandoSenha(true)
-    setMensagem('')
-
     try {
-      // Primeiro, verificar se a senha atual está correta
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: usuario.email,
-        password: senhaAtual
-      })
-
-      if (signInError) {
-        setMensagem('Senha atual incorreta')
-        setTipoMensagem('erro')
-        return
-      }
-
-      // Alterar a senha
-      const { error: updateError } = await supabase.auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         password: novaSenha
       })
 
-      if (updateError) {
-        setMensagem('Erro ao alterar senha: ' + updateError.message)
+      if (error) {
+        setMensagem('Erro ao alterar senha: ' + error.message)
         setTipoMensagem('erro')
-        return
+      } else {
+        setMensagem('Senha alterada com sucesso!')
+        setTipoMensagem('sucesso')
+        setEditandoSenha(false)
+        setSenhaAtual('')
+        setNovaSenha('')
+        setConfirmarSenha('')
       }
-
-      setMensagem('Senha alterada com sucesso!')
-      setTipoMensagem('sucesso')
-      setSenhaAtual('')
-      setNovaSenha('')
-      setConfirmarSenha('')
     } catch (error) {
-      console.error('Erro ao alterar senha:', error)
-      setMensagem('Erro interno ao alterar senha')
+      setMensagem('Erro ao alterar senha')
       setTipoMensagem('erro')
-    } finally {
-      setAlterandoSenha(false)
     }
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    router.push('/login')
+  function formatarData(data: string) {
+    return new Date(data).toLocaleDateString('pt-BR')
+  }
+
+  function getStatusPlano(dataVencimento: string) {
+    const hoje = new Date()
+    const vencimento = new Date(dataVencimento)
+    const diasRestantes = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
+    
+    if (diasRestantes < 0) {
+      return { status: 'Vencido', cor: '#ef4444', dias: Math.abs(diasRestantes) }
+    } else if (diasRestantes <= 7) {
+      return { status: 'Vence em breve', cor: '#f59e0b', dias: diasRestantes }
+    } else {
+      return { status: 'Ativo', cor: '#10b981', dias: diasRestantes }
+    }
   }
 
   if (loading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#111827',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#1f2937', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
       }}>
-        <div style={{ color: '#ffffff', fontSize: '18px' }}>Carregando...</div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            border: '4px solid #8b5cf6',
+            borderTop: '4px solid transparent',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto'
+          }}></div>
+          <p style={{ marginTop: '24px', color: '#e5e7eb', fontSize: '18px', fontWeight: '500' }}>
+            Carregando...
+          </p>
+        </div>
       </div>
     )
   }
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#111827',
-      padding: '24px'
-    }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '32px',
-        paddingBottom: '16px',
-        borderBottom: '1px solid #374151'
+  if (!usuario) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#1f2937', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
       }}>
-        <div>
-          <h1 style={{
-            fontSize: '28px',
-            fontWeight: 'bold',
-            color: '#ffffff',
-            margin: '0 0 8px 0'
-          }}>
-            Minha Conta - {usuario?.nome_negocio || 'Lava Rápido'}
-          </h1>
-          <p style={{
-            color: '#9ca3af',
-            margin: 0,
-            fontSize: '16px'
-          }}>
-            Gerencie suas informações pessoais e configurações
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ color: '#e5e7eb', fontSize: '18px' }}>
+            Usuário não encontrado
           </p>
         </div>
-        
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onClick={() => router.push('/dashboard/lavarapido')}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#374151',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#374151'}
-          >
-            Voltar ao Dashboard
-          </button>
-          <button
-            onClick={handleLogout}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#dc2626',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-          >
-            Sair
-          </button>
+      </div>
+    )
+  }
+
+  const statusPlano = getStatusPlano(usuario.data_vencimento)
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#111827' }}>
+      {/* Header */}
+      <div style={{ 
+        backgroundColor: '#1f2937', 
+        borderBottom: '1px solid #374151',
+        padding: '24px 0'
+      }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+            <div>
+              <h1 style={{ 
+                fontSize: '24px', 
+                fontWeight: 'bold', 
+                color: '#ffffff',
+                margin: 0
+              }}>
+                Minha Conta
+              </h1>
+              <p style={{ 
+                color: '#d1d5db', 
+                marginTop: '4px', 
+                fontSize: '14px',
+                margin: 0
+              }}>
+                Gerencie suas informações e assinatura
+              </p>
+            </div>
+            <Link 
+              href="/dashboard/lavarapido"
+              style={{
+                padding: '10px 16px',
+                backgroundColor: '#374151',
+                color: 'white',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontWeight: '500',
+                transition: 'background-color 0.2s',
+                fontSize: '14px',
+                whiteSpace: 'nowrap'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#374151'}
+            >
+              ← Voltar ao Dashboard
+            </Link>
+          </div>
         </div>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-        gap: '24px'
-      }}>
+      {/* Main Content */}
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 16px' }}>
+        
         {/* Informações do Usuário */}
-        <div style={{
-          backgroundColor: '#1f2937',
-          borderRadius: '8px',
+        <div style={{ 
+          backgroundColor: '#1f2937', 
+          borderRadius: '8px', 
           padding: '24px',
-          border: '1px solid #374151'
+          border: '1px solid #374151',
+          marginBottom: '24px'
         }}>
-          <h2 style={{
-            fontSize: '20px',
-            fontWeight: 'bold',
+          <h2 style={{ 
+            fontSize: '20px', 
+            fontWeight: 'bold', 
             color: '#ffffff',
             margin: '0 0 20px 0'
           }}>
             Informações Pessoais
           </h2>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'grid', gap: '16px' }}>
             <div>
-              <label style={{
+              <label style={{ 
+                color: '#d1d5db', 
+                fontSize: '14px', 
+                fontWeight: '500',
                 display: 'block',
-                color: '#9ca3af',
-                fontSize: '14px',
                 marginBottom: '4px'
               }}>
                 Nome
               </label>
-              <div style={{
-                padding: '12px',
-                backgroundColor: '#374151',
-                borderRadius: '6px',
-                color: '#ffffff',
-                fontSize: '16px'
-              }}>
-                {usuario?.nome}
-              </div>
-            </div>
-            
-            <div>
-              <label style={{
-                display: 'block',
-                color: '#9ca3af',
-                fontSize: '14px',
-                marginBottom: '4px'
-              }}>
-                Email
-              </label>
-              <div style={{
-                padding: '12px',
-                backgroundColor: '#374151',
-                borderRadius: '6px',
-                color: '#ffffff',
-                fontSize: '16px'
-              }}>
-                {usuario?.email}
-              </div>
-            </div>
-            
-            <div>
-              <label style={{
-                display: 'block',
-                color: '#9ca3af',
-                fontSize: '14px',
-                marginBottom: '4px'
-              }}>
-                Nome do Negócio
-              </label>
-              <div style={{
-                padding: '12px',
-                backgroundColor: '#374151',
-                borderRadius: '6px',
-                color: '#ffffff',
-                fontSize: '16px'
-              }}>
-                {usuario?.nome_negocio}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Alterar Senha */}
-        <div style={{
-          backgroundColor: '#1f2937',
-          borderRadius: '8px',
-          padding: '24px',
-          border: '1px solid #374151'
-        }}>
-          <h2 style={{
-            fontSize: '20px',
-            fontWeight: 'bold',
-            color: '#ffffff',
-            margin: '0 0 20px 0'
-          }}>
-            Alterar Senha
-          </h2>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{
-                display: 'block',
-                color: '#9ca3af',
-                fontSize: '14px',
-                marginBottom: '4px'
-              }}>
-                Senha Atual
-              </label>
-              <input
-                type="password"
-                value={senhaAtual}
-                onChange={(e) => setSenhaAtual(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  backgroundColor: '#374151',
-                  border: '1px solid #4b5563',
-                  borderRadius: '6px',
-                  color: '#ffffff',
-                  fontSize: '16px',
-                  boxSizing: 'border-box'
-                }}
-                placeholder="Digite sua senha atual"
-              />
-            </div>
-            
-            <div>
-              <label style={{
-                display: 'block',
-                color: '#9ca3af',
-                fontSize: '14px',
-                marginBottom: '4px'
-              }}>
-                Nova Senha
-              </label>
-              <input
-                type="password"
-                value={novaSenha}
-                onChange={(e) => setNovaSenha(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  backgroundColor: '#374151',
-                  border: '1px solid #4b5563',
-                  borderRadius: '6px',
-                  color: '#ffffff',
-                  fontSize: '16px',
-                  boxSizing: 'border-box'
-                }}
-                placeholder="Digite a nova senha"
-              />
-            </div>
-            
-            <div>
-              <label style={{
-                display: 'block',
-                color: '#9ca3af',
-                fontSize: '14px',
-                marginBottom: '4px'
-              }}>
-                Confirmar Nova Senha
-              </label>
-              <input
-                type="password"
-                value={confirmarSenha}
-                onChange={(e) => setConfirmarSenha(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  backgroundColor: '#374151',
-                  border: '1px solid #4b5563',
-                  borderRadius: '6px',
-                  color: '#ffffff',
-                  fontSize: '16px',
-                  boxSizing: 'border-box'
-                }}
-                placeholder="Confirme a nova senha"
-              />
-            </div>
-            
-            {mensagem && (
-              <div style={{
-                padding: '12px',
-                backgroundColor: tipoMensagem === 'sucesso' ? '#065f46' : '#7f1d1d',
-                border: `1px solid ${tipoMensagem === 'sucesso' ? '#10b981' : '#ef4444'}`,
-                borderRadius: '6px',
-                color: tipoMensagem === 'sucesso' ? '#d1fae5' : '#fecaca',
-                fontSize: '14px'
-              }}>
-                {mensagem}
-              </div>
-            )}
-            
-            <button
-              onClick={handleAlterarSenha}
-              disabled={alterandoSenha}
-              style={{
-                padding: '12px 24px',
-                backgroundColor: alterandoSenha ? '#6b7280' : '#3b82f6',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: alterandoSenha ? 'not-allowed' : 'pointer',
+              <p style={{ 
+                color: '#ffffff', 
                 fontSize: '16px',
+                margin: 0,
+                padding: '12px',
+                backgroundColor: '#374151',
+                borderRadius: '6px'
+              }}>
+                {usuario.nome}
+              </p>
+            </div>
+            
+            <div>
+              <label style={{ 
+                color: '#d1d5db', 
+                fontSize: '14px', 
                 fontWeight: '500',
-                transition: 'background-color 0.2s'
-              }}
-              onMouseOver={(e) => {
-                if (!alterandoSenha) {
-                  e.currentTarget.style.backgroundColor = '#2563eb'
-                }
-              }}
-              onMouseOut={(e) => {
-                if (!alterandoSenha) {
-                  e.currentTarget.style.backgroundColor = '#3b82f6'
-                }
-              }}
-            >
-              {alterandoSenha ? 'Alterando...' : 'Alterar Senha'}
-            </button>
+                display: 'block',
+                marginBottom: '4px'
+              }}>
+                E-mail
+              </label>
+              <p style={{ 
+                color: '#ffffff', 
+                fontSize: '16px',
+                margin: 0,
+                padding: '12px',
+                backgroundColor: '#374151',
+                borderRadius: '6px'
+              }}>
+                {usuario.email}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Plano e Assinatura */}
-        <div style={{
-          backgroundColor: '#1f2937',
-          borderRadius: '8px',
+        <div style={{ 
+          backgroundColor: '#1f2937', 
+          borderRadius: '8px', 
           padding: '24px',
-          border: '1px solid #374151'
+          border: '1px solid #374151',
+          marginBottom: '24px'
         }}>
-          <h2 style={{
-            fontSize: '20px',
-            fontWeight: 'bold',
+          <h2 style={{ 
+            fontSize: '20px', 
+            fontWeight: 'bold', 
             color: '#ffffff',
             margin: '0 0 20px 0'
           }}>
             Plano e Assinatura
           </h2>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{
-                display: 'block',
-                color: '#9ca3af',
-                fontSize: '14px',
-                marginBottom: '4px'
-              }}>
-                Plano Atual
-              </label>
-              <div style={{
-                padding: '12px',
-                backgroundColor: '#065f46',
-                border: '1px solid #10b981',
-                borderRadius: '6px',
-                color: '#d1fae5',
-                fontSize: '16px',
-                fontWeight: '500'
-              }}>
-                Plano Básico - Lava Rápido
-              </div>
-            </div>
-            
-            <div>
-              <label style={{
-                display: 'block',
-                color: '#9ca3af',
-                fontSize: '14px',
-                marginBottom: '4px'
-              }}>
-                Status
-              </label>
-              <div style={{
-                padding: '12px',
-                backgroundColor: '#065f46',
-                border: '1px solid #10b981',
-                borderRadius: '6px',
-                color: '#d1fae5',
-                fontSize: '16px',
-                fontWeight: '500'
-              }}>
-                Ativo
-              </div>
-            </div>
-            
-            <div>
-              <label style={{
-                display: 'block',
-                color: '#9ca3af',
-                fontSize: '14px',
-                marginBottom: '4px'
-              }}>
-                Próximo Vencimento
-              </label>
-              <div style={{
-                padding: '12px',
-                backgroundColor: '#374151',
-                borderRadius: '6px',
-                color: '#ffffff',
-                fontSize: '16px'
-              }}>
-                Em breve - Sistema de pagamentos
-              </div>
-            </div>
-            
-            <div style={{
+          <div style={{ display: 'grid', gap: '16px' }}>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
               padding: '16px',
-              backgroundColor: '#1e3a8a',
-              border: '1px solid #3b82f6',
-              borderRadius: '6px',
-              color: '#dbeafe',
-              fontSize: '14px'
+              backgroundColor: '#374151',
+              borderRadius: '8px'
             }}>
-              <strong>Em desenvolvimento:</strong> Em breve você poderá gerenciar sua assinatura, 
-              visualizar histórico de pagamentos e alterar planos diretamente aqui.
+              <div>
+                <p style={{ 
+                  color: '#ffffff', 
+                  fontSize: '16px', 
+                  fontWeight: '600',
+                  margin: '0 0 4px 0'
+                }}>
+                  Plano Atual
+                </p>
+                <p style={{ 
+                  color: '#d1d5db', 
+                  fontSize: '14px',
+                  margin: 0
+                }}>
+                  {usuario.plano || 'Plano Básico'}
+                </p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ 
+                  color: statusPlano.cor, 
+                  fontSize: '14px', 
+                  fontWeight: '600',
+                  padding: '4px 8px',
+                  backgroundColor: statusPlano.cor + '20',
+                  borderRadius: '4px'
+                }}>
+                  {statusPlano.status}
+                </span>
+              </div>
+            </div>
+            
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              padding: '16px',
+              backgroundColor: '#374151',
+              borderRadius: '8px'
+            }}>
+              <div>
+                <p style={{ 
+                  color: '#ffffff', 
+                  fontSize: '16px', 
+                  fontWeight: '600',
+                  margin: '0 0 4px 0'
+                }}>
+                  Data de Vencimento
+                </p>
+                <p style={{ 
+                  color: '#d1d5db', 
+                  fontSize: '14px',
+                  margin: 0
+                }}>
+                  {formatarData(usuario.data_vencimento)}
+                </p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ 
+                  color: statusPlano.cor, 
+                  fontSize: '14px', 
+                  fontWeight: '600',
+                  margin: 0
+                }}>
+                  {statusPlano.dias} {statusPlano.dias === 1 ? 'dia' : 'dias'} {statusPlano.dias < 0 ? 'atrasado' : 'restantes'}
+                </p>
+              </div>
             </div>
           </div>
+          
+          {/* Botão de Renovação (futuro) */}
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <button
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#8b5cf6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                fontSize: '14px'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#7c3aed'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#8b5cf6'}
+            >
+              Renovar Assinatura (Em breve)
+            </button>
+          </div>
+        </div>
+
+        {/* Alterar Senha */}
+        <div style={{ 
+          backgroundColor: '#1f2937', 
+          borderRadius: '8px', 
+          padding: '24px',
+          border: '1px solid #374151'
+        }}>
+          <h2 style={{ 
+            fontSize: '20px', 
+            fontWeight: 'bold', 
+            color: '#ffffff',
+            margin: '0 0 20px 0'
+          }}>
+            Segurança
+          </h2>
+          
+          {!editandoSenha ? (
+            <button
+              onClick={() => setEditandoSenha(true)}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#2563eb',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                fontSize: '14px'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+            >
+              Alterar Senha
+            </button>
+          ) : (
+            <div style={{ display: 'grid', gap: '16px' }}>
+              <div>
+                <label style={{ 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500',
+                  display: 'block',
+                  marginBottom: '4px'
+                }}>
+                  Nova Senha
+                </label>
+                <input
+                  type="password"
+                  value={novaSenha}
+                  onChange={(e) => setNovaSenha(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '6px',
+                    color: '#ffffff',
+                    fontSize: '14px'
+                  }}
+                  placeholder="Digite a nova senha"
+                />
+              </div>
+              
+              <div>
+                <label style={{ 
+                  color: '#d1d5db', 
+                  fontSize: '14px', 
+                  fontWeight: '500',
+                  display: 'block',
+                  marginBottom: '4px'
+                }}>
+                  Confirmar Nova Senha
+                </label>
+                <input
+                  type="password"
+                  value={confirmarSenha}
+                  onChange={(e) => setConfirmarSenha(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    backgroundColor: '#374151',
+                    border: '1px solid #4b5563',
+                    borderRadius: '6px',
+                    color: '#ffffff',
+                    fontSize: '14px'
+                  }}
+                  placeholder="Confirme a nova senha"
+                />
+              </div>
+              
+              {mensagem && (
+                <div style={{ 
+                  padding: '12px',
+                  backgroundColor: tipoMensagem === 'sucesso' ? '#10b981' : '#ef4444',
+                  color: 'white',
+                  borderRadius: '6px',
+                  fontSize: '14px'
+                }}>
+                  {mensagem}
+                </div>
+              )}
+              
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={alterarSenha}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s',
+                    fontSize: '14px'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
+                >
+                  Salvar Nova Senha
+                </button>
+                <button
+                  onClick={() => {
+                    setEditandoSenha(false)
+                    setNovaSenha('')
+                    setConfirmarSenha('')
+                    setMensagem('')
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s',
+                    fontSize: '14px'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
-} 
+}
