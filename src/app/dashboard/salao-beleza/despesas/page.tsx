@@ -80,22 +80,15 @@ export default function DespesasPage() {
   }, [usuarioId])
 
   useEffect(() => {
-    if (despesas.length > 0) {
+    if (filteredDespesas.length > 0) {
       loadChartData()
       loadCategoryData()
     }
-  }, [despesas])
+  }, [filteredDespesas])
 
   useEffect(() => {
-    // Aplicar filtro de período quando as despesas mudarem
-    const filtered = despesas.filter(despesa => {
-      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
-      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
-      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
-      return despesaDate >= start && despesaDate <= end
-    })
-    setFilteredDespesas(filtered)
-  }, [despesas, dateRange])
+    aplicarFiltros()
+  }, [despesas, filtros, dateRange])
 
   async function checkUserAndLoadData() {
     try {
@@ -177,25 +170,37 @@ export default function DespesasPage() {
   }
 
   function aplicarFiltros() {
-    const filtered = despesas.filter(despesa => {
+    let filtered = [...despesas]
+
+    // Aplicar filtro de período
+    filtered = filtered.filter(despesa => {
       const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
-      
-      if (filtros.categoria && despesa.categoria_despesa?.id !== filtros.categoria) {
-        return false
-      }
-      
-      if (filtros.dataInicio) {
-        const startDate = new Date(filtros.dataInicio + 'T00:00:00')
-        if (despesaDate < startDate) return false
-      }
-      
-      if (filtros.dataFim) {
-        const endDate = new Date(filtros.dataFim + 'T23:59:59')
-        if (despesaDate > endDate) return false
-      }
-      
-      return true
+      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
+      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
+      return despesaDate >= start && despesaDate <= end
     })
+
+    // Aplicar filtro de categoria
+    if (filtros.categoria) {
+      filtered = filtered.filter(despesa => 
+        despesa.categoria_despesa?.id === filtros.categoria
+      )
+    }
+
+    // Aplicar filtro de data de início
+    if (filtros.dataInicio) {
+      filtered = filtered.filter(despesa => 
+        despesa.data_despesa >= filtros.dataInicio
+      )
+    }
+
+    // Aplicar filtro de data de fim
+    if (filtros.dataFim) {
+      filtered = filtered.filter(despesa => 
+        despesa.data_despesa <= filtros.dataFim
+      )
+    }
+
     setFilteredDespesas(filtered)
   }
 
@@ -205,14 +210,7 @@ export default function DespesasPage() {
       dataInicio: '',
       dataFim: ''
     })
-    // Reaplicar filtro de período padrão
-    const filtered = despesas.filter(despesa => {
-      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
-      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
-      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
-      return despesaDate >= start && despesaDate <= end
-    })
-    setFilteredDespesas(filtered)
+    // A função aplicarFiltros será chamada automaticamente pelo useEffect
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -328,7 +326,7 @@ export default function DespesasPage() {
       date.setMonth(date.getMonth() - (5 - i))
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
       
-      const monthDespesas = despesas.filter(d => d.data_despesa.startsWith(monthKey))
+      const monthDespesas = filteredDespesas.filter(d => d.data_despesa.startsWith(monthKey))
         .reduce((sum, d) => sum + d.valor, 0)
       
       monthlyDataArray.push({
@@ -346,7 +344,7 @@ export default function DespesasPage() {
       date.setDate(date.getDate() - i)
       const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       
-      const dayDespesas = despesas.filter(d => d.data_despesa === dateKey)
+      const dayDespesas = filteredDespesas.filter(d => d.data_despesa === dateKey)
         .reduce((sum, d) => sum + d.valor, 0)
       
       dailyDataArray.push({
