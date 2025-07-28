@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste API Categorias</title>
+</head>
+<body>
+    <h1>Teste API Categorias</h1>
+    <button onclick="testarAPI()">Testar API</button>
+    <div id="resultado"></div>
+
+    <script>
+        async function testarAPI() {
+            const tipoNegocioId = 'e9f13adb-5f8c-4a26-b7c0-447397f276e2'; // Estacionamento
+            const url = `/api/admin/categorias-por-tipo-alternativa?tipo=${tipoNegocioId}`;
+            
+            console.log('Testando API:', url);
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                console.log('Resposta da API:', data);
+                
+                document.getElementById('resultado').innerHTML = `
+                    <h3>Resultado:</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Receitas encontradas:</strong> ${data.receitas?.length || 0}</p>
+                    <p><strong>Despesas encontradas:</strong> ${data.despesas?.length || 0}</p>
+                    <h4>Receitas:</h4>
+                    <ul>
+                        ${data.receitas?.map(cat => `<li>${cat.nome} (ID: ${cat.id})</li>`).join('') || 'Nenhuma'}
+                    </ul>
+                    <h4>Despesas:</h4>
+                    <ul>
+                        ${data.despesas?.map(cat => `<li>${cat.nome} (ID: ${cat.id})</li>`).join('') || 'Nenhuma'}
+                    </ul>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('resultado').innerHTML = `<p style="color: red;">Erro: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html> 

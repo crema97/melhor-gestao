@@ -139,7 +139,7 @@ export default function AdminDashboard() {
 
     setCarregandoCategorias(true)
     try {
-      const url = `/api/admin/categorias-por-tipo-alternativa?tipo=${tipoNegocioId}`
+      const url = `/api/admin/categorias-por-tipo-direto?tipo=${tipoNegocioId}`
       console.log('Fazendo requisição para:', url)
       
       const response = await fetch(url)

@@ -17,29 +17,42 @@ export async function GET(request: Request) {
     const supabaseUrl = 'https://yfiygrsowmctczlnrdky.supabase.co'
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmaXlncnNvd21jdGN6bG5yZGt5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDIyMTU3NCwiZXhwIjoyMDY1Nzk3NTc0fQ.3s4_ewJgBBZ2V3GqEvWzDxz-5mnPHTUmfnOB3kManJc'
 
-    // Buscar categorias de receita
-    const receitasResponse = await fetch(`${supabaseUrl}/rest/v1/categorias_receita?tipo_negocio_id=eq.${tipoNegocioId}&select=id,nome,tipo_negocio_id`, {
+    // Buscar categorias de receita (apenas ativas)
+    const receitasResponse = await fetch(`${supabaseUrl}/rest/v1/categorias_receita?tipo_negocio_id=eq.${tipoNegocioId}&ativo=eq.true&select=id,nome,tipo_negocio_id`, {
       headers: {
         'apikey': supabaseKey,
         'Authorization': `Bearer ${supabaseKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       }
     })
 
-    // Buscar categorias de despesa
-    const despesasResponse = await fetch(`${supabaseUrl}/rest/v1/categorias_despesa?tipo_negocio_id=eq.${tipoNegocioId}&select=id,nome,tipo_negocio_id`, {
+    // Buscar categorias de despesa (apenas ativas)
+    const despesasResponse = await fetch(`${supabaseUrl}/rest/v1/categorias_despesa?tipo_negocio_id=eq.${tipoNegocioId}&ativo=eq.true&select=id,nome,tipo_negocio_id`, {
       headers: {
         'apikey': supabaseKey,
         'Authorization': `Bearer ${supabaseKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       }
     })
 
     const receitas = await receitasResponse.json()
     const despesas = await despesasResponse.json()
 
+    console.log('=== DEBUG API CATEGORIAS ===')
+    console.log('Tipo de negócio ID:', tipoNegocioId)
+    console.log('Status receitas:', receitasResponse.status)
+    console.log('Status despesas:', despesasResponse.status)
     console.log('Receitas encontradas:', receitas)
     console.log('Despesas encontradas:', despesas)
+    console.log('Total receitas:', receitas?.length || 0)
+    console.log('Total despesas:', despesas?.length || 0)
+    console.log('=== FIM DEBUG ===')
 
     return NextResponse.json({
       receitas: receitas || [],
