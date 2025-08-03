@@ -113,27 +113,15 @@ export default function EstacionamentoDashboard() {
   }, [receitas, despesas])
 
   useEffect(() => {
-    if (receitas.length > 0 || despesas.length > 0) {
-      const startDateStr = `${dateRange.startDate.getFullYear()}-${String(dateRange.startDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.startDate.getDate()).padStart(2, '0')}`
-      const endDateStr = `${dateRange.endDate.getFullYear()}-${String(dateRange.endDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.endDate.getDate()).padStart(2, '0')}`
-      
-      const filteredReceitas = receitas.filter(r => r.data_receita >= startDateStr && r.data_receita <= endDateStr)
-      const filteredDespesas = despesas.filter(d => d.data_despesa >= startDateStr && d.data_despesa <= endDateStr)
-      
-      setFilteredReceitas(filteredReceitas)
-      setFilteredDespesas(filteredDespesas)
-    }
-  }, [receitas, despesas, dateRange])
-
-  useEffect(() => {
     // Aplicar filtro de período quando as receitas e despesas mudarem
     console.log('=== DEBUG: Filtro de Período ===')
     console.log('Receitas originais:', receitas.length, receitas)
     console.log('Despesas originais:', despesas.length, despesas)
     console.log('Período selecionado:', dateRange.startDate, 'até', dateRange.endDate)
     
-    const startDateStr = dateRange.startDate.toISOString().split('T')[0]
-    const endDateStr = dateRange.endDate.toISOString().split('T')[0]
+    // Formatar datas corretamente para comparação
+    const startDateStr = `${dateRange.startDate.getFullYear()}-${String(dateRange.startDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.startDate.getDate()).padStart(2, '0')}`
+    const endDateStr = `${dateRange.endDate.getFullYear()}-${String(dateRange.endDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.endDate.getDate()).padStart(2, '0')}`
     
     console.log('Filtrando por período:', startDateStr, 'até', endDateStr)
     
