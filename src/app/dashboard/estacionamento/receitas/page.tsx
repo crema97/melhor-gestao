@@ -169,8 +169,8 @@ export default function ReceitasPage() {
   }
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
-    const startStr = startDate.toISOString().split('T')[0]
-    const endStr = endDate.toISOString().split('T')[0]
+    const startStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`
+    const endStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`
     const filtered = receitas.filter(receita => {
       return receita.data_receita >= startStr && receita.data_receita <= endStr
     })

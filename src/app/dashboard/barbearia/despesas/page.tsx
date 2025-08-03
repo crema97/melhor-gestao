@@ -190,11 +190,11 @@ export default function DespesasPage() {
     let filtered = [...despesas]
 
     // Aplicar filtro de período
+    const startDateStr = `${dateRange.startDate.getFullYear()}-${String(dateRange.startDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.startDate.getDate()).padStart(2, '0')}`
+    const endDateStr = `${dateRange.endDate.getFullYear()}-${String(dateRange.endDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.endDate.getDate()).padStart(2, '0')}`
+    
     filtered = filtered.filter(despesa => {
-      const despesaDate = new Date(despesa.data_despesa + 'T00:00:00')
-      const start = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate())
-      const end = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate(), 23, 59, 59)
-      return despesaDate >= start && despesaDate <= end
+      return despesa.data_despesa >= startDateStr && despesa.data_despesa <= endDateStr
     })
 
     // Aplicar filtro de categoria
