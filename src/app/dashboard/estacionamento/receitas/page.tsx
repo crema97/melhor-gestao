@@ -56,7 +56,7 @@ export default function ReceitasPage() {
   const [editingReceita, setEditingReceita] = useState<Receita | null>(null)
   const [dateRange, setDateRange] = useState({
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    endDate: new Date()
+    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
   })
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [dailyData, setDailyData] = useState<DailyData[]>([])
@@ -93,7 +93,7 @@ export default function ReceitasPage() {
 
   useEffect(() => {
     aplicarFiltros()
-  }, [receitas, filtros])
+  }, [receitas, filtros, dateRange])
 
   async function checkUserAndLoadData() {
     try {
@@ -334,24 +334,36 @@ export default function ReceitasPage() {
   function aplicarFiltros() {
     let filtered = [...receitas]
 
+    // Aplicar filtro de período do dateRange
+    const startDateStr = `${dateRange.startDate.getFullYear()}-${String(dateRange.startDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.startDate.getDate()).padStart(2, '0')}`
+    const endDateStr = `${dateRange.endDate.getFullYear()}-${String(dateRange.endDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.endDate.getDate()).padStart(2, '0')}`
+    
+    filtered = filtered.filter(receita => {
+      return receita.data_receita >= startDateStr && receita.data_receita <= endDateStr
+    })
+
+    // Aplicar filtro de categoria
     if (filtros.categoria) {
       filtered = filtered.filter(receita => 
         receita.categoria_receita?.id === filtros.categoria
       )
     }
 
+    // Aplicar filtro de forma de pagamento
     if (filtros.formaPagamento) {
       filtered = filtered.filter(receita => 
         receita.forma_pagamento === filtros.formaPagamento
       )
     }
 
+    // Aplicar filtro de data de início
     if (filtros.dataInicio) {
       filtered = filtered.filter(receita => 
         receita.data_receita >= filtros.dataInicio
       )
     }
 
+    // Aplicar filtro de data de fim
     if (filtros.dataFim) {
       filtered = filtered.filter(receita => 
         receita.data_receita <= filtros.dataFim

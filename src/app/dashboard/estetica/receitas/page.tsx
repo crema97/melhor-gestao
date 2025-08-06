@@ -94,7 +94,7 @@ export default function ReceitasPage() {
 
   useEffect(() => {
     aplicarFiltros()
-  }, [receitas, filtros])
+  }, [receitas, filtros, dateRange])
 
   async function checkUserAndLoadData() {
     try {
@@ -187,12 +187,7 @@ export default function ReceitasPage() {
   }
 
   function handlePeriodChange(startDate: Date, endDate: Date) {
-    const startStr = startDate.toISOString().split('T')[0]
-    const endStr = endDate.toISOString().split('T')[0]
-    const filtered = receitas.filter(receita => {
-      return receita.data_receita >= startStr && receita.data_receita <= endStr
-    })
-    setFilteredReceitas(filtered)
+    setDateRange({ startDate, endDate })
   }
 
   function loadChartData() {
@@ -349,6 +344,14 @@ export default function ReceitasPage() {
 
   function aplicarFiltros() {
     let receitasFiltradas = [...receitas]
+
+    // Aplicar filtro de período do dateRange
+    const startDateStr = `${dateRange.startDate.getFullYear()}-${String(dateRange.startDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.startDate.getDate()).padStart(2, '0')}`
+    const endDateStr = `${dateRange.endDate.getFullYear()}-${String(dateRange.endDate.getMonth() + 1).padStart(2, '0')}-${String(dateRange.endDate.getDate()).padStart(2, '0')}`
+    
+    receitasFiltradas = receitasFiltradas.filter(receita => {
+      return receita.data_receita >= startDateStr && receita.data_receita <= endDateStr
+    })
 
     // Filtro por categoria
     if (filtros.categoria) {
