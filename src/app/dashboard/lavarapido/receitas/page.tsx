@@ -69,10 +69,10 @@ export default function ReceitasPage() {
   }, [filtros, usuarioId])
 
   useEffect(() => {
-    if (receitas.length > 0) {
+    if (filteredReceitas.length > 0) {
       loadChartData()
     }
-  }, [receitas])
+  }, [filteredReceitas])
 
   useEffect(() => {
     aplicarFiltros()
@@ -182,7 +182,7 @@ export default function ReceitasPage() {
       date.setDate(date.getDate() - i)
       const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       
-      const dayReceitas = receitas.filter(r => r.data_receita === dateKey)
+      const dayReceitas = filteredReceitas.filter(r => r.data_receita === dateKey)
         .reduce((sum, r) => sum + r.valor, 0)
       
       dailyDataArray.push({
