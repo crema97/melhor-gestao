@@ -55,10 +55,7 @@ export default function ReceitasPage() {
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
   })
-  const [filtros, setFiltros] = useState({
-    categoria: '',
-    formaPagamento: ''
-  })
+  const [filtros, setFiltros] = useState({ categoria: '', formaPagamento: '' })
   const router = useRouter()
 
   useEffect(() => {

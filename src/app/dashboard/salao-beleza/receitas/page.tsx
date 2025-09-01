@@ -65,10 +65,7 @@ export default function ReceitasPage() {
     endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
   })
   const [usuarioId, setUsuarioId] = useState<string | null>(null)
-  const [filtros, setFiltros] = useState({
-    categoria: '',
-    formaPagamento: ''
-  })
+  const [filtros, setFiltros] = useState({ categoria: '', formaPagamento: '' })
   const router = useRouter()
 
   // Dados para os gráficos
@@ -989,8 +986,8 @@ export default function ReceitasPage() {
                 </label>
                 <input
                   type="date"
-                  value={}
-                  onChange={e => setFiltros({ ...filtros,  })}
+                  value=""
+                  onChange={() => {}}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -1016,8 +1013,8 @@ export default function ReceitasPage() {
                 </label>
                 <input
                   type="date"
-                  value={}
-                  onChange={e => setFiltros({ ...filtros,  })}
+                  value=""
+                  onChange={() => {}}
                   style={{
                     width: '100%',
                     padding: '12px 16px',

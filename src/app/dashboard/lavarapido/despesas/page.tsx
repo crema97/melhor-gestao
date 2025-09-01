@@ -60,10 +60,7 @@ export default function DespesasPage() {
     endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59)
   })
   const [usuarioId, setUsuarioId] = useState<string>('')
-  const [filtros, setFiltros] = useState({
-    categoria: '',
-    formaPagamento: ''
-  })
+  const [filtros, setFiltros] = useState({ categoria: '' })
   const router = useRouter()
 
   useEffect(() => {
@@ -203,27 +200,11 @@ export default function DespesasPage() {
       )
     }
 
-    // Aplicar filtro de data de início
-    if () {
-      filtered = filtered.filter(despesa => 
-        despesa.data_despesa >= 
-      )
-    }
-
-    // Aplicar filtro de data de fim
-    if () {
-      filtered = filtered.filter(despesa => 
-        despesa.data_despesa <= 
-      )
-    }
-
     setFilteredDespesas(filtered)
   }
 
   function limparFiltros() {
-    setFiltros({
-      categoria: '',
-      })
+    setFiltros({ categoria: '' })
     // A função aplicarFiltros será chamada automaticamente pelo useEffect
   }
 
@@ -958,8 +939,8 @@ export default function DespesasPage() {
                 </label>
                 <input
                   type="date"
-                  value={}
-                  onChange={e => setFiltros({ ...filtros,  })}
+                  value=""
+                  onChange={() => {}}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -985,8 +966,8 @@ export default function DespesasPage() {
                 </label>
                 <input
                   type="date"
-                  value={}
-                  onChange={e => setFiltros({ ...filtros,  })}
+                  value=""
+                  onChange={() => {}}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
