@@ -62,8 +62,7 @@ export default function DespesasPage() {
   const [usuarioId, setUsuarioId] = useState<string>('')
   const [filtros, setFiltros] = useState({
     categoria: '',
-    dataInicio: '',
-    dataFim: ''
+    formaPagamento: ''
   })
   const router = useRouter()
 
@@ -205,16 +204,16 @@ export default function DespesasPage() {
     }
 
     // Aplicar filtro de data de início
-    if (filtros.dataInicio) {
+    if () {
       filtered = filtered.filter(despesa => 
-        despesa.data_despesa >= filtros.dataInicio
+        despesa.data_despesa >= 
       )
     }
 
     // Aplicar filtro de data de fim
-    if (filtros.dataFim) {
+    if () {
       filtered = filtered.filter(despesa => 
-        despesa.data_despesa <= filtros.dataFim
+        despesa.data_despesa <= 
       )
     }
 
@@ -224,9 +223,7 @@ export default function DespesasPage() {
   function limparFiltros() {
     setFiltros({
       categoria: '',
-      dataInicio: '',
-      dataFim: ''
-    })
+      })
     // A função aplicarFiltros será chamada automaticamente pelo useEffect
   }
 
@@ -921,8 +918,8 @@ export default function DespesasPage() {
                 </label>
                 <input
                   type="date"
-                  value={filtros.dataInicio}
-                  onChange={e => setFiltros({ ...filtros, dataInicio: e.target.value })}
+                  value={}
+                  onChange={e => setFiltros({ ...filtros,  })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -948,8 +945,8 @@ export default function DespesasPage() {
                 </label>
                 <input
                   type="date"
-                  value={filtros.dataFim}
-                  onChange={e => setFiltros({ ...filtros, dataFim: e.target.value })}
+                  value={}
+                  onChange={e => setFiltros({ ...filtros,  })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',

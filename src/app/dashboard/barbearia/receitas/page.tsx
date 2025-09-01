@@ -57,8 +57,6 @@ export default function ReceitasPage() {
   const [usuarioId, setUsuarioId] = useState<string | null>(null)
   const [filtros, setFiltros] = useState({
     categoria: '',
-    dataInicio: '',
-    dataFim: '',
     formaPagamento: ''
   })
   const router = useRouter()
@@ -185,19 +183,7 @@ export default function ReceitasPage() {
       )
     }
 
-    // Filtro por data de início
-    if (filtros.dataInicio) {
-      receitasFiltradas = receitasFiltradas.filter(receita => 
-        receita.data_receita >= filtros.dataInicio
-      )
-    }
 
-    // Filtro por data de fim
-    if (filtros.dataFim) {
-      receitasFiltradas = receitasFiltradas.filter(receita => 
-        receita.data_receita <= filtros.dataFim
-      )
-    }
 
     setFilteredReceitas(receitasFiltradas)
   }
@@ -205,8 +191,6 @@ export default function ReceitasPage() {
   function limparFiltros() {
     setFiltros({
       categoria: '',
-      dataInicio: '',
-      dataFim: '',
       formaPagamento: ''
     })
   }
@@ -1040,59 +1024,7 @@ export default function ReceitasPage() {
                 </select>
               </div>
 
-              {/* Filtro por Data de Início */}
-              <div>
-                <label style={{ 
-                  display: 'block', 
-                  color: '#d1d5db', 
-                  fontSize: '14px', 
-                  fontWeight: '500', 
-                  marginBottom: '8px' 
-                }}>
-                  Data de Início
-                </label>
-                <input
-                  type="date"
-                  value={filtros.dataInicio}
-                  onChange={e => setFiltros({ ...filtros, dataInicio: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    backgroundColor: '#374151',
-                    border: '1px solid #4b5563',
-                    borderRadius: '8px',
-                    color: '#ffffff',
-                    fontSize: '16px'
-                  }}
-                />
-              </div>
 
-              {/* Filtro por Data de Fim */}
-              <div>
-                <label style={{ 
-                  display: 'block', 
-                  color: '#d1d5db', 
-                  fontSize: '14px', 
-                  fontWeight: '500', 
-                  marginBottom: '8px' 
-                }}>
-                  Data de Fim
-                </label>
-                <input
-                  type="date"
-                  value={filtros.dataFim}
-                  onChange={e => setFiltros({ ...filtros, dataFim: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    backgroundColor: '#374151',
-                    border: '1px solid #4b5563',
-                    borderRadius: '8px',
-                    color: '#ffffff',
-                    fontSize: '16px'
-                  }}
-                />
-              </div>
             </div>
 
             {/* Botão Limpar Filtros */}

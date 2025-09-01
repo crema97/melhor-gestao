@@ -67,8 +67,6 @@ export default function ReceitasPage() {
   const [usuarioId, setUsuarioId] = useState<string | null>(null)
   const [filtros, setFiltros] = useState({
     categoria: '',
-    dataInicio: '',
-    dataFim: '',
     formaPagamento: ''
   })
   const router = useRouter()
@@ -353,28 +351,12 @@ export default function ReceitasPage() {
       )
     }
 
-    // Filtro por data de início
-    if (filtros.dataInicio) {
-      receitasFiltradas = receitasFiltradas.filter(receita => 
-        receita.data_receita >= filtros.dataInicio
-      )
-    }
-
-    // Filtro por data de fim
-    if (filtros.dataFim) {
-      receitasFiltradas = receitasFiltradas.filter(receita => 
-        receita.data_receita <= filtros.dataFim
-      )
-    }
-
     setFilteredReceitas(receitasFiltradas)
   }
 
   function limparFiltros() {
     setFiltros({
       categoria: '',
-      dataInicio: '',
-      dataFim: '',
       formaPagamento: ''
     })
   }
@@ -1007,8 +989,8 @@ export default function ReceitasPage() {
                 </label>
                 <input
                   type="date"
-                  value={filtros.dataInicio}
-                  onChange={e => setFiltros({ ...filtros, dataInicio: e.target.value })}
+                  value={}
+                  onChange={e => setFiltros({ ...filtros,  })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -1034,8 +1016,8 @@ export default function ReceitasPage() {
                 </label>
                 <input
                   type="date"
-                  value={filtros.dataFim}
-                  onChange={e => setFiltros({ ...filtros, dataFim: e.target.value })}
+                  value={}
+                  onChange={e => setFiltros({ ...filtros,  })}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
